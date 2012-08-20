@@ -218,7 +218,7 @@ var sc_materials_event()
 			return(1);
 		break;
 		
-		case screen.views.main:
+		case screen.views.main: //forward rendering
 			if(my != NULL)
 			{
 				//if(my.skill2 == 1) mtl.skill1 = floatv(1);

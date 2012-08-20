@@ -121,10 +121,10 @@ void sc_settings_setDefaults(SC_SETTINGS* settings)
 	
 	//DOF
 	settings.dof.enabled = 0;
-	settings.dof.blurX = 4;
-	settings.dof.blurY = 6;
-	settings.dof.focalPos = 1000;
-	settings.dof.focalWidth = 500;
+	settings.dof.blurX = 2;
+	settings.dof.blurY = 3;
+	settings.dof.focalPos = 500;
+	settings.dof.focalWidth = 2000;
 	
 	//Forward Rendering
 	settings.forward.enabled = 0;
@@ -485,7 +485,7 @@ void sc_skill_(ENTITY* ent,int objMode, var objVar)
 			//general data
 			myData->depth = 0;
 			myData->shadowBias = 0;
-			myData->castShadow = 0;
+			myData->castShadow = 3;
 			myData->pass = SC_PASS_GBUFFER;
 			myData->emissive.x = 0;
 			myData->emissive.y = 0;
@@ -710,7 +710,7 @@ void sc_material(ENTITY* ent,int objMode, MATERIAL* mat)
 			//general data
 			myData->depth = 0;
 			myData->shadowBias = 0;
-			myData->castShadow = 0;
+			myData->castShadow = 3;
 			myData->pass = SC_PASS_GBUFFER;
 			myData->emissive.x = 0;
 			myData->emissive.y = 0;

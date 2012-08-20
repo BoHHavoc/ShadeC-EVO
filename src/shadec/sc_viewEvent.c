@@ -45,8 +45,8 @@ var sc_viewEvent_event()
 			pd3dDev->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_ARGB(0, ambient_color.red/2, ambient_color.green/2, ambient_color.blue/2), 1.0, 0);
 			//pd3dDevice->Clear(0, NULL, D3DCLEAR_ZBUFFER, D3DCOLOR_ARGB(0, 0, 0, 0), 0.0, 0);
 			
-			//if(screen.views.sun != NULL)
-			//{
+			if(screen.views.sun != NULL)
+			{
 				//put code for rendering directional lights here
 				//draw fullscreen quad,apply directional light shader and blend
 				//set render states
@@ -61,7 +61,7 @@ var sc_viewEvent_event()
 				//pd3dDev->SetTexture (0, screen.renderTargets.gBuffer[0].d3dtex);
 				pd3dDev->SetTexture (0, screen.views.sun.bmap.d3dtex);
 				pd3dDev->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP,2,(LPVOID)screen.vertexScreenquad,sizeof(SC_VERTEX_SCREENQUAD));	
-			//}
+			}
 			
 			
 			

@@ -99,6 +99,10 @@ float4 mainPS(psIn In):COLOR0
 	//output.xyz = materialData.r;
 	//output.xyz = diffuseAndSpecular.xyz;
 	//output.xyz = albedoAndEmissiveMask.xyz;
+	
+	//output.xyz = diffuseAndSpecular.xyz;
+	output.w = 1;
+	
 	return output;
 	
 }

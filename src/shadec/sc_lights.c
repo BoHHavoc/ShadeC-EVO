@@ -504,7 +504,7 @@ var sc_lights_mtlShadowmapLocalRenderEvent()
 	mtl.skill3 = floatv(0); //shadow bias
 	if(my)
 	{
-		mtl.skill2 = floatv(1-(my.alpha-100));
+		mtl.skill2 = floatv(1-(my.alpha/100));
 		if(my.SC_SKILL)
 		{
 			SC_OBJECT* ObjData = (SC_OBJECT*)(my.SC_SKILL);
@@ -520,6 +520,10 @@ var sc_lights_mtlShadowmapLocalRenderEvent()
 				return(0);
 			}
 			
+		}
+		else
+		{
+			return (0);
 		}
 		
 		//free(screen);
@@ -564,6 +568,8 @@ void sc_lights_MaterialEventSun()
 
 void sc_lights_initSun(SC_SCREEN* screen)
 {
+	if(sun_color.red == 0 && sun_color.green == 0 && sun_color.blue == 0) return;
+	
 	//create materials
 	screen.materials.sun = mtl_create();
 	effect_load(screen.materials.sun, sc_lights_sMaterialSun);

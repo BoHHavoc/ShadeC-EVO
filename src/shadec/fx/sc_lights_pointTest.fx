@@ -18,8 +18,6 @@ texture mtlSkin1; //normals (xy) depth (zw)
 texture mtlSkin4; //material id (x), specular power (y), specular intensity (z), environment map id (w)
 texture texBRDFLut; //brdf equations stored in volumetric texture
 texture texMaterialLUT; //material data texture -> x = lighting equation Lookup Texture index // y = diffuse roughness // z = diffuse wraparound
-float brdfTest1;
-float brdfTest2;
 
 float4 vecSkill1; //lightpos (xyz), lightrange (w)
 float4 vecSkill5; //light color (xyz), scene depth (w)
@@ -160,15 +158,16 @@ float4 mainPS(vsOut In):COLOR0
    
    //materialData.r = brdfData1.r;
      
-   half OffsetU = (brdfData1.y-0.5)*2+brdfTest1; //diffuse roughness
-   half OffsetV = (brdfData1.z-0.5)*2+brdfTest2; //diffuse wraparound/velvety
+   half OffsetU = (brdfData1.y-0.5)*2; //diffuse roughness
+   half OffsetV = (brdfData1.z-0.5)*2; //diffuse wraparound/velvety
    //half2 nuv = float2((0.5+saturate(dot(Ln,normal)+OffsetU)/2.0),	saturate(1.0 - (0.5+dot(normal,Vn)/2.0)) + OffsetV); //diffuse brdf uv, no options
   	half2 diffuseUV = half2( (dot(Vn, normal)+OffsetU) , ((dot(Ln, normal) + 1) * 0.5)+OffsetV ); //diffuse brdf uv. options (OffsetU/V)
   	half3 diffuse = tex3D( brdfLUTSampler,half3(diffuseUV , brdfData1.r) ).rgb;
    color.rgb = diffuse * att * vecSkill5.xyz;
    
    //additional clipping based on diffuse lighting. clip non-lit parts
-   half shaded = (color.r+color.g+color.b)/3;
+   //half shaded = (color.r+color.g+color.b)/3;
+   half shaded = (color.r+color.g+color.b);
 	clip(shaded-0.001);
    
    //fps hungry....
@@ -196,7 +195,7 @@ float4 mainPS(vsOut In):COLOR0
    return color;
 }
 
-technique outside
+technique t1
 {
 	#ifdef STENCILMASK
 	//set stencil
