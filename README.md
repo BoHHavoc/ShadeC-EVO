@@ -14,4 +14,4 @@ If helping other Shade-C users, posting bugs or anything like that, a license is
 If your project is open source, a license is not needed.
 If you add new features to Shade-C, fix bugs or write tutorials you will get a free license. Please get in contact if you do so.
 
-!! If enough people start working on Shade-C (bugfixing, new features, tutorials and manual/wiki), it will become fully free and the need for a license will be abandoned. So don't hesitate to ask for write access for the git repository !!
+!! If enough people start working on Shade-C (bugfixing, new features, tutorials and manual/wiki), it will become fully free and the need for a license will be abandoned. !!
