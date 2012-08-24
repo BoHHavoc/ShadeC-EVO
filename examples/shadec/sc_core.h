@@ -16,6 +16,8 @@
 #define SC_PI 3.14159265 //Pi
 D3DXVECTOR4 sc_vec4Null;
 //BMAP* sc_bmapNull = "#1#1#8";
+BMAP* sc_map_random2x2 = "sc_random2x2.tga";
+BMAP* sc_map_random = "sc_random.png";
 
 //SC_OBJECT
 #define SC_OBJECT_LIGHT_POS 1

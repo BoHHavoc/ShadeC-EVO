@@ -11,7 +11,7 @@ void sc_ssao_MaterialEvent()
 			if(pEffect != NULL)
 			{
 				pEffect->SetVectorArray("SAMPLE_KERNEL", screen.ssaoKernel, sc_ssao_kernelSize);
-				pEffect->SetInt("SAMPLE_KERNEL_SIZE", sc_ssao_kernelSize);
+				pEffect->SetFloat("SAMPLE_KERNEL_SIZE", sc_ssao_kernelSize);
 			}
 			break;
 			

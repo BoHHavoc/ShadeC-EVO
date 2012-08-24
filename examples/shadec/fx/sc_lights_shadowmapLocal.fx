@@ -1,6 +1,8 @@
 bool AUTORELOAD;
 bool PASS_SOLID;
 
+#include <scPackDepth>
+
 float4x4 matWorldViewProj;
 //float4x4 matProj;
 
@@ -42,50 +44,42 @@ vsOut mainVS(vsIn In)
 	
 }
 
+half4 CalculateShadowDepth(float Pos2D_Z)
+{
+	half depth = ((Pos2D_Z)/vecSkill1.w);
+	depth += depth*vecSkill1.z;
+	//half depth = 1-(( (In.Pos2D)/vecSkill1.w ) + vecSkill1.z);
+	
+	/*
+	half4 outDepth = 0;
+	outDepth.x=floor(depth*255)/255;
+	outDepth.y=floor((depth-outDepth.x)*255*255)/255;
+	*/
+	
+	
+	return half4(PackDepth(depth),0,0);
+	//half3 Ln = vecSkill5.xzy - In.PosW.xyz;
+   //half att = saturate(1-length(Ln)/vecSkill1.w);
+}
+
 float4 mainPS(vsOut In):COLOR0
 {
 	//alpha clip
 	clip(tex2D(ColorSampler,In.Tex).a-vecSkill1.y);
 	
-	half depth = 1-((In.Pos2D)/vecSkill1.w);
-	depth += depth*vecSkill1.z;
-	//half depth = 1-(( (In.Pos2D)/vecSkill1.w ) + vecSkill1.z);
-	
-	half2 outDepth = 0;
-	outDepth.x=floor(depth*255)/255;
-	outDepth.y=floor((depth-outDepth.x)*255*255)/255;
-	
-	//half3 Ln = vecSkill5.xzy - In.PosW.xyz;
-   //half att = saturate(1-length(Ln)/vecSkill1.w);
-
-	//return 1;
-	return float4(outDepth,0,1);
+	return CalculateShadowDepth(In.Pos2D);
 }
 
 float4 mainPS_lm(vsOut In):COLOR0
 {
-	//clip(tex2D(ColorSampler,In.Tex).a-vecSkill1.y);
-	
-	half depth = 1-((In.Pos2D)/vecSkill1.w);
-	depth -= depth*vecSkill1.z;
-	//half depth = 1-(( (In.Pos2D)/vecSkill1.w ) + vecSkill1.z);
-	
-	half2 outDepth = 0;
-	outDepth.x=floor(depth*255)/255;
-	outDepth.y=floor((depth-outDepth.x)*255*255)/255;
-	
-	//half3 Ln = vecSkill5.xzy - In.PosW.xyz;
-   //half att = saturate(1-length(Ln)/vecSkill1.w);
-	
-	//return 1;
-	return float4(outDepth,0,1);
+	return CalculateShadowDepth(In.Pos2D);
 }
 
 technique t1
 {
 	pass p0
 	{
-		cullmode = cw;
+		cullmode = ccw;
 		FogEnable = False;
 		alphablendenable = false;
 		zwriteenable = true;
@@ -98,7 +92,7 @@ technique t1_lm
 {
 	pass p0
 	{
-		cullmode = cw;
+		cullmode = ccw;
 		FogEnable = False;
 		alphablendenable = false;
 		zwriteenable = true;

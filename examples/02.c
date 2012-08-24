@@ -47,8 +47,9 @@ void main()
 {
 	level_load("02.wmb");
 	wait(3);
-	set(level_ent, SHADOW); //level casts dynamic shadows
+	//set(level_ent, SHADOW); //level casts dynamic shadows...hmmm it casts shadows anyway, wether or not this is set... (?)
 	vec_set(sun_color, vector(0,0,0)); //set suncolor to zero (setting sun_color in WED to zero does NOTHING! This is a bug in gamestudio)
+	vec_set(ambient_color, vector(0,0,0));
 		
 	//create a camera object so we can move around the scene
 	you = ent_create(NULL, vector(168,-478, 212), v_camera);
@@ -59,7 +60,8 @@ void main()
 	
 	//set resolution before calling sc_setup
 	//if you want to change resolution again, simple call sc_setup() again after you changed the resolution
-	video_set(1280, 720, 0, 2);
+	//video_set(1280, 720, 0, 2);
+	video_set(800, 600, 0, 2);
 	
 	//setup skies
 	sc_sky(skycube);

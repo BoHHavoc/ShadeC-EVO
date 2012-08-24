@@ -4,8 +4,8 @@ float4x4 matProjInv; //needed for viewspace position reconstruction
 #include <scUnpackDepth>
 #include <scCalculatePosVSQuad>
 
-static int NOISE_SIZE = 4; //noise filter size
-int SAMPLE_KERNEL_SIZE; // number of ssao iterations
+static half NOISE_SIZE = 4; //noise filter size
+half SAMPLE_KERNEL_SIZE; // number of ssao iterations
 float4 SAMPLE_KERNEL[32];
 /*float4 SAMPLE_KERNEL[8] =
 {

@@ -189,11 +189,11 @@ struct vsOut
 struct vsIn
 {
 	float4 Pos : POSITION;
-	float2 Tex : TEXCOORD0;
-	float2 Shadow : TEXCOORD1;
-	float3 Normal : NORMAL;
+	half2 Tex : TEXCOORD0;
+	half2 Shadow : TEXCOORD1;
+	half3 Normal : NORMAL;
 	#ifdef NORMALMAPPING
-		float4 Tangent: TEXCOORD2;
+		half4 Tangent: TEXCOORD2;
 	#endif
 };
 
@@ -263,7 +263,7 @@ float DecodeFloatRGBA( float4 rgba ) {
 struct PixelToFrame
 {
     float4 normalsAndDepth : COLOR0;
-    float4 albedoAndEmissiveMask : COLOR1;
+    half4 albedoAndEmissiveMask : COLOR1;
     float4 materialData : COLOR2;
     //float4 lightmapAnd : COLOR3;
 };
@@ -273,16 +273,16 @@ PixelToFrame mainPS(vsOut In)
 {
 	PixelToFrame PSOut = (PixelToFrame)0;
 	
-	float4 skin1 = tex2D(entSkin1Sampler,In.Tex);
-	float4 skin2 = tex2D(entSkin2Sampler,In.Tex);
-	float4 skin3 = tex2D(entSkin3Sampler,In.Tex);
+	half4 skin1 = tex2D(entSkin1Sampler,In.Tex);
+	half4 skin2 = tex2D(entSkin2Sampler,In.Tex);
+	half4 skin3 = tex2D(entSkin3Sampler,In.Tex);
 	
 	//initial w values
 	PSOut.albedoAndEmissiveMask.w = 0;
 	
 	//normals
 	#ifdef NORMALMAPPING
-		float3 bump = SKIN_NORMAL*2-1;
+		half3 bump = SKIN_NORMAL*2-1;
 		In.Normal.rgb += (bump.x * In.Tangent.xyz + bump.y * In.Binormal.xyz);
 	#endif
 	//PSOut.normalsAndDepth.xy = PackNormals( mul((In.Normal.rgb) ,matView) ); //normals

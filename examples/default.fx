@@ -659,12 +659,21 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 		//return n.xy / f + 0.5;
 		
 		
-		//spheremap
-		float f = -n.z*2+1;
-		float g = dot(n,n);
-		float p = sqrt(g+f);
-		float2 enc = n/p * 0.5 + 0.5;
-		return enc;
+		
+//		//spheremap
+//		float f = -n.z*2+1;
+//		float g = dot(n,n);
+//		float p = sqrt(g+f);
+//		float2 enc = n/p * 0.5 + 0.5;
+//		return enc;
+		
+		//spheremap (optimized)
+		half3 fgp;
+		fgp.x = -n.z*2+1;
+		fgp.y = dot(n,n);
+		fgp.z = sqrt(dot(fgp.xy,1));
+		fgp.xy = n/fgp.z * 0.5 + 0.5;
+		return fgp.xy;
 		
 		
 		/*
@@ -693,23 +702,6 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	
 #endif
 
-//section: scPackDepth - packs linear depth to 2x8bit //
-#ifndef include_scPackDepth
-#define include_scPackDepth
-
-	half2 PackDepth(half inDepth)
-	{
-		half2 enc;
-		enc.x = floor(inDepth*255)/255;
-		enc.y = floor((inDepth-enc.x)*255*255)/255;
-		
-		return enc;
-	}
-	
-#endif
-
-
-
 //section: scUnpackNormals - unpacks normals //
 #ifndef include_scUnpackNormals
 #define include_scUnpackNormals
@@ -733,7 +725,7 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 		//n.z=-sqrt(1-dot(n.xy,n.xy));
 		//return n;
 		
-		
+		/*
 		//spheremap
 		float3 n;
 		n.xy = -enc*enc+enc;
@@ -743,6 +735,20 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 		n.xy = (enc*8-4) * m;
 		n.z = 1 - 8*f;
 		return n;
+		*/
+
+		//spheremap (optimized)
+		half3 n;
+		n.xy = -enc*enc+enc;
+		n.z = -1;
+		half2 fm;
+		fm.x = dot(n, half3(1,1,0.25));
+		fm.y = sqrt(fm.x);
+		n.xy = (enc*8-4) * fm.y;
+		n.z = 1 - 8*fm.x;
+		return n;
+		
+
 		
 		/*
 		//Lambert Azimuthal
@@ -758,6 +764,26 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	
 #endif
 
+//section: scPackDepth - packs linear depth to 2x8bit //
+#ifndef include_scPackDepth
+#define include_scPackDepth
+
+	half2 PackDepth(half inDepth)
+	{
+		
+//		half2 enc;
+//		enc.x = floor(inDepth*255)/255;
+//		enc.y = floor((inDepth-enc.x)*255*255)/255;
+		
+		//optimized
+		half2 enc;
+		enc.x = floor(inDepth*255)/255;
+		enc.y = floor((inDepth-enc.x)*65025)/255;
+		
+		return enc;
+	}
+	
+#endif
 
 //section: scUnpackDepth - unpacks depth //
 #ifndef include_scUnpackDepth
@@ -765,7 +791,11 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 
 	half UnpackDepth(half2 enc)
 	{
-		return enc.x + (enc.y/255);
+		//return enc.x + (enc.y/255);
+		
+		//optimized
+		enc.y /= 255;
+		return dot(enc,1);
 	}
 #endif
 
@@ -774,14 +804,26 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 #ifndef include_scPackSpecularData
 #define include_scPackSpecularData
 	
-	float PackSpecularData(float gloss, float power)
+	half PackSpecularData(half gloss, half power)
 	{
 		
-		float n_s = (0.43 + sqrt(0.1849 + 3.44*power)) * 1.1627907;
-      float integer_part = floor(n_s + 0.5);
-      float float_part = frac(gloss * 0.5);
-      return ((integer_part + float_part) * 0.03125);
+		//float n_s = (0.43 + sqrt(0.1849 + 3.44*power)) * 1.1627907;
+      //float integer_part = floor(n_s + 0.5);
+      //float float_part = frac(gloss * 0.5);
+      //return ((integer_part + float_part) * 0.03125);
       
+      //optimized
+      half3 ns_integerpart_floatpart;
+      ns_integerpart_floatpart.x = 0.43;//(0.43 + sqrt(0.1849 + 3.44*power)) * 1.1627907;
+      ns_integerpart_floatpart.y = 0.1849;
+      ns_integerpart_floatpart.z = 3.44*power;
+      ns_integerpart_floatpart.y = sqrt(dot(ns_integerpart_floatpart.yz,1));
+      ns_integerpart_floatpart.x = dot(ns_integerpart_floatpart.xy,1) * 1.1627907;
+      
+      ns_integerpart_floatpart.y = floor(ns_integerpart_floatpart.x + 0.5);
+      ns_integerpart_floatpart.z = frac(gloss * 0.5);
+      return (dot(ns_integerpart_floatpart.yz,1) * 0.03125);
+      //
       
       /*
       gloss *= 255;
@@ -809,19 +851,34 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 //section: scUnpackSpecularData - unpacks depth //
 #ifndef include_scUnpackSpecularData
 #define include_scUnpackSpecularData
-	half2 UnpackSpecularData(float data)
+	half2 UnpackSpecularData(half data)
 	{
 		
 		
 		
-		float scaleBackValue = data * 32.0 + 0.004;
-      float integer_part = floor(scaleBackValue);
-      float float_part = frac(scaleBackValue);
+		//float scaleBackValue = data * 32.0 + 0.004;
+		//float integer_part = floor(scaleBackValue);
+      //float float_part = frac(scaleBackValue);
   
-      float spcPower = (integer_part*integer_part*0.43 - integer_part*0.43) * 0.5;
-      float spcScale = float_part * 2.0;
+      //float spcPower = (integer_part*integer_part*0.43 - integer_part*0.43) * 0.5;
+      //float spcScale = float_part * 2.0;
       
-      return half2(spcScale,spcPower);
+      //return half2(spcScale,spcPower);
+      
+      //optimized
+      half3 scaleBackValue_integerpart_floatpart;
+      scaleBackValue_integerpart_floatpart.x = 32.0;
+      scaleBackValue_integerpart_floatpart.y = 0.004;
+      scaleBackValue_integerpart_floatpart.x = data * dot(scaleBackValue_integerpart_floatpart.xy,1);
+		scaleBackValue_integerpart_floatpart.y = floor(scaleBackValue_integerpart_floatpart.x);
+      scaleBackValue_integerpart_floatpart.z = frac(scaleBackValue_integerpart_floatpart.x);
+  
+      half2 spcScale_Power;// = (pow(scaleBackValue_integerpart_floatpart.y,2)*0.43 - scaleBackValue_integerpart_floatpart.y*0.43) * 0.5;
+      spcScale_Power.x = (pow(scaleBackValue_integerpart_floatpart.y,2)*0.43 - scaleBackValue_integerpart_floatpart.y*0.43) * 0.5;
+      spcScale_Power.y = scaleBackValue_integerpart_floatpart.z * 2.0;
+      
+      return spcScale_Power;
+      //
       
       
       /*
@@ -856,16 +913,16 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 #ifndef include_scTriplanarProjection
 #define include_scTriplanarProjection
 	//float4 TriplanarProjection(sampler inTexSampler, float3 inPos, float3 inNormal, float inScale)
-	float4 TriplanarProjection(sampler2D inSampler, float3 inPos, float3 inNormal, float inScale, float inBlendSmoothnes)
+	half4 TriplanarProjection(sampler2D inSampler, float3 inPos, half3 inNormal, half inScale, half inBlendSmoothnes)
 	{
-		float4 col = 0;
+		half4 col = 0;
 		
 		inPos /= inScale;
-		float4 col_z = tex2D(inSampler,inPos.xy);
-		float4 col_y = tex2D(inSampler,inPos.xz);	
-		float4 col_x = tex2D(inSampler,inPos.yz);	
+		half4 col_z = tex2D(inSampler,inPos.xy);
+		half4 col_y = tex2D(inSampler,inPos.xz);	
+		half4 col_x = tex2D(inSampler,inPos.yz);	
 		
-		float3 BlendF=pow(abs(inNormal), inBlendSmoothnes);//inBlendSmoothnes);   
+		half3 BlendF=pow(abs(inNormal), inBlendSmoothnes);//inBlendSmoothnes);   
       BlendF /= dot(BlendF.xyz,1.f);
       
 		col = col_x * BlendF.x
@@ -958,28 +1015,28 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 //section: scTriplanarProjectionNM - returns tri planar mapping //
 #ifndef include_scTriplanarProjectionNM
 #define include_scTriplanarProjectionNM
-	float3 TriplanarProjectionNM(sampler2D inSampler, float3 inPos, float3 inNormal, float inScale)
+	half3 TriplanarProjectionNM(sampler2D inSampler, float3 inPos, half3 inNormal, half inScale)
 	{
-		float3 outNormal = 0;
+		half3 outNormal = 0;
 		inNormal = normalize(inNormal);
 		
 		inPos /= inScale;
-		float2 bumpFetch1 = tex2D(inSampler,inPos.yz).xy*2-1; //X
-		float2 bumpFetch2 = tex2D(inSampler,inPos.zx).xy*2-1; //Y
-		float2 bumpFetch3 = tex2D(inSampler,inPos.xy).xy*2-1; //Z
+		half2 bumpFetch1 = tex2D(inSampler,inPos.yz).xy*2-1; //X
+		half2 bumpFetch2 = tex2D(inSampler,inPos.zx).xy*2-1; //Y
+		half2 bumpFetch3 = tex2D(inSampler,inPos.xy).xy*2-1; //Z
 		
 		//Blendweights
 		//float3 BlendF=pow(abs(inNormal), inBlendSmoothnes);//inBlendSmoothnes);   
       //BlendF /= dot(BlendF.xyz,1.f);
-      float3 blend_weights = abs( inNormal.xyz );   // Tighten up the blending zone:
+      half3 blend_weights = abs( inNormal.xyz );   // Tighten up the blending zone:
 		blend_weights = (blend_weights - 0.2) * 7;
 		blend_weights = max(blend_weights, 0);      // Force weights to sum to 1.0 (very important!)
 		blend_weights /= (blend_weights.x + blend_weights.y + blend_weights.z ).xxx;
 		
 		//oversimplified tangent basis
-		float3 bump1 = float3(0, bumpFetch1.x, bumpFetch1.y);
- 		float3 bump2 = float3(bumpFetch2.y, 0, bumpFetch2.x);
- 		float3 bump3 = float3(bumpFetch3.x, bumpFetch3.y, 0);
+		half3 bump1 = half3(0, bumpFetch1.x, bumpFetch1.y);
+ 		half3 bump2 = half3(bumpFetch2.y, 0, bumpFetch2.x);
+ 		half3 bump3 = half3(bumpFetch3.x, bumpFetch3.y, 0);
       
       
 		outNormal = bump1 * blend_weights.x
@@ -1009,7 +1066,202 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 #endif
 
 
-
+//section: scGetShadow - Calculate Shadows. Needs projective texcoords and original light->receiver depth//
+#ifndef include_scGetShadow
+#define include_scGetShadow
+	#include <scUnpackDepth>
+	
+	#ifdef RANDOMIZE_SHADOW
+	texture sc_map_random2x2_bmap;
+	sampler2D shadowRandomSampler = sampler_state 
+	{ 
+	   Texture = <sc_map_random2x2_bmap>; 
+	   AddressU = WRAP; 
+		AddressV = WRAP;
+		AddressW = WRAP;
+	   MinFilter = NONE;
+		MagFilter = NONE;
+		MipFilter = NONE;
+	};
+	#endif
+	
+	
+	float g_MinVariance = 0.0001;
+	
+	float linstep(float min, float max, float v)  
+	{  
+	  return clamp((v - min) / (max - min), 0, 1);  
+	}  
+	float ReduceLightBleeding(float p_max, float Amount)  
+	{  
+	  // Remove the [0, Amount] tail and linearly rescale (Amount, 1].  
+	   return linstep(Amount, 1, p_max);  
+	}
+	/*
+	float ChebyshevUpperBound(float2 Moments, float t)  
+	{  
+	  // One-tailed inequality valid if t > Moments.x  
+	   float p = (t <= Moments.x);  
+	  // Compute variance.  
+	   float Variance = Moments.y - (Moments.x*Moments.x);  
+	  Variance = max(Variance, g_MinVariance);  
+	  // Compute probabilistic upper bound.  
+	   float d = t - Moments.x;  
+	  float p_max = Variance / (Variance + d*d);  
+	  return max(p, p_max);  
+	}
+	float ShadowContribution(sampler2D shadowSampler, float2 lightTexCoord, float distanceToLight)  
+	{  
+	  // Read the moments from the variance shadow map.  
+	   float depth = UnpackDepth(tex2D(shadowSampler, lightTexCoord).xy);  
+	   float2 moments;
+	   moments.x = depth;  
+	   float dx = ddx(depth);  
+		float dy = ddy(depth);  
+		// Compute second moment over the pixel extents.  
+		moments.y = depth*depth + 0.25*(dx*dx + dy*dy);  
+	   
+	  // Compute the Chebyshev upper bound.  
+	   return ChebyshevUpperBound(moments, distanceToLight);  
+	}
+	
+	float ESM(sampler2D shadowSampler, half2 inTex, half receiver)
+	{
+		float occluder= UnpackDepth(tex2D(shadowSampler, inTex).xy);
+		float overdark = 1000;
+		float    lit = exp(overdark* ( occluder - receiver ));
+		lit = saturate(lit);
+		return lit;
+	}
+	*/
+	
+	//static half2 shadow_blurSize_softness = half2(0.0025, 0.015);
+	static half2 shadow_blurSize_softness = half2(0.0025, 0.02);
+	half GetShadow(sampler2D shadowSampler, float2 inTex, half inDepth, half maxDepth)
+	{
+		
+		//fix shadow bias
+	   //inDepth -= (1/maxDepth);
+		
+		#ifdef RANDOMIZE_SHADOW
+			inTex += ((tex2D(shadowRandomSampler, inTex*64).xy-0.5)*2)*shadow_blurSize_softness.x;
+			inTex += ((tex2D(shadowRandomSampler, inTex*128).xy-0.5)*8)*shadow_blurSize_softness.x;
+			inTex += ((tex2D(shadowRandomSampler, inTex*256).xy-0.5)*10)*shadow_blurSize_softness.x;
+		#endif
+		
+		/*
+		shadow_blurSize_softness.x = 0.0003125;
+		shadow_blurSize_softness.y = 0.95;
+		inTex += ((tex2D(shadowRandomSampler, inTex*2048).xy-0.5)*2)*0.001;	
+		half shadow = 0;
+		shadow += saturate( exp( (UnpackDepth(tex2D(shadowSampler, inTex).xy)-inDepth)*shadow_blurSize_softness.y * maxDepth) );
+		shadow += saturate( exp( (UnpackDepth(tex2D(shadowSampler, inTex +float2(shadow_blurSize_softness.x,shadow_blurSize_softness.x) ).xy)-inDepth)*shadow_blurSize_softness.y * maxDepth) );
+		shadow += saturate( exp( (UnpackDepth(tex2D(shadowSampler, inTex +float2(-shadow_blurSize_softness.x,-shadow_blurSize_softness.x) ).xy)-inDepth)*shadow_blurSize_softness.y * maxDepth) );
+		shadow += saturate( exp( (UnpackDepth(tex2D(shadowSampler, inTex +float2(shadow_blurSize_softness.x,-shadow_blurSize_softness.x) ).xy)-inDepth)*shadow_blurSize_softness.y * maxDepth) );
+		shadow += saturate( exp( (UnpackDepth(tex2D(shadowSampler, inTex +float2(-shadow_blurSize_softness.x,shadow_blurSize_softness.x) ).xy)-inDepth)*shadow_blurSize_softness.y * maxDepth) );
+		shadow /= 5;
+		return shadow;
+		*/
+		
+		/*
+		float depth = UnpackDepth(tex2D(shadowSampler, inTex).xy);
+		half shadow =  (depth > inDepth) ? 	1 : 0;
+		depth = UnpackDepth(tex2D(shadowSampler, inTex +float2(shadow_blurSize_softness.x,shadow_blurSize_softness.x) ).xy);
+		shadow +=  (depth > inDepth) ? 	1 : 0;
+		depth = UnpackDepth(tex2D(shadowSampler, inTex +float2(shadow_blurSize_softness.x,-shadow_blurSize_softness.x) ).xy);
+		shadow +=  (depth > inDepth) ? 	1 : 0;
+		depth = UnpackDepth(tex2D(shadowSampler, inTex +float2(-shadow_blurSize_softness.x,shadow_blurSize_softness.x) ).xy);
+		shadow +=  (depth > inDepth) ? 	1 : 0;
+		depth = UnpackDepth(tex2D(shadowSampler, inTex +float2(-shadow_blurSize_softness.x,-shadow_blurSize_softness.x) ).xy);
+		shadow +=  (depth > inDepth) ? 	1 : 0;
+		shadow /= 5;
+		return shadow;
+		*/
+		
+		
+		
+		
+		/*
+		half4 shadowDepth[2];
+	   shadowDepth[0].x = UnpackDepth(tex2D(shadowSampler, inTex + float2(shadow_blurSize_softness.x,shadow_blurSize_softness.x) ).xy);
+	   shadowDepth[0].y = UnpackDepth(tex2D(shadowSampler, inTex + float2(-shadow_blurSize_softness.x,shadow_blurSize_softness.x) ).xy);
+	   shadowDepth[0].z = UnpackDepth(tex2D(shadowSampler, inTex + float2(shadow_blurSize_softness.x,-shadow_blurSize_softness.x) ).xy);
+	   shadowDepth[0].w = UnpackDepth(tex2D(shadowSampler, inTex + float2(-shadow_blurSize_softness.x,-shadow_blurSize_softness.x) ).xy);
+	   
+	   shadowDepth[1].x = UnpackDepth(tex2D(shadowSampler, inTex + float2(shadow_blurSize_softness.x,0) ).xy);
+	   shadowDepth[1].y = UnpackDepth(tex2D(shadowSampler, inTex + float2(-shadow_blurSize_softness.x,0) ).xy);
+	   shadowDepth[1].z = UnpackDepth(tex2D(shadowSampler, inTex + float2(0,shadow_blurSize_softness.x) ).xy);
+	   shadowDepth[1].w = UnpackDepth(tex2D(shadowSampler, inTex + float2(0,-shadow_blurSize_softness.x) ).xy);
+	   //shadowDepth = (shadowDepth > inDepth) ? 	1 : 0;
+	   
+	   //kinda works....
+	   shadowDepth[0] = saturate( exp( (shadowDepth[0]-inDepth)*shadow_blurSize_softness.y * maxDepth) );
+	   shadowDepth[1] = saturate( exp( (shadowDepth[1]-inDepth)*shadow_blurSize_softness.y * maxDepth) );
+	   return (dot(shadowDepth[0],1) + dot(shadowDepth[1],1)) * 0.125;	   
+	   //
+	   */
+	   
+	   
+	   //half lerpFactor = saturate( exp( (UnpackDepth(tex2D(shadowSampler, inTex).xy)-inDepth)*maxDepth) );
+	   //lerpFactor = saturate( (UnpackDepth(tex2D(shadowSampler, inTex).xy) - inDepth)*10000 );
+	   //return sqrt(ShadowContribution(shadowSampler, inTex, inDepth));
+	   
+	   /*
+	   shadowDepth.x = UnpackDepth(tex2D(shadowSampler, inTex).xy);
+	   float temp = (shadowDepth.x-inDepth);
+	   temp *= (temp)*30;
+	   //temp = saturate(pow(1-temp,300));
+	   //inDepth *= 1200;
+	   //shadowDepth.x *= 1200;
+	   //temp *= (inDepth - shadowDepth.x);
+	   return temp;
+	   */
+	   
+	   /*
+	   //ESM
+	   float occluder= UnpackDepth(tex2D(shadowSampler, inTex).xy)-0.05f;
+		float overdark =30.05f;
+		float    lit = exp(overdark* (occluder - inDepth));
+		lit = saturate(lit);
+	   return lit;
+	   */
+	   
+	   
+	   
+	   //create filter taps
+	   half4 shadowDepth;
+	   shadowDepth.x = UnpackDepth(tex2D(shadowSampler, inTex + float2(shadow_blurSize_softness.x,shadow_blurSize_softness.x) ).xy);
+	   shadowDepth.y = UnpackDepth(tex2D(shadowSampler, inTex + float2(-shadow_blurSize_softness.x,shadow_blurSize_softness.x) ).xy);
+	   shadowDepth.z = UnpackDepth(tex2D(shadowSampler, inTex + float2(shadow_blurSize_softness.x,-shadow_blurSize_softness.x) ).xy);
+	   shadowDepth.w = UnpackDepth(tex2D(shadowSampler, inTex + float2(-shadow_blurSize_softness.x,-shadow_blurSize_softness.x) ).xy);
+	   //shadowDepth = 1-saturate( (shadowDepth-inDepth) * shadow_blurSize_softness.y * maxDepth ); //cullmode of depthmap: CW
+	   shadowDepth = saturate( ( (inDepth-shadowDepth)*shadow_blurSize_softness.y * maxDepth)  //cullmode of depthmap: CCW
+	   					* max(1 , saturate( exp( (UnpackDepth(tex2D(shadowSampler, inTex).xy)-inDepth)*shadow_blurSize_softness.y * maxDepth) ) *6 )   );
+	   //shadowDepth = saturate( ( (inDepth-shadowDepth)*shadow_blurSize_softness.y * maxDepth) );  //cullmode of depthmap: CCW
+	   					//* max(1 , saturate( exp( (UnpackDepth(tex2D(shadowSampler, inTex).xy)-inDepth)*shadow_blurSize_softness.y * maxDepth) ) *6 )   );
+	   
+	   //create filter
+	   half filter = shadowDepth.x*shadowDepth.y*shadowDepth.z*shadowDepth.w; //cullmode of depthmap: CW
+	   
+	   //create softshadow
+	   shadowDepth.x = saturate( exp( (UnpackDepth(tex2D(shadowSampler, inTex).xy)-inDepth)*shadow_blurSize_softness.y * maxDepth) );
+	   
+	   //return shadowDepth.x;
+	   //finalize filter
+	   filter *= shadowDepth.x;
+	   
+	   
+	   //return ReduceLightBleeding( shadowDepth.x, filter );
+	   return smoothstep( filter, 1, shadowDepth.x );
+	   /*
+	   shadowDepth.y = 1-saturate(((UnpackDepth(tex2D(shadowSampler, inTex).xy) - (inDepth-(3/maxDepth))) * 3000));
+	   shadowDepth.y *= 1-filter;//saturate(exp((UnpackDepth(tex2D(shadowSampler, inTex).xy) - (inDepth-(3/maxDepth))) * 60));
+	   
+	   //return shadowDepth.y;
+	   return half3(shadowDepth.y, 1-pow(smoothstep( filter, 1, shadowDepth.x ),100) ,0);
+	   */
+	}
+#endif
 
 
 
