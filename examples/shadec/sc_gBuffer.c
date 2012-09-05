@@ -140,7 +140,7 @@ void sc_gBuffer_destroy(SC_SCREEN* screen)
 
 void sc_gBuffer_frm(SC_SCREEN* screen)
 {
-	if(!screen) return 0;
+	//if(!screen) return 0;
 	
 	proc_mode = PROC_LATE;
 	if(screen.views.gBuffer != NULL)

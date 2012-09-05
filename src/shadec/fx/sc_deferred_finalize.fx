@@ -52,7 +52,7 @@ sampler2D ssaoSampler = sampler_state
 struct psIn
 {
 	float4 Pos : POSITION;
-	float2 Tex : TEXCOORD0;
+	half2 Tex : TEXCOORD0;
 };
 
 float4 mainPS(psIn In):COLOR0
@@ -102,6 +102,8 @@ float4 mainPS(psIn In):COLOR0
 	
 	//output.xyz = diffuseAndSpecular.xyz;
 	output.w = 1;
+	
+	
 	
 	return output;
 	

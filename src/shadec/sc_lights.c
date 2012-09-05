@@ -26,7 +26,7 @@ void sc_light_updateSpotMtx(ENTITY* inLight)
 	else vec_for_angle(lightDir, inLight.pan);
 	
 	sc_skill(inLight, SC_OBJECT_LIGHT_DIR, lightDir);
-	if(lightDir.y == -90) lightDir.y = 80;
+	//if(lightDir.y == -90) lightDir.y = 80; //might have to comment this in again (?)
 	
 	//create lightViewMatrix
 	D3DXVECTOR3 vEyePt;
@@ -68,8 +68,8 @@ void sc_light_updateSpotMtx(ENTITY* inLight)
 		  0.0, 0.0, 1.0, 0.0,
 		  0.0, 0.0, 0.0, 1.0 };
 		  
-	fTexAdj[12] = 0.5 + ((float)0.5/(float)512);
-	fTexAdj[13] = 0.5 + ((float)0.5/(float)512);
+	fTexAdj[12] = 0.5 + ((float)0.5/(float)256);
+	fTexAdj[13] = 0.5 + ((float)0.5/(float)256);
 
 	mat_multiply(mtxLightWorldViewProj, fTexAdj);
 	
@@ -321,8 +321,9 @@ ENTITY* sc_light_createFunc(int inType, var inRange, VECTOR* inColor, VECTOR* in
 			shadowView.aspect = 1;
 			shadowView.clip_near = 0;
 			shadowView.clip_far = inRange;
-			shadowView.size_x = 512;
-			shadowView.size_y = 512;
+			shadowView.size_x = 256;
+			shadowView.size_y = 256;
+			shadowView.bg = pixel_for_vec(COLOR_WHITE,0,8888);
 			
 			//set shadowview flags
 			set(shadowView, SHOW);
@@ -339,11 +340,24 @@ ENTITY* sc_light_createFunc(int inType, var inRange, VECTOR* inColor, VECTOR* in
 
 			//apply shadow rendertarget
 			#ifdef SC_CUSTOM_ZBUFFER
-				sc_checkZBuffer(512, 512);
+				sc_checkZBuffer(256, 256);
 			#endif
-			BMAP* shadowBmap = bmap_createblack(512,512,32);
+			BMAP* shadowBmap = bmap_createblack(256,256,32);
 			//bmap_to_mipmap(shadowBmap);
-			shadowView.bmap = shadowBmap;
+			//shadowView.bmap = shadowBmap;
+			shadowView.bmap = bmap_createblack(256,256,32);
+			
+			
+			//blur light depthmap
+			VIEW* blurView = view_create(-799);
+			set(blurView, CHILD);
+			set(blurView, PROCESS_TARGET);
+			shadowView.stage = blurView;
+			blurView.bmap = shadowBmap;
+			blurView.material = mtl_create();
+			effect_load(blurView.material, "sc_lights_shadowmapLocalBlur.fx");
+			blurView.material.skill1 = floatv((float)1/(float)shadowView.size_x);
+			//
 
 			//create shadowdepth material
 			MATERIAL* shadowMtl = mtl_create();

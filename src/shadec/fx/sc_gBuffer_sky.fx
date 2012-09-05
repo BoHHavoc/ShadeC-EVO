@@ -44,15 +44,15 @@ struct vsOut
 {
 	float4 Pos : POSITION;
 	float Pos2D : TEXCOORD0;
-	float4 Tex : TEXCOORD1;
-	float3 Normal : TEXCOORD2;
+	half4 Tex : TEXCOORD1;
+	half3 Normal : TEXCOORD2;
 };
 
 struct vsIn
 {
 	float4 Pos : POSITION;
-	float2 Tex : TEXCOORD0;
-	float3 Normal : NORMAL;
+	half2 Tex : TEXCOORD0;
+	half3 Normal : NORMAL;
 };
 
 vsOut mainVS(vsIn In)
@@ -71,7 +71,7 @@ vsOut mainVS(vsIn In)
 struct PixelToFrame
 {
     float4 normalsAndDepth : COLOR0;
-    float4 albedoAndEmissiveMask : COLOR1;
+    half4 albedoAndEmissiveMask : COLOR1;
     float4 materialData : COLOR2;
     //float4 lightmapAnd : COLOR3;
 };
@@ -81,7 +81,7 @@ PixelToFrame mainPS(vsOut In)
 {
 	PixelToFrame PSOut = (PixelToFrame)0;
 	
-	float4 skin1 = tex2D(entSkin1Sampler,In.Tex);
+	half4 skin1 = tex2D(entSkin1Sampler,In.Tex);
 	
 	//initial w values
 	PSOut.albedoAndEmissiveMask = 0;

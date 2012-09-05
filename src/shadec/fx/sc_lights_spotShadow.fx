@@ -1,5 +1,6 @@
 #include <scUnpackNormals>
 #include <scUnpackDepth>
+#include <scGetShadow>
 //#include <scUnpackSpecularData>
 
 //#define STENCILMASK
@@ -21,13 +22,13 @@ texture mtlSkin3; //shadowmap
 texture mtlSkin4; //material id (x), specular power (y), specular intensity (z), environment map id (w)
 texture texBRDFLut; //lighting equations stored in volumetric texture
 texture texMaterialLUT; //material data texture -> x = lighting equation Lookup Texture index // y = diffuse roughness // z = diffuse wraparound
-float brdfTest1;
-float brdfTest2;
 
 float4 vecSkill1; //lightpos (xyz), lightrange (w)
 float4 vecSkill5; //light color (xyz), scene depth (w)
 float4 vecSkill9; //light dir (xyz), stencil ref (w)
 //float4 vecTime;
+
+//static half2 blurSize_softness = half2(0.001, 3000);
 
 sampler normalsAndDepthSampler = sampler_state 
 { 
@@ -107,6 +108,9 @@ struct vsOut
 	float3 projCoord : TEXCOORD0;
 	float4 posVS : TEXCOORD1;
 	half2 texCoord : TEXCOORD2;
+	//nointerpolation float3 projCoord : TEXCOORD0;
+	//nointerpolation float4 posVS : TEXCOORD1;
+	//nointerpolation half2 texCoord : TEXCOORD2;
 };
 
 struct vsIn
@@ -129,48 +133,6 @@ vsOut mainVS(vsIn In)
 	return Out;
 }
 
-
-half getShadow(half2 inTex, half inDepth)
-{
-	half blurSize = 0.001;
-	half softness = 3000;
-	
-	half shadow = 0;
-	half shadowDepth = 0;
-	half2 depthBuffer = 0;
-	
-	depthBuffer = tex2D(shadowSampler, inTex ).xy;
-	shadowDepth = depthBuffer.x + depthBuffer.y/255;
-	half shadowTmp = saturate((shadowDepth-inDepth)*softness);
-	shadow += shadowTmp;
-	//shadow = 1;
-	//if(shadowDepth > inDepth) shadow = 0;
-	
-
-	depthBuffer = tex2D(shadowSampler, inTex + float2(blurSize,blurSize) ).xy;
-	shadowDepth = depthBuffer.x + depthBuffer.y/255;
-	shadowTmp = saturate((shadowDepth-inDepth)*softness);
-   shadow += shadowTmp;
-	depthBuffer = tex2D(shadowSampler, inTex + float2(-blurSize,blurSize) ).xy;
-	shadowDepth = depthBuffer.x + depthBuffer.y/255;
-	shadowTmp = saturate((shadowDepth-inDepth)*softness);
-   shadow += shadowTmp;
-	depthBuffer = tex2D(shadowSampler, inTex + float2(blurSize,-blurSize) ).xy;
-	shadowDepth = depthBuffer.x + depthBuffer.y/255;
-	shadowTmp = saturate((shadowDepth-inDepth)*softness);
-   shadow += shadowTmp;
-	depthBuffer = tex2D(shadowSampler, inTex + float2(-blurSize,-blurSize) ).xy;
-	shadowDepth = depthBuffer.x + depthBuffer.y/255;
-	shadowTmp = saturate((shadowDepth-inDepth)*softness);
-   shadow += shadowTmp;
-
-	return 1-(shadow/5);
-	
-	
-	//return 1-shadow;
-
-}
-
 float4 mainPS(vsOut In):COLOR0
 {
 	//je nach tiefe clippen...
@@ -184,8 +146,8 @@ float4 mainPS(vsOut In):COLOR0
    projTex.y = -In.projCoord.y/In.projCoord.z/2.0f +0.5f + (0.5/vecViewPort.y);
    
    //get gBuffer   
-   half4 gBuffer = tex2D(normalsAndDepthSampler, projTex);
-   gBuffer.z = UnpackDepth(gBuffer.zw);
+   float4 gBuffer = tex2D(normalsAndDepthSampler, projTex);
+   gBuffer.w = UnpackDepth(gBuffer.zw);
    
    //get specular data
    //half2 glossAndPower = UnpackSpecularData(tex2D(emissiveAndSpecularSampler, projTex).w);
@@ -193,38 +155,41 @@ float4 mainPS(vsOut In):COLOR0
    
    //clip pixels which can't be seen
    //not really needed anymore due to correct zbuffer culling :)
-   //float junk = ((In.posVS.z/vecSkill5.w))-(gBuffer.z);//length(gBuffer.z-(In.posVS.z/vecSkill5.w));
-   //clip(((In.posVS.z/vecSkill5.w))-(gBuffer.z));
+   //float junk = ((In.posVS.z/vecSkill5.w))-(gBuffer.w);//length(gBuffer.w-(In.posVS.z/vecSkill5.w));
+   //clip(((In.posVS.z/vecSkill5.w))-(gBuffer.w));
+   
    
    //decode normals
-   half3 normal = UnpackNormals(gBuffer.xy);
+   gBuffer.xyz = UnpackNormals(gBuffer.xy);
       
    //get view pos
-   float3 vFrustumRayVS = In.posVS.xyz * (vecSkill5.w/In.posVS.z);
-   float3 posVS = gBuffer.z * vFrustumRayVS;
+   //float3 vFrustumRayVS = In.posVS.xyz * (vecSkill5.w/In.posVS.z);
+   float3 posVS = gBuffer.w * In.posVS.xyz * (vecSkill5.w/In.posVS.z);
    
    //spotlight projection/cone
    //half4 lightProj = mul( half4(posVS,1), mul(matViewInv,matMtl) );
    half4 lightProj = mul( half4(posVS,1), matMtl );
-   half3 projection = tex2D(projSampler, lightProj.xy/lightProj.z).rgb;
-  
+   //half3 projection = tex2D(projSampler, lightProj.xy/lightProj.z).rgb;
+   color.rgb = tex2D(projSampler, lightProj.xy/lightProj.z).rgb;
+  	
    
    half3 Ln = mul(vecSkill1.xzy,matView).xyz - posVS.xyz;
-   half att = saturate(1-length(Ln)/vecSkill1.w);
-   clip(att*length(projection)-0.001);
+   //half att = saturate(1-length(Ln)/vecSkill1.w);
+   //clip(att*dot(color.rgb,1)-0.001);
+   color.rgb *= saturate(1-length(Ln)/vecSkill1.w); //attenuation
+   clip(dot(color.rgb,1)-0.001);
    Ln = normalize(Ln);
-   half backprojection = saturate(dot( mul(-vecSkill9.xzy,matView) , Ln));
-   clip(backprojection-0.0001);
+   //half backprojection = saturate(dot( mul(-vecSkill9.xzy,matView) , Ln));
+   clip(saturate(dot( mul(-vecSkill9.xzy,matView) , Ln))-0.0001); //clip backprojection
    //half3 Vn = normalize(matView[0].xyz - posVS);//normalize(IN.WorldView);
    half3 Vn = normalize(vecViewDir.xyz - posVS); //same as above but less arithmetic instructions
    half3 Hn = normalize(Vn + Ln);
    
-   
    //half4 brdfData = (tex2D(brdfDataSampler, projTex)); //get brdf gBuffer
-   //half2 light = lit(dot(Ln,normal), dot(Hn, normal),brdfData.g*255).yz;
+   //half2 light = lit(dot(Ln,gBuffer.xyz), dot(Hn, gBuffer.xyz),brdfData.g*255).yz;
 	//color.rgb = light.x * vecSkill5.xyz * att;//vecSkill5.xyz;
    //color.a = light.y;// * glossAndPower.x;
-   //color.rgb = dot(Ln,normal)*att*vecSkill5.xyz;
+   //color.rgb = dot(Ln,gBuffer.xyz)*att*vecSkill5.xyz;
    
    
    //material data
@@ -233,44 +198,47 @@ float4 mainPS(vsOut In):COLOR0
    half4 brdfData1 = tex1D( materialLUTSampler, materialData.r ); // x = lighting equation Lookup Texture index // y = diffuse roughness // z = diffuse wraparound
    //brdfData.r = brdfData1.r;
      
-   half OffsetU = (brdfData1.y-0.5)*2+brdfTest1; //diffuse roughness
-   half OffsetV = (brdfData1.z-0.5)*2+brdfTest2; //diffuse wraparound/velvety
-   //half2 nuv = float2((0.5+saturate(dot(Ln,normal)+OffsetU)/2.0),	saturate(1.0 - (0.5+dot(normal,Vn)/2.0)) + OffsetV); //diffuse brdf uv, no options
-  	half2 diffuseUV = half2( (dot(Vn, normal)+OffsetU) , ((dot(Ln, normal) + 1) * 0.5)+OffsetV ); //diffuse brdf uv. options (OffsetU/V)
-  	half3 diffuse = tex3D( brdfSampler,half3(diffuseUV , brdfData1.r) ).rgb;
-   color.rgb = diffuse * att * projection * vecSkill5.xyz;
+   half2 OffsetUV;
+   OffsetUV.x = (brdfData1.y-0.5)*2; //diffuse roughness
+   OffsetUV.y = (brdfData1.z-0.5)*2; //diffuse wraparound/velvety
+   //half2 nuv = float2((0.5+saturate(dot(Ln,gBuffer.xyz)+OffsetUV.x)/2.0),	saturate(1.0 - (0.5+dot(gBuffer.xyz,Vn)/2.0)) + OffsetUV.y); //diffuse brdf uv, no options
+  	half2 lightFuncUV = half2( (dot(Vn, gBuffer.xyz)+OffsetUV.x) , ((dot(Ln, gBuffer.xyz) + 1) * 0.5)+OffsetUV.y ); //diffuse brdf uv. options (OffsetUV.x/V)
+  	half4 lighting = tex3D( brdfSampler,half3(lightFuncUV , brdfData1.r) );
+   color.rgb *= lighting.xyz * vecSkill5.xyz;
    
    //shadows
-   half shadowdepth = saturate(1-(lightProj.z/vecSkill1.w));
+   //half shadowdepth = saturate(1-(lightProj.z/vecSkill1.w));
    //half2 noise = (tex2D(shadowNoiseSampler, (lightProj.xy/lightProj.z)*1000).xy*2-1);
    //lightProj.xy += noise*0.05;//*(1-shadowdepth);
    //lightProj.xy -= (1-noise)*0.05;//*(1-shadowdepth);
-   color.rgb *= getShadow(lightProj.xy/lightProj.z, shadowdepth);
+   //color.rgb *= GetShadow(shadowSampler, lightProj.xy/lightProj.z, ((lightProj.z/vecSkill1.w)));
+   color.rgb *= GetShadow(shadowSampler, lightProj.xy/lightProj.z, lightProj.z/vecSkill1.w, vecSkill1.w);
    
    
    //additional clipping based on diffuse lighting. clip non-lit parts
-   half shaded = (color.r+color.g+color.b)/3;
-	clip(shaded-0.001);
+   clip(dot(color.rgb,1)-0.003);
    
    //fps hungry....
-   half2 specularUV = ( dot(Ln,Hn) , dot(normal,Hn) ); //isotropic
+   lightFuncUV = ( dot(Ln,Hn) , dot(gBuffer.xyz,Hn) ); //isotropic
    //anisotropic
-   	//specularUV.x = 0.5+dot(Ln,normal)/2.0;
-   	//specularUV.y = 1-(0.5+dot(normal,Hn)/2.0);
-   half3 specular = tex3D( brdfSampler, half3(specularUV, brdfData1.r) ).a;
-   color.a = pow(specular+0.005, materialData.g*255);
+   	//diffuseUV.x = 0.5+dot(Ln,gBuffer.xyz)/2.0;
+   	//diffuseUV.y = 1-(0.5+dot(gBuffer.xyz,Hn)/2.0);
+   lighting.w = tex3D( brdfSampler, half3(lightFuncUV, brdfData1.r) ).a;
+   color.a = pow(lighting.w+0.005, materialData.g*255);
    //...
    //conventional specular
-   //color.a = pow(dot(normal,Hn),materialData.g*255);
+   //color.a = pow(dot(gBuffer.xyz,Hn),materialData.g*255);
    
     
-   //color.rgb = pow(diffuse,diffuseRoughness) * att * vecSkill5.xyz;
+   //color.rgb = pow(lighting.xyz,diffuseRoughness) * att * vecSkill5.xyz;
    //color.a = (saturate(pow(specular,materialData.g*255)));
       
 	//pack
 	//color.rgb /= 1.5;
 	//color.rgb += brdfData1.rgb*color.rgb;
-		
+	//color.rgb=GetShadow(shadowSampler, lightProj.xy/lightProj.z, lightProj.z/vecSkill1.w, vecSkill1.w);
+	
+	
 	color.rgb *= 0.5;
 	color.a *= length(color.rgb);
 	

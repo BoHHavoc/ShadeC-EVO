@@ -62,7 +62,7 @@ half4 CalculateShadowDepth(float Pos2D_Z)
    //half att = saturate(1-length(Ln)/vecSkill1.w);
 }
 
-float4 mainPS(vsOut In):COLOR0
+half4 mainPS(vsOut In):COLOR0
 {
 	//alpha clip
 	clip(tex2D(ColorSampler,In.Tex).a-vecSkill1.y);
@@ -70,7 +70,7 @@ float4 mainPS(vsOut In):COLOR0
 	return CalculateShadowDepth(In.Pos2D);
 }
 
-float4 mainPS_lm(vsOut In):COLOR0
+half4 mainPS_lm(vsOut In):COLOR0
 {
 	return CalculateShadowDepth(In.Pos2D);
 }

@@ -1,4 +1,4 @@
-// Light handling functions256
+// Light handling functions
 
 void sc_light_updatePointMtx(ENTITY* inLight)
 {
@@ -26,7 +26,7 @@ void sc_light_updateSpotMtx(ENTITY* inLight)
 	else vec_for_angle(lightDir, inLight.pan);
 	
 	sc_skill(inLight, SC_OBJECT_LIGHT_DIR, lightDir);
-	if(lightDir.y == -90) lightDir.y = 80;
+	//if(lightDir.y == -90) lightDir.y = 80; //might have to comment this in again (?)
 	
 	//create lightViewMatrix
 	D3DXVECTOR3 vEyePt;
@@ -323,6 +323,7 @@ ENTITY* sc_light_createFunc(int inType, var inRange, VECTOR* inColor, VECTOR* in
 			shadowView.clip_far = inRange;
 			shadowView.size_x = 256;
 			shadowView.size_y = 256;
+			shadowView.bg = pixel_for_vec(COLOR_WHITE,0,8888);
 			
 			//set shadowview flags
 			set(shadowView, SHOW);

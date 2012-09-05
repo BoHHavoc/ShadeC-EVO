@@ -1,6 +1,5 @@
 #include <scUnpackNormals>
 #include <scUnpackDepth>
-//#define RANDOMIZE_SHADOW
 #include <scGetShadow>
 //#include <scUnpackSpecularData>
 
@@ -103,13 +102,15 @@ sampler2D shadowSampler = sampler_state
 	BorderColor = 0x00000000;
 };
 
-
 struct vsOut
 {
 	float4 Pos : POSITION;
 	float3 projCoord : TEXCOORD0;
 	float4 posVS : TEXCOORD1;
 	half2 texCoord : TEXCOORD2;
+	//nointerpolation float3 projCoord : TEXCOORD0;
+	//nointerpolation float4 posVS : TEXCOORD1;
+	//nointerpolation half2 texCoord : TEXCOORD2;
 };
 
 struct vsIn
@@ -157,6 +158,7 @@ float4 mainPS(vsOut In):COLOR0
    //float junk = ((In.posVS.z/vecSkill5.w))-(gBuffer.w);//length(gBuffer.w-(In.posVS.z/vecSkill5.w));
    //clip(((In.posVS.z/vecSkill5.w))-(gBuffer.w));
    
+   
    //decode normals
    gBuffer.xyz = UnpackNormals(gBuffer.xy);
       
@@ -167,21 +169,21 @@ float4 mainPS(vsOut In):COLOR0
    //spotlight projection/cone
    //half4 lightProj = mul( half4(posVS,1), mul(matViewInv,matMtl) );
    half4 lightProj = mul( half4(posVS,1), matMtl );
-   half3 projection = tex2D(projSampler, lightProj.xy/lightProj.z).rgb;
-  
+   //half3 projection = tex2D(projSampler, lightProj.xy/lightProj.z).rgb;
+   color.rgb = tex2D(projSampler, lightProj.xy/lightProj.z).rgb;
+  	
    
    half3 Ln = mul(vecSkill1.xzy,matView).xyz - posVS.xyz;
    //half att = saturate(1-length(Ln)/vecSkill1.w);
-   //clip(att*dot(projection,1)-0.001);
-   projection *= saturate(1-length(Ln)/vecSkill1.w); //attenuation
-   clip(dot(projection,1)-0.001);
+   //clip(att*dot(color.rgb,1)-0.001);
+   color.rgb *= saturate(1-length(Ln)/vecSkill1.w); //attenuation
+   clip(dot(color.rgb,1)-0.001);
    Ln = normalize(Ln);
-   half backprojection = saturate(dot( mul(-vecSkill9.xzy,matView) , Ln));
-   clip(backprojection-0.0001);
+   //half backprojection = saturate(dot( mul(-vecSkill9.xzy,matView) , Ln));
+   clip(saturate(dot( mul(-vecSkill9.xzy,matView) , Ln))-0.0001); //clip backprojection
    //half3 Vn = normalize(matView[0].xyz - posVS);//normalize(IN.WorldView);
    half3 Vn = normalize(vecViewDir.xyz - posVS); //same as above but less arithmetic instructions
    half3 Hn = normalize(Vn + Ln);
-   
    
    //half4 brdfData = (tex2D(brdfDataSampler, projTex)); //get brdf gBuffer
    //half2 light = lit(dot(Ln,gBuffer.xyz), dot(Hn, gBuffer.xyz),brdfData.g*255).yz;
@@ -202,7 +204,7 @@ float4 mainPS(vsOut In):COLOR0
    //half2 nuv = float2((0.5+saturate(dot(Ln,gBuffer.xyz)+OffsetUV.x)/2.0),	saturate(1.0 - (0.5+dot(gBuffer.xyz,Vn)/2.0)) + OffsetUV.y); //diffuse brdf uv, no options
   	half2 lightFuncUV = half2( (dot(Vn, gBuffer.xyz)+OffsetUV.x) , ((dot(Ln, gBuffer.xyz) + 1) * 0.5)+OffsetUV.y ); //diffuse brdf uv. options (OffsetUV.x/V)
   	half4 lighting = tex3D( brdfSampler,half3(lightFuncUV , brdfData1.r) );
-   color.rgb = lighting.xyz * projection * vecSkill5.xyz;
+   color.rgb *= lighting.xyz * vecSkill5.xyz;
    
    //shadows
    //half shadowdepth = saturate(1-(lightProj.z/vecSkill1.w));
@@ -235,6 +237,8 @@ float4 mainPS(vsOut In):COLOR0
 	//color.rgb /= 1.5;
 	//color.rgb += brdfData1.rgb*color.rgb;
 	//color.rgb=GetShadow(shadowSampler, lightProj.xy/lightProj.z, lightProj.z/vecSkill1.w, vecSkill1.w);
+	
+	
 	color.rgb *= 0.5;
 	color.a *= length(color.rgb);
 	

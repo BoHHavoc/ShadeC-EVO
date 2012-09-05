@@ -7,11 +7,12 @@ Basic Example on how to setup Shade-C
 #include <litec.h>
 #include <acknex.h>
 #include <default.c>
-#include "common.h"
 
 //include Shade-C
 #define PRAGMA_PATH "shadec"
 #include "shade-c.h"
+
+#include "common.h"
 
 
 ENTITY* skycube =
@@ -63,6 +64,7 @@ void main()
 	camera.size_y = screen_size.y;
 	//set camera as main view of sc_screen_default
 	sc_screen_default = sc_screen_create(camera);
+	
 	
 	//enable/disable Shade-C effects. You have to set these before calling sc_setup()
 	//If you want to change these during runtime, simply call sc_setup() again after you enabled/disabled an effect

@@ -768,6 +768,9 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 #ifndef include_scPackDepth
 #define include_scPackDepth
 
+	//const float4 bitSh	= float4(   256*256*256, 256*256,   256,         1);
+	//const float4 bitMsk = float4(   0,      1.0/256.0,    1.0/256.0,    1.0/256.0);
+
 	half2 PackDepth(half inDepth)
 	{
 		
@@ -776,11 +779,14 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 //		enc.y = floor((inDepth-enc.x)*255*255)/255;
 		
 		//optimized
-		half2 enc;
-		enc.x = floor(inDepth*255)/255;
-		enc.y = floor((inDepth-enc.x)*65025)/255;
+		//half2 enc;
+		//enc.x = floor(inDepth*255)/255;
+		//enc.y = floor((inDepth-enc.x)*65025)/255;
+		//return enc;
 		
-		return enc;
+		return half2( floor(inDepth * 255.f)/255.f, frac(inDepth * 255.f) );
+		//return half2( floor(inDepth * 65536.f)/65536.f, frac(inDepth * 65536.f) );
+		
 	}
 	
 #endif
@@ -788,14 +794,19 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 //section: scUnpackDepth - unpacks depth //
 #ifndef include_scUnpackDepth
 #define include_scUnpackDepth
+	
+	//static float4 extract = { 1.0, 0.00390625, 0.0000152587890625, 0.000000059604644775390625 };
+	//const float4 bitShifts = float4(1.0/(256.0*256.0*256.0), 1.0/(256.0*256.0), 1.0/256.0, 1);
 
 	half UnpackDepth(half2 enc)
 	{
 		//return enc.x + (enc.y/255);
 		
 		//optimized
-		enc.y /= 255;
+		enc.y /= 255.f;
 		return dot(enc,1);
+		
+		//return dot(enc,extract.xy);
 	}
 #endif
 
@@ -1071,21 +1082,7 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 #define include_scGetShadow
 	#include <scUnpackDepth>
 	
-	#ifdef RANDOMIZE_SHADOW
-	texture sc_map_random2x2_bmap;
-	sampler2D shadowRandomSampler = sampler_state 
-	{ 
-	   Texture = <sc_map_random2x2_bmap>; 
-	   AddressU = WRAP; 
-		AddressV = WRAP;
-		AddressW = WRAP;
-	   MinFilter = NONE;
-		MagFilter = NONE;
-		MipFilter = NONE;
-	};
-	#endif
-	
-	
+	/*
 	float g_MinVariance = 0.0001;
 	
 	float linstep(float min, float max, float v)  
@@ -1097,57 +1094,17 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	  // Remove the [0, Amount] tail and linearly rescale (Amount, 1].  
 	   return linstep(Amount, 1, p_max);  
 	}
-	/*
-	float ChebyshevUpperBound(float2 Moments, float t)  
-	{  
-	  // One-tailed inequality valid if t > Moments.x  
-	   float p = (t <= Moments.x);  
-	  // Compute variance.  
-	   float Variance = Moments.y - (Moments.x*Moments.x);  
-	  Variance = max(Variance, g_MinVariance);  
-	  // Compute probabilistic upper bound.  
-	   float d = t - Moments.x;  
-	  float p_max = Variance / (Variance + d*d);  
-	  return max(p, p_max);  
-	}
-	float ShadowContribution(sampler2D shadowSampler, float2 lightTexCoord, float distanceToLight)  
-	{  
-	  // Read the moments from the variance shadow map.  
-	   float depth = UnpackDepth(tex2D(shadowSampler, lightTexCoord).xy);  
-	   float2 moments;
-	   moments.x = depth;  
-	   float dx = ddx(depth);  
-		float dy = ddy(depth);  
-		// Compute second moment over the pixel extents.  
-		moments.y = depth*depth + 0.25*(dx*dx + dy*dy);  
-	   
-	  // Compute the Chebyshev upper bound.  
-	   return ChebyshevUpperBound(moments, distanceToLight);  
-	}
-	
-	float ESM(sampler2D shadowSampler, half2 inTex, half receiver)
-	{
-		float occluder= UnpackDepth(tex2D(shadowSampler, inTex).xy);
-		float overdark = 1000;
-		float    lit = exp(overdark* ( occluder - receiver ));
-		lit = saturate(lit);
-		return lit;
-	}
 	*/
 	
 	//static half2 shadow_blurSize_softness = half2(0.0025, 0.015);
-	static half2 shadow_blurSize_softness = half2(0.0025, 0.02);
+	static half2 shadow_blurSize_softness = half2(0.0075, 0.02);
 	half GetShadow(sampler2D shadowSampler, float2 inTex, half inDepth, half maxDepth)
 	{
 		
+		
 		//fix shadow bias
 	   //inDepth -= (1/maxDepth);
-		
-		#ifdef RANDOMIZE_SHADOW
-			inTex += ((tex2D(shadowRandomSampler, inTex*64).xy-0.5)*2)*shadow_blurSize_softness.x;
-			inTex += ((tex2D(shadowRandomSampler, inTex*128).xy-0.5)*8)*shadow_blurSize_softness.x;
-			inTex += ((tex2D(shadowRandomSampler, inTex*256).xy-0.5)*10)*shadow_blurSize_softness.x;
-		#endif
+	   //inDepth -= 0.001;
 		
 		/*
 		shadow_blurSize_softness.x = 0.0003125;
@@ -1230,36 +1187,40 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	   
 	   //create filter taps
 	   half4 shadowDepth;
-	   shadowDepth.x = UnpackDepth(tex2D(shadowSampler, inTex + float2(shadow_blurSize_softness.x,shadow_blurSize_softness.x) ).xy);
-	   shadowDepth.y = UnpackDepth(tex2D(shadowSampler, inTex + float2(-shadow_blurSize_softness.x,shadow_blurSize_softness.x) ).xy);
-	   shadowDepth.z = UnpackDepth(tex2D(shadowSampler, inTex + float2(shadow_blurSize_softness.x,-shadow_blurSize_softness.x) ).xy);
-	   shadowDepth.w = UnpackDepth(tex2D(shadowSampler, inTex + float2(-shadow_blurSize_softness.x,-shadow_blurSize_softness.x) ).xy);
+	   shadowDepth.x = UnpackDepth(tex2D(shadowSampler, inTex + half2(shadow_blurSize_softness.x,shadow_blurSize_softness.x) ).xy);// + float2(shadow_blurSize_softness.x,shadow_blurSize_softness.x) ).xy);
+	   shadowDepth.y = UnpackDepth(tex2D(shadowSampler, inTex + half2(-shadow_blurSize_softness.x,shadow_blurSize_softness.x) ).xy);
+	   shadowDepth.z = UnpackDepth(tex2D(shadowSampler, inTex + half2(shadow_blurSize_softness.x,-shadow_blurSize_softness.x) ).xy);
+	   shadowDepth.w = UnpackDepth(tex2D(shadowSampler, inTex + half2(-shadow_blurSize_softness.x,-shadow_blurSize_softness.x) ).xy);
+	   //half falloff = saturate((inDepth-min(min(shadowDepth.x,shadowDepth.y), min(shadowDepth.z,shadowDepth.w)) )*5);
+	   half falloff = saturate((inDepth-min(min(shadowDepth.x,shadowDepth.y), min(shadowDepth.z,shadowDepth.w)) )* (6*(maxDepth*0.001)) );
 	   //shadowDepth = 1-saturate( (shadowDepth-inDepth) * shadow_blurSize_softness.y * maxDepth ); //cullmode of depthmap: CW
-	   shadowDepth = saturate( ( (inDepth-shadowDepth)*shadow_blurSize_softness.y * maxDepth)  //cullmode of depthmap: CCW
-	   					* max(1 , saturate( exp( (UnpackDepth(tex2D(shadowSampler, inTex).xy)-inDepth)*shadow_blurSize_softness.y * maxDepth) ) *6 )   );
-	   //shadowDepth = saturate( ( (inDepth-shadowDepth)*shadow_blurSize_softness.y * maxDepth) );  //cullmode of depthmap: CCW
+	   //shadowDepth = saturate( ( (inDepth-shadowDepth)*shadow_blurSize_softness.y * maxDepth)  //cullmode of depthmap: CCW
+	   //					* max(1 , saturate( exp( (UnpackDepth(tex2D(shadowSampler, inTex).xy)-inDepth)*shadow_blurSize_softness.y * maxDepth) ) *5 )   );
+	   shadowDepth = saturate( ( (inDepth-shadowDepth)*shadow_blurSize_softness.y * maxDepth) );  //cullmode of depthmap: CCW
 	   					//* max(1 , saturate( exp( (UnpackDepth(tex2D(shadowSampler, inTex).xy)-inDepth)*shadow_blurSize_softness.y * maxDepth) ) *6 )   );
 	   
 	   //create filter
-	   half filter = shadowDepth.x*shadowDepth.y*shadowDepth.z*shadowDepth.w; //cullmode of depthmap: CW
+	   half filter = shadowDepth.x*shadowDepth.y*shadowDepth.z*shadowDepth.w; //cullmode of depthmap: CCW
 	   
 	   //create softshadow
-	   shadowDepth.x = saturate( exp( (UnpackDepth(tex2D(shadowSampler, inTex).xy)-inDepth)*shadow_blurSize_softness.y * maxDepth) );
+	   shadowDepth.x = saturate( exp( (UnpackDepth(tex2D(shadowSampler, inTex).xy)-(inDepth-0.0012))*shadow_blurSize_softness.y * maxDepth) );
 	   
-	   //return shadowDepth.x;
+	   
 	   //finalize filter
 	   filter *= shadowDepth.x;
-	   
-	   
+	   filter = max(filter, 1-falloff);
+	      
 	   //return ReduceLightBleeding( shadowDepth.x, filter );
-	   return smoothstep( filter, 1, shadowDepth.x );
-	   /*
-	   shadowDepth.y = 1-saturate(((UnpackDepth(tex2D(shadowSampler, inTex).xy) - (inDepth-(3/maxDepth))) * 3000));
-	   shadowDepth.y *= 1-filter;//saturate(exp((UnpackDepth(tex2D(shadowSampler, inTex).xy) - (inDepth-(3/maxDepth))) * 60));
+	   //return smoothstep(filter, 1, shadowDepth.x);
+	      
+	   //create shadow mask to get rid of surface acne
+	   shadowDepth.w = saturate((1-shadowDepth.x)*17);
+	   shadowDepth.w =  1-pow(shadowDepth.w,14);
 	   
-	   //return shadowDepth.y;
-	   return half3(shadowDepth.y, 1-pow(smoothstep( filter, 1, shadowDepth.x ),100) ,0);
-	   */
+	   //final shadow
+	   //return max(smoothstep( 1-pow(1-filter,2), 1, shadowDepth.x ),shadowDepth.w);
+	   //return smoothstep( filter, 1, shadowDepth.x );
+	   return max(smoothstep( filter, 1, shadowDepth.x ),shadowDepth.w);
 	}
 #endif
 

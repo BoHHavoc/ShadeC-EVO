@@ -18,12 +18,12 @@ void sc_setup(SC_SCREEN* screen)
 	
 	//deactivate stencil shadows
 	shadow_stencil = 8;
-	
+		
 	if( screen.views.main.size_x == 0) screen.views.main.size_x = screen_size.x;
 	if( screen.views.main.size_y == 0) screen.views.main.size_y = screen_size.y;
 	
 	screen.draw = 0;
-		
+	
 	//setup generic rendertargets
 	if(screen.renderTargets.full0 != NULL) bmap_purge(screen.renderTargets.full0);
 	screen.renderTargets.full0 = bmap_createblack(screen.views.main.size_x, screen.views.main.size_y, 32);
@@ -52,7 +52,9 @@ void sc_setup(SC_SCREEN* screen)
 	sc_deferredLighting_destroy(screen);
 	sc_lights_destroySun(screen);
 	sc_gBuffer_destroy(screen);
-
+	
+	wait(2);
+	
 	//setup effects
 	sc_materials_init();
 	sc_gBuffer_init(screen, SC_GBUFFER_DEFERRED, 32);
@@ -68,7 +70,7 @@ void sc_setup(SC_SCREEN* screen)
 	//sc_gammaCorrection_init(screen); //not used yet...
 	sc_viewEvent_init(screen);
 	
-	wait(2);
+	//wait(2);
 	
 	screen.draw = 1;
 	

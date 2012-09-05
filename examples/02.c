@@ -45,10 +45,13 @@ void v_camera()
 
 void main()
 {
+	
 	level_load("02.wmb");
-	wait(3);
-	//set(level_ent, SHADOW); //level casts dynamic shadows...hmmm it casts shadows anyway, wether or not this is set... (?)
-	vec_set(sun_color, vector(0,0,0)); //set suncolor to zero (setting sun_color in WED to zero does NOTHING! This is a bug in gamestudio)
+	wait(5); //wait for level load
+	//set suncolor to zero (setting sun_color in WED to zero does NOTHING! This is a bug in gamestudio)
+	//if suncolor == 0, sun will not be rendered. Set this for pure indoor scenes to boost performance!
+	vec_set(sun_color, vector(0,0,0)); 
+	//set ambient color to zero as we want a dark level with nice shadows ;)
 	vec_set(ambient_color, vector(0,0,0));
 		
 	//create a camera object so we can move around the scene
@@ -56,7 +59,7 @@ void main()
 	you.pan = 123;
 	you.tilt = -18;
 	camera.arc = 75;
-	camera.clip_far = 1000; //set this as low as possible to increase performance AND visuals!
+	camera.clip_far = 5000; //set this as low as possible to increase performance AND visuals!
 	
 	//set resolution before calling sc_setup
 	//if you want to change resolution again, simple call sc_setup() again after you changed the resolution
@@ -66,9 +69,6 @@ void main()
 	//setup skies
 	sc_sky(skycube);
 	
-	//set camera sizes (this is only needed if you use "camera" as main view due to a bug in Acknex)
-	camera.size_x = screen_size.x;
-	camera.size_y = screen_size.y;
 	//set camera as main view of sc_screen_default
 	sc_screen_default = sc_screen_create(camera);
 	
@@ -79,22 +79,23 @@ void main()
 	sc_screen_default.settings.refract.enabled = 0; //enable for refractive effects such as heat haze and glass
 	sc_screen_default.settings.hdr.enabled = 1; //enable Bloom/HDR
 	sc_screen_default.settings.hdr.lensflare.enabled = 1; //enable for a nice lensflare effect in combination with HDR/Bloom
-	sc_screen_default.settings.dof.enabled = 1; //enable Depth of Field Effect
-	sc_screen_default.settings.ssao.enabled = 1; //enable to activate SSAO
+	sc_screen_default.settings.dof.enabled = 0; //enable Depth of Field Effect
+	sc_screen_default.settings.ssao.enabled = 0; //enable to activate SSAO
 	
 	//initialize shade-c, use default screen object
 	sc_setup(sc_screen_default);
-	
+	//wait(3); //wait for Shade-C
 	
 	//tweak effect parameters anytime you want
 	// -> more info in sc_core.h, in struct SC_SETTINGS
 	sc_screen_default.settings.hdr.brightpass = 0.15;
-	sc_screen_default.settings.hdr.intensity = 1.45;
+	sc_screen_default.settings.hdr.intensity = 1.0;
 	sc_screen_default.settings.hdr.blurX = 8;
 	sc_screen_default.settings.hdr.blurY = 12;
 	sc_screen_default.settings.hdr.lensflare.brightpass = 0.2;
 	sc_screen_default.settings.hdr.lensflare.intensity = 0.5;
 	sc_screen_default.settings.dof.focalPos = 300;
 	sc_screen_default.settings.dof.focalWidth = 600;
-	sc_screen_default.settings.ssao.radius = 80;
+	sc_screen_default.settings.ssao.radius = 80;	
+	
 }
