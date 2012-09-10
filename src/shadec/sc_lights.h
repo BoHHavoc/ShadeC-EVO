@@ -2,7 +2,7 @@
 //----- USER INPUT -------------------------------------------------------------
 //------------------------------------------------------------------------------
 
-int sc_lights_defaultClipRange = 10000; //If not set otherwise, lights will be clipped at this range
+int sc_lights_defaultClipRange = 5000; //If not set otherwise, lights will be clipped at this range
 
 //------------------------------------------------------------------------------
 // ! END OF USER INPUT !
@@ -81,3 +81,9 @@ void sc_lights_destroySun(SC_SCREEN* screen);
 void sc_lights_frmSun(SC_SCREEN* screen);
 
 STRING* sc_lights_sMaterialSun = "sc_lights_sun.fx";
+STRING* sc_lights_sMaterialSunShadow = "sc_lights_sunShadow.fx";
+//STRING* sc_lights_sMaterialShadowmap = "sc_lights_shadowmap.fx";
+STRING* sc_lights_sMaterialShadowmapSplit1 = "sc_lights_shadowmap.fx";
+STRING* sc_lights_sMaterialShadowmapSplit2 = "sc_lights_shadowmap.fx";
+STRING* sc_lights_sMaterialShadowmapSplit3 = "sc_lights_shadowmap.fx";
+STRING* sc_lights_sMaterialShadowmapSplit4 = "sc_lights_shadowmap.fx";

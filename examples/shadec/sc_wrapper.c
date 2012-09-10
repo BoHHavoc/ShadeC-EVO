@@ -17,7 +17,9 @@ void sc_setup(SC_SCREEN* screen)
 	*/
 	
 	//deactivate stencil shadows
-	shadow_stencil = 8;
+	//...this wont work here, you have to do this before loading a level
+	//shadow_stencil = 8;
+	//shadow_stencil = -1;
 		
 	if( screen.views.main.size_x == 0) screen.views.main.size_x = screen_size.x;
 	if( screen.views.main.size_y == 0) screen.views.main.size_y = screen_size.y;

@@ -8,9 +8,9 @@ sampler2D blurSampler = sampler_state
 {
 	Texture = <TargetMap>;
 
-	MinFilter = NONE;
-	MagFilter = NONE;
-	MipFilter = NONE;
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	MipFilter = LINEAR;
 	AddressU = MIRROR;
 	AddressV = MIRROR;
 	//AddressU = Border;
@@ -18,41 +18,99 @@ sampler2D blurSampler = sampler_state
 	//BorderColor = 0x00000000;
 };
 
-/*
-texture sc_map_random2x2_bmap;
-sampler2D noiseSampler = sampler_state
-{
-	Texture = <sc_map_random2x2_bmap>;
-	
-	MinFilter = Linear;
-	MagFilter = Linear;
-	MipFilter = Linear;
-	AddressU = WRAP;
-	AddressV = WRAP;
-};
-*/
 
-
-half4 mainPS(float2 inTex : TEXCOORD0):COLOR0
+half4 mainPS(float2 inTex : TEXCOORD0):COLOR
 {
 	//inTex += vecViewPort.zw * ((tex2D(noiseSampler, inTex*vecViewPort.xy)-0.5)*2);
-	half4 result = tex2D(blurSampler, inTex);
+	half4 result = tex2D(blurSampler, inTex).x;
 	
-	result.xy += tex2D(blurSampler, inTex + half2(0, vecSkill1.x)).xy;
-	result.xy += tex2D(blurSampler, inTex + half2(vecSkill1.x, 0)).xy;
-	result.xy += tex2D(blurSampler, inTex + half2(0, -vecSkill1.x)).xy;
-	result.xy += tex2D(blurSampler, inTex + half2(-vecSkill1.x, 0)).xy;
+	result.x += tex2D(blurSampler, inTex + half2(0, vecSkill1.x)).x;
+	result.x += tex2D(blurSampler, inTex + half2(vecSkill1.x, 0)).x;
+	result.x += tex2D(blurSampler, inTex + half2(0, -vecSkill1.x)).x;
+	result.x += tex2D(blurSampler, inTex + half2(-vecSkill1.x, 0)).x;
 	
 	vecSkill1.x *= 0.75;
-	result.xy += tex2D(blurSampler, inTex + half2(vecSkill1.x, vecSkill1.x)).xy;
-	result.xy += tex2D(blurSampler, inTex + half2(-vecSkill1.x, -vecSkill1.x)).xy;
-	result.xy += tex2D(blurSampler, inTex + half2(vecSkill1.x, -vecSkill1.x)).xy;
-	result.xy += tex2D(blurSampler, inTex + half2(-vecSkill1.x, vecSkill1.x)).xy;
+	result.x += tex2D(blurSampler, inTex + half2(vecSkill1.x, vecSkill1.x)).x;
+	result.x += tex2D(blurSampler, inTex + half2(-vecSkill1.x, -vecSkill1.x)).x;
+	result.x += tex2D(blurSampler, inTex + half2(vecSkill1.x, -vecSkill1.x)).x;
+	result.x += tex2D(blurSampler, inTex + half2(-vecSkill1.x, vecSkill1.x)).x;
 	
-	result.xy /= 9;
+	result.x /= 9;
+	
 	
 	return result;
 }
+
+
+/*
+#define SAMPLE_COUNT 5
+float2 Offsets[SAMPLE_COUNT] = {
+	0,0,
+	1,0,
+	0,1,
+	-1,0,
+	0,-1
+};
+
+
+float log_conv ( float x0, float X, float y0, float Y )
+{
+    return (X + log(x0 + (y0 * exp(Y - X))));
+}
+
+float4 mainPS(float2 inTex : TEXCOORD0):COLOR
+{
+	float  sample[5];
+   for (int i = 0; i < 5; i++)
+   {
+       sample[i] = tex2D( blurSampler, inTex + (Offsets[i]/vecViewPort.xy)vecSkill1.x ).x;
+   }
+ 
+   const float c = (1.f/5.f);    
+   
+   float accum;
+   accum = log_conv( c, sample[0], c, sample[1] );
+   for (int i = 2; i < 5; i++)
+   {
+       accum = log_conv( 1.f, accum, c, sample[i] );
+   }    
+        
+   //float depth = accum;
+   return accum;
+}
+*/
+
+/*
+//sampler TextureSampler : register(s0);
+#define SAMPLE_COUNT 3
+float2 Offsets[SAMPLE_COUNT] = {
+	1,0,
+	0,1,
+	1,1
+};
+
+float log_space(float w0, float d1, float w1, float d2){
+	return (d1 + log(w0 + (w1 * exp(d2 - d1))));
+}
+
+float4 mainPS(float2 texCoord : TEXCOORD0) : COLOR0
+{
+	float v, B, B2;
+	float w = (1.0/SAMPLE_COUNT);
+
+	B = tex2D(blurSampler, texCoord + Offsets[0]/256);
+	B2 = tex2D(blurSampler, texCoord + Offsets[0]/256);
+	v = log_conv(w, B, w, B2);
+
+	for(int i = 2; i < SAMPLE_COUNT; i++)
+	{
+		B = tex2D(blurSampler, texCoord + Offsets[i]/256);
+		v = log_conv(1.0, v, w, B);
+	}
+
+	return v;
+}
+*/
 
 technique t1
 {
@@ -61,6 +119,7 @@ technique t1
 		PixelShader = compile ps_2_0 mainPS();
 	}
 }
+
 
 /*
 const static float4 vPurple = float4(0.7f, 0.2f, 0.9f, 1.0f);

@@ -3,27 +3,8 @@ float4x4 matProjInv; //needed for viewspace position reconstruction
 #include <scUnpackNormals>
 #include <scUnpackDepth>
 #include <scCalculatePosVSQuad>
-
-static half NOISE_SIZE = 4; //noise filter size
-half SAMPLE_KERNEL_SIZE; // number of ssao iterations
-float4 SAMPLE_KERNEL[32];
-/*float4 SAMPLE_KERNEL[8] =
-{
-	0.5,0.5,0.5,0,
-	1,0,0.5,0,
-	0,1,0.5,0,
-	0,0,0.5,0,
-	
-	1,1,0.5,0,
-	-1,1,0.5,0,
-	1,-1,0.5,0,
-	-1,-1,0.5,0
-};
-*/
-
-float RADIUS = 50;
-
-
+#include <scNormalsFromPosition>
+#include <scNormalsFromDepth>
 
 bool AUTORELOAD;
 
@@ -40,12 +21,35 @@ texture mtlSkin1;
 sampler normalsAndDepthSampler = sampler_state 
 { 
    Texture = <mtlSkin1>; 
-   MinFilter = NONE;
-	MagFilter = NONE;
-	MipFilter = NONE;
+   MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	MipFilter = LINEAR;
 	AddressU = MIRROR;
 	AddressV = MIRROR;
 };
+
+texture mtlSkin3;
+sampler lightingSampler = sampler_state 
+{ 
+   Texture = <mtlSkin3>; 
+   MinFilter = POINT;
+	MagFilter = POINT;
+	MipFilter = POINT;
+	AddressU = MIRROR;
+	AddressV = MIRROR;
+};
+/*
+texture sc_ssao_texSampleMask_bmap;
+sampler sampleMaskSampler = sampler_state
+{
+	Texture = <sc_ssao_texSampleMask_bmap>;
+	MinFilter = NONE;
+	MagFilter = NONE;
+	MipFilter = NONE;
+	AddressU = WRAP;
+	AddressV = WRAP;
+};
+
 
 texture mtlSkin2;
 sampler albedoAndEmissiveSampler = sampler_state 
@@ -70,104 +74,135 @@ sampler lightingSampler = sampler_state
 };
 
 texture mtlSkin4;
+texture sc_map_random2x2_bmap;
 sampler randSampler = sampler_state
 {
-	Texture = <mtlSkin4>;
+	Texture = <sc_map_random2x2_bmap>;
 	MinFilter = NONE;
 	MagFilter = NONE;
 	MipFilter = NONE;
 	AddressU = WRAP;
 	AddressV = WRAP;
 };
-
+*/
 /*
-float3 getPosition(float2 inUV)
+//parameters
+float SampleRadius <string uiname="Sample Radius";> = 10.1;
+float Intensity <string uiname="Intensity";> = 0.46;
+//float Scale <string uiname="Scale";> = 0.6;
+float Scale <string uiname="Scale";> = 0.001;
+float Bias <string uiname="Bias";> = 0.04;
+float SelfOcclusion <string uiname="Self Occlusion";> = 0.07;
+
+float doAmbientOcclusion(in float2 tcoord,in float2 uv, in float3 p, in float3 cnorm)
 {
-	//half2 depthBuffer = tex2D(gBufferSampler, inUV).xw;
-	half depth = UnpackDepth(tex2D(normalsAndDepthSampler, inUV).zw);
-	//if(depth == 0) depth = 1;
-   //depth = 1-depth;
-   //compute world position
-	half3 viewRay = 0;
-	viewRay.x = lerp(vecSkill5.x, vecSkill5.y, inUV.x);
-	viewRay.y = lerp(vecSkill5.z, vecSkill5.w, inUV.y);
-	viewRay.z = vecSkill9.x;
-	float3 vPos = (depth) * (viewRay);
-   
-	return vPos;
+
+
+  half depth = UnpackDepth(tex2D(normalsAndDepthSampler, tcoord + uv).zw);
+  float3 diff = CalculatePosVSQuad(tcoord, depth*vecSkill9.x) - p;
+  const float3 v = normalize(diff);
+  //return CalculatePosVSQuad(tcoord + uv, depth*vecSkill9.x).y;
+  const float  d = length(diff)*Scale;
+  return max(0.0-SelfOcclusion,dot(cnorm,v)-Bias)*(1.0/(1.0+d*d))*Intensity;
 }
 */
 
 
+half getRandom(in float2 uv)
+{
+  return ((frac(uv.x * (vecViewPort.x*0.25))*0.25)+(frac(uv.y*(vecViewPort.y*0.25))*0.5));
+}
+
+float compareDepths( in float depth1, in float depth2, in half aorange, in half3 normal )
+{
+	
+	float far = vecSkill9.x;
+	float near = 1;
+	//float aoCap = 1.0;
+	//float aoMultiplier = vecSkill1.x*100;//500.0;
+	//float depthTolerance = 0.0000;
+	//float SelfOcclusion = 0.0005;
+	//float aorange = 30.0;// units in space the AO effect extends to (this gets divided by the camera far range
+	//float diff = sqrt(clamp(1.0-(depth1-depth2) / (aorange/(far-near)),0.0,1.0));
+	//float ao = min(aoCap,max(0-SelfOcclusion,depth1-depth2-depthTolerance) * aoMultiplier) * diff;
+	float diff = sqrt(clamp(1.0-(depth1-depth2) / (aorange/(far-1)),0.0,1.0));
+	return min(1,max(-vecSkill1.z,depth1-depth2) * vecSkill1.x*100) * diff;
+
+//	float3 diff = depth2 - depth1;
+//	const float3 v = normalize(diff);
+//	const float  d = length(diff)*2;
+//	return max(0.0,dot(normal,v)-0.04)*(1.0/(1.0+d));
+/*
+	half Bias = 0.04;
+	half SelfOcclusion = 0.1;
+	half Scale = 0.6;
+	half Intensity = 0.46;
+  float3 diff = depth2 - depth1;
+  const float3 v = normalize(diff);
+  //return CalculatePosVSQuad(tcoord + uv, depth*vecSkill9.x).y;
+  const float  d = length(diff)*Scale;
+  return max(0.0-SelfOcclusion,dot(normal,v)-Bias)*(1.0/(1.0+d*d))*Intensity;
+  */
+}
+
 float4 mainPS(float2 inTex:TEXCOORD0):COLOR0
 {
-	inTex.xy *= 2;
-	
 	//inTex.x += (0.5/vecViewPort.x); //half pixel fix
 	//inTex.y += (0.5/vecViewPort.y); //half pixel fix
+	
+	inTex.xy *= 2;
+	
+	
 
 	float4 gBuffer = tex2D(normalsAndDepthSampler, inTex.xy);
+	gBuffer.w = UnpackDepth(gBuffer.zw);
+	gBuffer.xyz = UnpackNormals(gBuffer.xy);		
 	
-	float depth = UnpackDepth(gBuffer.zw);//(tex2D(depthSampler,inTex.xy).x);
-	float3 normal = UnpackNormals(gBuffer.xy);
-	//normal = mul(half4(normal, 0), matViewInv).xyz;
+	half rand = getRandom(inTex); //random noise
+	//half4 sampleMask = tex2D(sampleMaskSampler, inTex*vecViewPort.xy/4); //sample mask (needed to fetch correct normal (left, right, top, bottom) )
 	
-	//if(depth == 0) depth = 1;
-	//compute world position
-	/*
-	float3 viewRay = 0;
-	viewRay.x = lerp(vecSkill5.x, vecSkill5.y, inTex.x);
-	viewRay.y = lerp(vecSkill5.z, vecSkill5.w, inTex.y);
-	viewRay.z = vecSkill9.x;
-	float3 vPos = (depth) * (viewRay);
-	*/
-	float3 vPos = CalculatePosVSQuad(inTex, depth*vecSkill9.x);
-	//float3 wPos = mul(float4(vPos,1), matViewInv);
-   
-   //float2 rand = normalize(tex2D(randSampler, vecViewPort.xy * inTex.xy / (NOISE_SIZE)).xy  * 2.0f - 1.0f);
+	//extrude texture coordinates along normals
+	//this effectively "scales" the objects/projection, just like in a vertexshader where you scale the size of an object by its normals!
+	half aoRadius = vecSkill1.y;
+	//half3 normal = NormalsFromDepth(gBuffer.w * vecSkill9.x); //returns view space normals...just what we need!
+	half3 normal = gBuffer.xyz;
+	normal.y = -normal.y;
+	//normal = NormalsFromDepth(gBuffer.w * vecSkill9.x);
+	//normal.xy = normal.xy * sampleMask.x + normal.yx * sampleMask.y - normal.yx * sampleMask.z - normal.xy * sampleMask.w;
+	normal.xyz *= rand;
 	
-	//change-of-basis matrix calculation	
-	float3 rvec = tex2D(randSampler, vecViewPort.xy * inTex.xy / (NOISE_SIZE)).xyz  * 2.0f - 1.0f;
-	float3 tangent = normalize(rvec - normal * dot(rvec, normal));
-	float3 bitangent = cross(normal, tangent);
-	float3x3 tbn = float3x3(tangent, bitangent, normal);
-	//   
+	float2 EN = (normal.xy * aoRadius);
+	float2 offset_EN = EN / (gBuffer.w * (vecViewPort.xy*4));
+	float2 samp_UV = inTex + offset_EN;
+	//
+	
+	//half lighting = tex2D(lightingSampler, inTex).xyz*2;
+	
+	half depth2 = UnpackDepth(tex2D(normalsAndDepthSampler, samp_UV).zw);
+	half ao = compareDepths(gBuffer.w,depth2, (aoRadius+3)*2, normal);
 	
 	
-	//ssao
-	float occlusion = 0.0;
-	half3 color = 0;
-	for (int i = 0; i < SAMPLE_KERNEL_SIZE; ++i) {
-	//	get sample position:
-		float3 sample = mul(SAMPLE_KERNEL[i], tbn); //tbn * SAMPLE_KERNEL[i];
-		sample = sample * vecSkill1.y + vPos;
-		
-	//	project sample position:
-		float4 offset = float4(sample, 1.0);
-		offset = mul(offset, matProj);//PROJECTION_MATRIX * offset;
-		offset.xy /= offset.w;
-		offset.xy = offset.xy * 0.5 + 0.5;
-		
-	//	get sample depth:
-		offset.y = 1-offset.y;
-		float sample_depth = UnpackDepth(tex2D(normalsAndDepthSampler,  offset.xy).zw) * vecSkill9.x; //texture(LINEAR_DEPTH, offset.xy).r;
-				
-	//	range check & accumulate:
-		float range_check = abs(vPos.z - sample_depth) < vecSkill1.y ? 1.0 : 0.0;
-		half ao = (sample_depth <= (sample.z-vecSkill1.z) ? 1.0 : 0.0) * range_check;
+	samp_UV = inTex + (((normal.xy + normal.yx)/2 * aoRadius) / (gBuffer.w * (vecViewPort.xy*4)));
+	depth2 = UnpackDepth(tex2D(normalsAndDepthSampler, samp_UV).zw);
+	ao += compareDepths(gBuffer.w,depth2, (aoRadius+3)*2, normal);
 	
-		//colorbleeding
-		//half3 sample_color = tex2D(albedoAndEmissiveSampler, offset.xy).xyz;
-		//half3 lighting = tex2D(lightingSampler, offset.xy).xyz * 2;
-		//color += sample_color * ao * lighting;
-		
-		//ao
-		occlusion += ao;// * (1-lighting);
-		
-	}  
-   //color = rvec * SAMPLE_KERNEL_SIZE;
-   occlusion = 1-saturate((occlusion / SAMPLE_KERNEL_SIZE) * vecSkill1.x);
-	return half4(color/SAMPLE_KERNEL_SIZE,occlusion);
+	samp_UV = inTex + (((normal.xy - normal.yx)/2 * aoRadius) / (gBuffer.w * (vecViewPort.xy*4)));
+	depth2 = UnpackDepth(tex2D(normalsAndDepthSampler, samp_UV).zw);
+	ao += compareDepths(gBuffer.w,depth2, (aoRadius+3)*2, normal);
+	
+	samp_UV = inTex + (((normal.yx)/2 * aoRadius) / (gBuffer.w * (vecViewPort.xy*4)));
+	depth2 = UnpackDepth(tex2D(normalsAndDepthSampler, samp_UV).zw);
+	ao += compareDepths(gBuffer.w,depth2, (aoRadius+3)*2, normal);
+	
+	samp_UV = inTex + (((-normal.yx)/2 * aoRadius) / (gBuffer.w * (vecViewPort.xy*4)));
+	depth2 = UnpackDepth(tex2D(normalsAndDepthSampler, samp_UV).zw);
+	ao += compareDepths(gBuffer.w,depth2, (aoRadius+3)*2, normal);
+	
+	ao = 1-saturate(ao/5);
+	//ao =  lighting;
+	//ao = ao*(1-(tex2D(lightingSampler, inTex).xyz*2));
+
+	return half4(0,0,0,ao);//half4(1-saturate(ao.xxx),1);
 }
 
 
@@ -180,6 +215,6 @@ technique ps20
       //ZWriteEnable = FALSE;
 		AlphaBlendEnable = FALSE;
       
-		PixelShader = compile ps_3_0 mainPS();
+		PixelShader = compile ps_2_a mainPS();
 	}
 }

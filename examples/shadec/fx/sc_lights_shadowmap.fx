@@ -3,7 +3,10 @@ bool PASS_SOLID;
 
 #include <scPackDepth>
 
-float4x4 matWorldViewProj;
+//float4x4 matWorldViewProj;
+float4x4 matWorld;
+//float4x4 matWorldView;
+float4x4 matSplitViewProj;
 //float4x4 matProj;
 
 float4 vecSkill1; //depthmap stuff, x = | y = alpha clip | z = | w = maxDepth
@@ -21,7 +24,7 @@ sampler2D ColorSampler = sampler_state
 struct vsOut
 {
 	float4 Pos : POSITION;
-	float Pos2D : TEXCOORD0;
+	float2 Pos2D : TEXCOORD0;
 	float2 Tex : TEXCOORD1;
 };
 
@@ -35,18 +38,18 @@ vsOut mainVS(vsIn In)
 {
 	vsOut Out = (vsOut)0;
 	
-	float4 pos = mul(In.Pos,matWorldViewProj);
-	Out.Pos2D = pos.z;
-	Out.Pos = pos;//mul(pos,matProj);
+	Out.Pos = mul(In.Pos,matWorld);
+	Out.Pos = mul(Out.Pos, matSplitViewProj);
+	Out.Pos2D = Out.Pos.zw;
 	Out.Tex = In.Tex;	
 	
 	return Out;
 	
 }
 
-half4 CalculateShadowDepth(float Pos2D_Z)
+half4 CalculateShadowDepth(float2 Pos2D)
 {
-	half depth = ((Pos2D_Z)/vecSkill1.w);
+	half depth = (Pos2D.x/Pos2D.y);
 	depth += depth*vecSkill1.z;
 	//half depth = 1-(( (In.Pos2D)/vecSkill1.w ) + vecSkill1.z);
 	
@@ -57,8 +60,7 @@ half4 CalculateShadowDepth(float Pos2D_Z)
 	*/
 	
 	
-	//return half4(PackDepth(depth),0,0);
-	return half4(depth,0,0,0);
+	return depth;//exp(2*depth);
 	//half3 Ln = vecSkill5.xzy - In.PosW.xyz;
    //half att = saturate(1-length(Ln)/vecSkill1.w);
 }
@@ -67,12 +69,13 @@ half4 mainPS(vsOut In):COLOR0
 {
 	//alpha clip
 	clip(tex2D(ColorSampler,In.Tex).a-vecSkill1.y);
-	
+	//return tex2D(ColorSampler,In.Tex);
 	return CalculateShadowDepth(In.Pos2D);
 }
 
 half4 mainPS_lm(vsOut In):COLOR0
 {
+	//return tex2D(ColorSampler,In.Tex);
 	return CalculateShadowDepth(In.Pos2D);
 }
 
@@ -80,12 +83,15 @@ technique t1
 {
 	pass p0
 	{
+		//ColorWriteEnable = RED;
 		cullmode = ccw;
 		FogEnable = False;
 		alphablendenable = false;
 		zwriteenable = true;
+		
 		vertexshader = compile vs_2_0 mainVS();
 		pixelshader = compile ps_2_0 mainPS();
+		
 	}
 }
 
@@ -93,6 +99,7 @@ technique t1_lm
 {
 	pass p0
 	{
+		//ColorWriteEnable = RED;
 		cullmode = ccw;
 		FogEnable = False;
 		alphablendenable = false;

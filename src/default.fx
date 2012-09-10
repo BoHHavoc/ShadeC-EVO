@@ -764,6 +764,38 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	
 #endif
 
+//section: scNormalsFromPosition - creates flat normals from position//
+#ifndef include_scNormalsFromPosition
+#define include_scNormalsFromPosition
+
+	//#include <scUnpackDepth>
+	//#include <scCalculatePosVSQuad>
+	//half3 NormalsFromPosition(half2 inTex, half2 screenSize, sampler depthSampler)
+	half3 NormalsFromPosition(half3 inPos)
+	{
+		//float3 p1 = tex2D(g_buffer_pos, uv+float2(1.0/g_screen_size.x*0.25,0)).xyz;
+		//float3 p2 = tex2D(g_buffer_pos, uv+float2(0,1.0/g_screen_size.y*0.25)).xyz;
+		//float3 p = CalculatePosVSQuad(inTex, UnpackDepth(tex2D(depthSampler, inTex).zw));
+		//float3 dx = p1-p;
+		//float3 dy = p2-p;
+		//return normalize(cross( dx , dy  ));  
+	
+		return normalize(cross(ddx(inPos.xyz),ddy(inPos.xyz)));
+	}
+	
+#endif
+
+//section: scNormalsFromDepth - creates flat normals from linear depth//
+#ifndef include_scNormalsFromDepth
+#define include_scNormalsFromDepth
+	half3 NormalsFromDepth(float inDepth)
+	{
+		//return normalize(float3(ddx(inDepth) * 5000.0, ddy(inDepth) * 5000.0, 1.0));// * 0.5 + 0.5;
+		//return normalize(float3(ddx(inDepth) * clipFar, ddy(inDepth) * clipFar, 1.0));// * 0.5 + 0.5;
+		return normalize(float3(ddx(inDepth), ddy(inDepth), 1.0));// * 0.5 + 0.5;
+	}
+#endif
+
 //section: scPackDepth - packs linear depth to 2x8bit //
 #ifndef include_scPackDepth
 #define include_scPackDepth
@@ -771,12 +803,13 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	//const float4 bitSh	= float4(   256*256*256, 256*256,   256,         1);
 	//const float4 bitMsk = float4(   0,      1.0/256.0,    1.0/256.0,    1.0/256.0);
 
-	half2 PackDepth(half inDepth)
+	float2 PackDepth(float inDepth)
 	{
 		
 //		half2 enc;
 //		enc.x = floor(inDepth*255)/255;
 //		enc.y = floor((inDepth-enc.x)*255*255)/255;
+//		return enc;
 		
 		//optimized
 		//half2 enc;
@@ -784,7 +817,11 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 		//enc.y = floor((inDepth-enc.x)*65025)/255;
 		//return enc;
 		
-		return half2( floor(inDepth * 255.f)/255.f, frac(inDepth * 255.f) );
+		
+		//return half2( floor(inDepth * 255.f)/255.f, frac(inDepth * 255.f) );
+		//inDepth = 1-inDepth;
+		inDepth *= 255.f;
+		return half2( floor(inDepth)/255.f, frac(inDepth) );
 		//return half2( floor(inDepth * 65536.f)/65536.f, frac(inDepth * 65536.f) );
 		
 	}
@@ -798,7 +835,7 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	//static float4 extract = { 1.0, 0.00390625, 0.0000152587890625, 0.000000059604644775390625 };
 	//const float4 bitShifts = float4(1.0/(256.0*256.0*256.0), 1.0/(256.0*256.0), 1.0/256.0, 1);
 
-	half UnpackDepth(half2 enc)
+	float UnpackDepth(float2 enc)
 	{
 		//return enc.x + (enc.y/255);
 		
@@ -1070,7 +1107,7 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 		viewRay.y = lerp(1, -1, inTex.y);
 		viewRay.z = 1;
 		viewRay.w = 1;
-		
+			
 		viewRay.xyz = mul(viewRay, matProjInv).xyz;
 		return (viewRay.xyz * inDepth);
 	}
@@ -1097,7 +1134,8 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	*/
 	
 	//static half2 shadow_blurSize_softness = half2(0.0025, 0.015);
-	static half2 shadow_blurSize_softness = half2(0.0075, 0.02);
+	//static half2 shadow_blurSize_softness = half2(0.0075, 0.02);
+	static half2 shadow_softness = 0.075;
 	half GetShadow(sampler2D shadowSampler, float2 inTex, half inDepth, half maxDepth)
 	{
 		
@@ -1184,7 +1222,7 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	   */
 	   
 	   
-	   
+	   /*
 	   //create filter taps
 	   half4 shadowDepth;
 	   shadowDepth.x = UnpackDepth(tex2D(shadowSampler, inTex + half2(shadow_blurSize_softness.x,shadow_blurSize_softness.x) ).xy);// + float2(shadow_blurSize_softness.x,shadow_blurSize_softness.x) ).xy);
@@ -1221,10 +1259,110 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	   //return max(smoothstep( 1-pow(1-filter,2), 1, shadowDepth.x ),shadowDepth.w);
 	   //return smoothstep( filter, 1, shadowDepth.x );
 	   return max(smoothstep( filter, 1, shadowDepth.x ),shadowDepth.w);
+	   */
+	   
+	   //inDepth -=  0.00025;
+	   half shadowDepth = tex2D(shadowSampler, inTex).x;//UnpackDepth(tex2D(shadowSampler, inTex).xy);
+	   return saturate( exp( (exp(shadowDepth)-exp(inDepth))*shadow_softness * maxDepth) );
 	}
 #endif
 
 
+//section: scGetPssm - calculates PSSM shadows //
+#ifndef include_scGetPssm
+#define include_scGetPssm
+
+	//#include <scGetShadow>
+	float pssm_splitdist_var[5];
+	//float pssm_numsplits_var = 3;
+	//static half2 shadow_blurSize_softness = half2(0.0025, 0.025);
+	static half shadow_softness = 0.025;
+	//static half2 shadow_blurSize_softness = half2(0.00125, 0.01);
+	
+	/*
+	float linstep(float min, float max, float v)  
+	{  
+	  return clamp((v - min) / (max - min), 0, 1);  
+	}  
+	float ReduceLightBleeding(float p_max, float Amount)  
+	{  
+	  // Remove the [0, Amount] tail and linearly rescale (Amount, 1].  
+	   return linstep(Amount, 1, p_max);  
+	}
+	*/
+	
+	half GetPssm(half4 shadowTexcoord[4], half fDistance, half maxDepth, half numberOfSplits, sampler sDepth1, sampler sDepth2, sampler sDepth3, sampler sDepth4)
+	{
+		/*
+		half fShadow = 0;
+		if(fDistance < pssm_splitdist_var[1] || pssm_numsplits_var < 2)
+		{
+			//fShadow = (tex2Dlod(sDepth1, half4(shadowTexcoord[0].xy,0,0) ).r + pssm_fbias_flt  < shadowTexcoord[0].z) ? 0.0f: 1.0f;
+			shadowTexcoord[0].z = exp(2*shadowTexcoord[0].z);
+	 		fShadow = saturate( exp( (exp(2*tex2Dlod(sDepth1, half4(shadowTexcoord[0].xy,0,0) ).r)-(shadowTexcoord[0].z))*shadow_blurSize_softness.y * maxDepth) );
+	 		//fShadow *= 1-saturate(fDistance/pssm_splitdist_var[1]);
+ 		}
+		else if(fDistance < pssm_splitdist_var[2] || pssm_numsplits_var < 3)
+		{
+			//fShadow = (tex2Dlod(sDepth2, half4(shadowTexcoord[1].xy,0,0) ).r + 2*pssm_fbias_flt  < shadowTexcoord[1].z) ? 0.0f: 1.0f;
+			shadowTexcoord[1].z = exp(2*shadowTexcoord[1].z);
+	 		fShadow = saturate( exp( (exp(2*tex2Dlod(sDepth2, half4(shadowTexcoord[1].xy,0,0) ).r)-(shadowTexcoord[1].z))*shadow_blurSize_softness.y * maxDepth) );
+		}
+		else if(fDistance < pssm_splitdist_var[3] || pssm_numsplits_var < 4)
+		{
+	 		//fShadow = (tex2Dlod(sDepth3, half4(shadowTexcoord[2].xy,0,0) ).r + 4*pssm_fbias_flt  < shadowTexcoord[2].z) ? 0.0f: 1.0f;
+	 		shadowTexcoord[2].z = exp(2*shadowTexcoord[2].z);
+	 		fShadow = saturate( exp( (exp(2*tex2Dlod(sDepth3, half4(shadowTexcoord[2].xy,0,0) ).r)-(shadowTexcoord[2].z))*shadow_blurSize_softness.y * maxDepth) );
+ 		}
+		else
+		{
+	 		//fShadow = (tex2Dlod(sDepth4, half4(shadowTexcoord[3].xy,0,0) ).r + 8*pssm_fbias_flt  < shadowTexcoord[3].z) ? 0.0f: 1.0f;
+	 		fShadow = saturate( exp( (tex2Dlod(sDepth4, half4(shadowTexcoord[3].xy,0,0) ).r-(shadowTexcoord[3].z)) * shadow_blurSize_softness.y * 16 * maxDepth) );
+ 		}
+	 		//fShadow = saturate(((fDistance+pssm_splitdist_var[1])/pssm_splitdist_var[2]));
+	 		//fShadow = saturate(fDistance/pssm_splitdist_var[2]) * saturate(fDistance/pssm_splitdist_var[1]);
+	 	*/
+	 	
+	 	
+	 	
+	 	
+	 	//optimize this!!!
+	 	/*
+	 	half4 shadows = 0;
+	 	shadowTexcoord[0].z = exp(2*shadowTexcoord[0].z);
+	 	shadows.x = saturate( exp( (exp(2*tex2D(sDepth1, shadowTexcoord[0].xy ).r)-(shadowTexcoord[0].z))*shadow_softness * maxDepth) );
+	 	shadowTexcoord[1].z = exp(2*shadowTexcoord[1].z);
+	 	shadows.y = saturate( exp( (exp(2*tex2D(sDepth2, shadowTexcoord[1].xy ).r)-(shadowTexcoord[1].z))*shadow_softness * maxDepth) );
+	 	shadowTexcoord[2].z = exp(2*shadowTexcoord[2].z);
+	 	shadows.z = saturate( exp( (exp(2*tex2D(sDepth3, shadowTexcoord[2].xy ).r)-(shadowTexcoord[2].z))*shadow_softness * maxDepth) );
+	 	shadowTexcoord[3].z = exp(2*shadowTexcoord[3].z);
+	 	shadows.w = saturate( exp( (exp(2*tex2D(sDepth4, shadowTexcoord[3].xy ).r)-(shadowTexcoord[3].z))*shadow_softness * maxDepth) );
+	 	*/
+	 	
+	 	//optimized
+	 	half4 shadows, realDepth;
+	 	//half4 realDepth;  //= half4(shadowTexcoord[0].z, shadowTexcoord[1].z, shadowTexcoord[2].z, shadowTexcoord[3].z);
+	 	realDepth.x = shadowTexcoord[0].z;
+	 	realDepth.y = shadowTexcoord[1].z;
+	 	realDepth.z = shadowTexcoord[2].z;
+	 	realDepth.w = shadowTexcoord[3].z;
+	 	realDepth -=  0.00025;
+	 	shadows.x = tex2D(sDepth1, shadowTexcoord[0].xy ).r;
+	 	shadows.y = tex2D(sDepth2, shadowTexcoord[1].xy ).r;
+	 	shadows.z = tex2D(sDepth3, shadowTexcoord[2].xy ).r;
+	 	shadows.w = tex2D(sDepth4, shadowTexcoord[3].xy ).r;
+	 	shadows = saturate( exp( (exp(2*shadows)-exp(2*realDepth))*shadow_softness * maxDepth) );
+	 	//
+	 	
+	 	half fShadow;
+	 	fShadow = lerp( shadows.x, shadows.y, pow(saturate(fDistance/pssm_splitdist_var[1]),10) );
+	 	fShadow = lerp( fShadow, shadows.z, pow(saturate(fDistance/pssm_splitdist_var[2]),10) );
+	 	fShadow = lerp( fShadow, shadows.w, pow(saturate(fDistance/pssm_splitdist_var[3]),10) );
+	 	//fShadow = lerp( fShadow, 1, pow(saturate((fDistance/pssm_splitdist_var[numberOfSplits])*1.5),20) );
+	 	 	
+	 	return fShadow;
+	}
+#endif
 
 
 //////////////////////////////////////////////////////////////////////

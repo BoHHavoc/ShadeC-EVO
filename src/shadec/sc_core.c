@@ -111,8 +111,8 @@ void sc_settings_setDefaults(SC_SETTINGS* settings)
 {
 	//HDR
 	settings.hdr.enabled = 0;
-	settings.hdr.blurX = 4;
-	settings.hdr.blurY = 6;
+	settings.hdr.blurX = 8;
+	settings.hdr.blurY = 12;
 	settings.hdr.brightpass = 0.25;
 	settings.hdr.intensity = 1;
 	settings.hdr.lensflare.enabled = 0;
@@ -136,7 +136,15 @@ void sc_settings_setDefaults(SC_SETTINGS* settings)
 	settings.ssao.enabled = 0;
 	settings.ssao.radius = 25;
 	settings.ssao.intensity = 1;
-	settings.ssao.selfOcclusion = 0.85;
+	//settings.ssao.selfOcclusion = 0.85;
+	settings.ssao.selfOcclusion = 0.0004; //0.0005 gets rid of almost all self occlusion
+	
+	//SUN
+	settings.lights.sunShadows = 0;
+	settings.lights.sunPssmSplits = 3;
+	settings.lights.sunPssmSplitWeight = 0.5;
+	settings.lights.sunPssmBlurSplits = 0;
+	settings.lights.sunShadowResolution = 1024;
 }
 
 SC_SCREEN* sc_screen_create(VIEW* inView)

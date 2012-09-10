@@ -57,7 +57,8 @@ half4 CalculateShadowDepth(float Pos2D_Z)
 	*/
 	
 	
-	return half4(PackDepth(depth),0,0);
+	//return half4(PackDepth(depth),0,0);
+	return half4(depth,0,0,0);
 	//half3 Ln = vecSkill5.xzy - In.PosW.xyz;
    //half att = saturate(1-length(Ln)/vecSkill1.w);
 }

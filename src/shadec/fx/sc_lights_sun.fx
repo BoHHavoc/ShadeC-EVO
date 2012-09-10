@@ -163,6 +163,7 @@ float4 mainPS(in float2 inTex:TEXCOORD0):COLOR0
 	
 	color.rgb *= 0.5;
 	color.a *= length(color.rgb);
+	
 
    return color;
 }

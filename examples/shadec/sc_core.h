@@ -166,6 +166,7 @@ typedef struct SC_VERTEX_SCREENQUAD {
 //SC_SCREEN------------------------------------------------------------------------------------
 typedef struct{
 	VIEW* gBuffer;
+	VIEW* sunShadowDepth[4];
 	VIEW* sun;
 	VIEW* deferredLighting;
 	//VIEW* shadowsDepth;
@@ -205,7 +206,7 @@ typedef struct{
 	BMAP* gBuffer[4]; //gBuffer
 	BMAP* deferredLighting; //lighting data, diffuse (rgb) and specular (a)
 	BMAP* ssao; //ssao buffer, color bleeding (rgb) and shadow (a)
-	
+	BMAP* sunShadowDepth[4];
 	
 	BMAP* full0; //generic rendertarget, full screen size
 	BMAP* half0; //generic rendertarget, half screen size
@@ -285,6 +286,11 @@ typedef struct{
 
 typedef struct{
 	VECTOR sunPos;
+	int sunShadows;
+	int sunShadowResolution;
+	int sunPssmSplits;
+	var sunPssmSplitWeight;
+	int sunPssmBlurSplits;
 }SC_SETTINGS_LIGHTS;
 
 typedef struct{

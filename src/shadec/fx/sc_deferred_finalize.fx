@@ -55,7 +55,7 @@ struct psIn
 	half2 Tex : TEXCOORD0;
 };
 
-float4 mainPS(psIn In):COLOR0
+float4 mainPS(psIn In):COLOR
 {
 	half4 albedoAndEmissiveMask = tex2D(albedoAndEmissiveMaskSampler, In.Tex);
 	half4 diffuseAndSpecular = tex2D(diffuseAndSpecularSampler, In.Tex); //get lighting
@@ -63,7 +63,6 @@ float4 mainPS(psIn In):COLOR0
 	diffuseAndSpecular.w = diffuseAndSpecular.a/length(diffuseAndSpecular.xyz) * 2; //unpack specular
 	diffuseAndSpecular.xyz *= 2; //rescale
 	//diffuseAndSpecular.w *= 2;
-	
 	//apply ssao
 	half4 ssao = tex2D(ssaoSampler, In.Tex);
 	diffuseAndSpecular.xyz *= ssao.w;
@@ -101,6 +100,8 @@ float4 mainPS(psIn In):COLOR0
 	//output.xyz = albedoAndEmissiveMask.xyz;
 	
 	//output.xyz = diffuseAndSpecular.xyz;
+	//output.xyz = ssao.w;
+	
 	output.w = 1;
 	
 	
