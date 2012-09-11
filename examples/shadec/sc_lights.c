@@ -341,7 +341,9 @@ ENTITY* sc_light_createFunc(int inType, var inRange, VECTOR* inColor, VECTOR* in
 			shadowView.clip_far = inRange;
 			shadowView.size_x = 256;
 			shadowView.size_y = 256;
-			shadowView.bg = pixel_for_vec(COLOR_WHITE,0,8888);
+			#ifndef SC_A7
+				shadowView.bg = pixel_for_vec(COLOR_WHITE,0,8888);
+			#endif
 			shadowView.lod = shadow_lod;
 			
 			//set shadowview flags
@@ -579,7 +581,9 @@ var sc_lights_mtlShadowmapLocalRenderEvent()
 // SUN																																										//
 //----------------------------------------------------------------------------------------------------------------------------------//
 
-#include <shadows.c>
+#ifndef SC_A7
+	#include <shadows.c>
+#endif
 
 void sc_lights_MaterialEventSun()
 {
@@ -589,7 +593,13 @@ void sc_lights_MaterialEventSun()
 	{
 		screen.views.sun.bmap = screen.renderTargets.full0;
 		
-		LPD3DXEFFECT pEffect = (LPD3DXEFFECT)mtl->d3deffect;
+		//LPD3DXEFFECT pEffect = (LPD3DXEFFECT)mtl->d3deffect;
+		#ifndef SC_A7
+			LPD3DXEFFECT pEffect = (LPD3DXEFFECT)mtl->d3deffect;
+		#else
+			LPD3DXEFFECT pEffect = (LPD3DXEFFECT)render_d3dxeffect;
+		#endif
+		
 		//LPD3DXEFFECT pEffect = (LPD3DXEFFECT)(mtl->d3deffect);
 		if(pEffect != NULL)
 		{
@@ -632,7 +642,7 @@ void sc_lights_initSun(SC_SCREEN* screen)
 	screen.views.sun.bmap = screen.renderTargets.full0;
 	
 	
-	
+	#ifndef SC_A7
 	//PSSM SHADOWS
 	if(screen.settings.lights.sunShadows == 1)
 	{
@@ -646,7 +656,9 @@ void sc_lights_initSun(SC_SCREEN* screen)
 			
 			screen.views.sunShadowDepth[i] = view_create(-800);
 			
-			screen.views.sunShadowDepth[i].bg = pixel_for_vec(COLOR_WHITE,0,8888);
+			#ifndef SC_A7
+				screen.views.sunShadowDepth[i].bg = pixel_for_vec(COLOR_WHITE,0,8888);
+			#endif
 			screen.views.sunShadowDepth[i].lod = shadow_lod;
 				
 			/*
@@ -724,6 +736,7 @@ void sc_lights_initSun(SC_SCREEN* screen)
 		
 		bmap_zbuffer(bmap_createblack(maxv(screen_size.x,screen.settings.lights.sunShadowResolution),maxv(screen_size.y,screen.settings.lights.sunShadowResolution),32));
 	}
+	#endif
 	//------------
 	
 	
@@ -822,7 +835,7 @@ void sc_lights_frmSun(SC_SCREEN* screen)
 		
 		
 		
-		
+		#ifndef SC_A7
 		// PSSM main loop
 		if(screen.settings.lights.sunPssmSplits>0 && screen.settings.lights.sunShadows == 1)
 		{
@@ -879,6 +892,7 @@ void sc_lights_frmSun(SC_SCREEN* screen)
 			DEBUG_BMAP(screen.views.sun->bmap,20,0.2);
 		#endif
 		}
+		#endif
 		
 		
 	}

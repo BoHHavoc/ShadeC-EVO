@@ -7,7 +7,13 @@ void sc_ssao_MaterialEvent()
 		
 		case screen.views.ssao:
 		//	screen.views.preSSAO.bmap = screen.renderTargets.full0;
-			LPD3DXEFFECT pEffect = (LPD3DXEFFECT)mtl->d3deffect;
+			//LPD3DXEFFECT pEffect = (LPD3DXEFFECT)mtl->d3deffect;
+			#ifndef SC_A7
+				LPD3DXEFFECT pEffect = (LPD3DXEFFECT)mtl->d3deffect;
+			#else
+				LPD3DXEFFECT pEffect = (LPD3DXEFFECT)render_d3dxeffect;
+			#endif
+			
 			if(pEffect != NULL)
 			{
 				pEffect->SetVectorArray("SAMPLE_KERNEL", screen.ssaoKernel, sc_ssao_kernelSize);
