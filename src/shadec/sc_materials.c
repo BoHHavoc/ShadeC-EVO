@@ -73,7 +73,12 @@ var sc_materials_event()
 			
 			
 			//LPD3DXEFFECT pEffect = (LPD3DXEFFECT)(render_d3dxeffect);
-			LPD3DXEFFECT pEffect = (LPD3DXEFFECT)(mtl->d3deffect);
+			//LPD3DXEFFECT pEffect = (LPD3DXEFFECT)(mtl->d3deffect);
+			#ifndef SC_A7
+				LPD3DXEFFECT pEffect = (LPD3DXEFFECT)mtl->d3deffect;
+			#else
+				LPD3DXEFFECT pEffect = (LPD3DXEFFECT)render_d3dxeffect;
+			#endif
 			
 			if(my != NULL)
 			{
@@ -129,7 +134,13 @@ var sc_materials_event()
 		case screen.views.deferredLighting:
 		
 			//LPD3DXEFFECT pEffect = (LPD3DXEFFECT)render_d3dxeffect;
-			LPD3DXEFFECT pEffect = (LPD3DXEFFECT)(mtl->d3deffect);
+			
+			#ifndef SC_A7
+				LPD3DXEFFECT pEffect = (LPD3DXEFFECT)mtl->d3deffect;
+			#else
+				LPD3DXEFFECT pEffect = (LPD3DXEFFECT)render_d3dxeffect;
+			#endif
+			
 			if(pEffect != NULL)
 			{
 				pEffect->SetTexture("texBRDFLut", sc_deferredLighting_texBRDFLUT); //assign volumetric brdf lut
@@ -230,7 +241,13 @@ var sc_materials_event()
 					
 					//pass data to effect	
 					//LPD3DXEFFECT pEffect = (LPD3DXEFFECT)render_d3dxeffect;
-					LPD3DXEFFECT pEffect = (LPD3DXEFFECT)mtl->d3deffect;
+					//LPD3DXEFFECT pEffect = (LPD3DXEFFECT)mtl->d3deffect;
+					#ifndef SC_A7
+						LPD3DXEFFECT pEffect = (LPD3DXEFFECT)mtl->d3deffect;
+					#else
+						LPD3DXEFFECT pEffect = (LPD3DXEFFECT)render_d3dxeffect;
+					#endif
+					
 					if(pEffect != NULL)
 					{
 						pEffect->SetTexture("texNormalsAndDepth", screen.renderTargets.gBuffer[SC_GBUFFER_NORMALS_AND_DEPTH].d3dtex);
@@ -280,7 +297,14 @@ var sc_materials_event()
 					if(ObjData.pass != SC_PASS_REFRACT) return(1); //only render entities which have the SC_PASS_FORWARD flag set
 						
 					//LPD3DXEFFECT pEffect = (LPD3DXEFFECT)render_d3dxeffect;
-					LPD3DXEFFECT pEffect = (LPD3DXEFFECT)mtl->d3deffect;
+					//LPD3DXEFFECT pEffect = (LPD3DXEFFECT)mtl->d3deffect;
+					
+					#ifndef SC_A7
+						LPD3DXEFFECT pEffect = (LPD3DXEFFECT)mtl->d3deffect;
+					#else
+						LPD3DXEFFECT pEffect = (LPD3DXEFFECT)render_d3dxeffect;
+					#endif
+					
 					if(pEffect != NULL)
 					{
 						pEffect->SetTexture("texNormalsAndDepth", screen.renderTargets.gBuffer[SC_GBUFFER_NORMALS_AND_DEPTH].d3dtex);

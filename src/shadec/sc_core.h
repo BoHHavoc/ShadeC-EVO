@@ -8,7 +8,7 @@
 #define SC_USE_NOFLAG1 //RECOMMENDED If defined, you should set FLAG1 for all non-shadow casting objects to additionally boost performance. DO NOT USE FLAG1 FOR ANY OTHER THINGS if this is defined!
 //#define SC_CUSTOM_ZBUFFER //EXPERIMANTAL might fix bugs if the build in automatic zbuffer does not work. EXPERIMENTAL
 #define SC_USEPVS //RECOMMENDED Use Acknex's intern BSP/PVS calculations for light/shadow culling.
-
+//#define SC_A7 //If defined, Shade-C will compile under A7, however many features might be missing, like PSSM Shadows
 //------------------------------------------------------------------------------
 // ! END OF USER INPUT !
 //------------------------------------------------------------------------------
