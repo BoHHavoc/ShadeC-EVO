@@ -2,6 +2,7 @@
 
 Basic Example on how to use terrains
 
+NOT FNISHED YET!!! DONT USE!!!
 
 ***************************************************************************/
 

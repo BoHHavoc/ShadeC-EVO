@@ -2,6 +2,7 @@
 #define PRAGMA_PATH "assets"
 #define PRAGMA_PATH "assets\vloga"
 #define PRAGMA_PATH "assets\byNobiax"
+#define PRAGMA_PATH "assets\terrainTextures"
 
 
 //WED helper functions
@@ -64,4 +65,12 @@ MATERIAL* mtl_levelDefaultNM =
 	event = sc_materials_event;
 	
 	power = 5;
+}
+
+MATERIAL* mtl_terrain01 =
+{
+	effect = "sc_terrain.fx";
+	flags = ENABLE_RENDER;
+	
+	event = sc_materials_event;
 }

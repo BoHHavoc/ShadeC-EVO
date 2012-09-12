@@ -301,6 +301,27 @@ void sc_ent_heatHaze(ENTITY* ent, VECTOR* color, var softness, var speed, var st
 
 //------------------------------------------------------------------------------------------
 
+
+//Terrain
+
+void sc_ent_terrain(ENTITY* ent, STRING* sAtlas)
+{
+	//create atlas
+	LPDIRECT3DVOLUMETEXTURE9* terrainAtlas = sc_volumeTexture_create(sAtlas);
+	
+	ent.material = mtl_create();
+	effect_load(ent.material, "sc_terrain.fx");
+	ent.material.flags = ENABLE_RENDER;
+	ent.material.event = sc_materials_event;
+	
+	LPD3DXEFFECT fx = ent->material->d3deffect;
+	if(fx)
+	{
+		fx->SetTexture("texAtlas",terrainAtlas);
+	}
+	
+}
+
 /*
 // Water
 //
