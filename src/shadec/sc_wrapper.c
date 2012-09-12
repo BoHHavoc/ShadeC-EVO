@@ -1,21 +1,5 @@
 void sc_setup(SC_SCREEN* screen)
 {
-	/*
-	//setup screen
-	if(screen == 0 || screen == NULL)
-	{
-		camera.size_x = screen_size.x;
-		camera.size_y = screen_size.y;
-		if(sc_screen_default == NULL) sc_screen_default = sc_screen_create(camera);
-		screen = sc_screen_default;
-	}
-	else 
-	{
-		if( screen.views.main.size_x == 0) screen.views.main.size_x = screen_size.x;
-		if( screen.views.main.size_y == 0) screen.views.main.size_y = screen_size.y;
-	}
-	*/
-	
 	//deactivate stencil shadows
 	//...this wont work here, you have to do this before loading a level
 	//shadow_stencil = 8;
@@ -29,6 +13,10 @@ void sc_setup(SC_SCREEN* screen)
 	//setup generic rendertargets
 	if(screen.renderTargets.full0 != NULL) bmap_purge(screen.renderTargets.full0);
 	screen.renderTargets.full0 = bmap_createblack(screen.views.main.size_x, screen.views.main.size_y, 32);
+	if(screen.renderTargets.full1 != NULL) bmap_purge(screen.renderTargets.full1);
+	screen.renderTargets.full1 = bmap_createblack(screen.views.main.size_x, screen.views.main.size_y, 32);
+	if(screen.renderTargets.full2 != NULL) bmap_purge(screen.renderTargets.full2);
+	screen.renderTargets.full2 = bmap_createblack(screen.views.main.size_x, screen.views.main.size_y, 32);
 	if(screen.renderTargets.half0 != NULL) bmap_purge(screen.renderTargets.half0);
 	screen.renderTargets.half0 = bmap_createblack(screen.views.main.size_x/2, screen.views.main.size_y/2, 32);
 	if(screen.renderTargets.half1 != NULL) bmap_purge(screen.renderTargets.half1);
@@ -49,6 +37,7 @@ void sc_setup(SC_SCREEN* screen)
 	sc_dof_destroy(screen);
 	sc_refract_destroy(screen);
 	sc_forward_destroy(screen);
+	sc_antialiasing_destroy(screen);
 	sc_deferred_destroy(screen);
 	sc_ssao_destroy(screen);
 	sc_deferredLighting_destroy(screen);
@@ -64,6 +53,7 @@ void sc_setup(SC_SCREEN* screen)
 	sc_deferredLighting_init(screen, 1);
 	if(screen.settings.ssao.enabled == 1) sc_ssao_init(screen); //optional
 	sc_deferred_init(screen);
+	if(screen.settings.antialiasing.enabled == 1) sc_antialiasing_init(screen);
 	if(screen.settings.forward.enabled == 1) sc_forward_init(screen, SC_FORWARD_RENDER); //option 1
 	else sc_forward_init(screen, SC_FORWARD_PASSTHROUGH); // option 2
 	if(screen.settings.refract.enabled == 1) sc_refract_init(screen); //optional

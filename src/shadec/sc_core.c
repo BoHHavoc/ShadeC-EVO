@@ -145,6 +145,9 @@ void sc_settings_setDefaults(SC_SETTINGS* settings)
 	settings.lights.sunPssmSplitWeight = 0.5;
 	settings.lights.sunPssmBlurSplits = 0;
 	settings.lights.sunShadowResolution = 1024;
+	
+	//Antialiasing
+	settings.antialiasing.enabled = 0;
 }
 
 SC_SCREEN* sc_screen_create(VIEW* inView)

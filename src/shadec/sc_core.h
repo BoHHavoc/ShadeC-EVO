@@ -39,6 +39,7 @@ BMAP* sc_map_random = "sc_random.png";
 #define SC_OBJECT_PASS 103
 #define SC_OBJECT_EMISSIVE 104
 #define SC_OBJECT_COLOR 105
+//#define SC_OBJECT_TERRAIN_ATLAS 106
 
 #define SC_OBJECT_MATERIAL_ID 200
 
@@ -176,6 +177,9 @@ typedef struct{
 	VIEW* ssaoBlurY;
 	VIEW* ssaoFinalize;
 	VIEW* deferred;
+	VIEW* antialiasing;
+	VIEW* antialiasingEdgeDetect;
+	VIEW* antialiasingBlendWeights;
 	VIEW* main;
 	VIEW* refract;
 	VIEW* hdr;
@@ -199,6 +203,7 @@ typedef struct{
 	VIEW* preHDR;
 	VIEW* preDOF;
 	VIEW* preGammaCorrection;
+	VIEW* preAntialiasing;
 	
 }SC_SCREEN_VIEWS;
 
@@ -209,12 +214,14 @@ typedef struct{
 	BMAP* sunShadowDepth[4];
 	
 	BMAP* full0; //generic rendertarget, full screen size
+	BMAP* full1; //generic rendertarget, full screen size
+	BMAP* full2; //generic rendertarget, full screen size
 	BMAP* half0; //generic rendertarget, half screen size
 	BMAP* half1; //generic rendertarget, half screen size
 	BMAP* quarter0; //generic rendertarget, quarter screen size
 	BMAP* quarter1; //generic rendertarget, quarter screen size
 	BMAP* eighth0; //generic rendertarget, eighth screen size
-	BMAP* eighth1; //generic rendertarget, quarter screen size
+	BMAP* eighth1; //generic rendertarget, eighth screen size
 }SC_SCREEN_RENDERTARGETS;
 
 typedef struct{
@@ -294,12 +301,17 @@ typedef struct{
 }SC_SETTINGS_LIGHTS;
 
 typedef struct{
+	int enabled;
+}SC_SETTINGS_ANTIALIASING;
+
+typedef struct{
 	SC_SETTINGS_HDR hdr;
 	SC_SETTINGS_DOF dof;
 	SC_SETTINGS_REFRACT forward;
 	SC_SETTINGS_REFRACT refract;
 	SC_SETTINGS_SSAO ssao;
 	SC_SETTINGS_LIGHTS lights;
+	SC_SETTINGS_ANTIALIASING antialiasing;
 }SC_SETTINGS;
 //
 

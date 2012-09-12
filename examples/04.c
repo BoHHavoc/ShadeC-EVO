@@ -1,6 +1,6 @@
 /***************************************************************************
 
-Basic Example on how to use lights and materials
+Basic Example on how to use antialiasing
 
 
 ***************************************************************************/
@@ -63,10 +63,6 @@ void main()
 	you.pan = 123;
 	you.tilt = -18;
 	camera.arc = 75;
-	/*you = ent_create(NULL, vector(-224,-317, 119), v_camera);
-	you.pan = 138;
-	you.tilt = -44;
-	camera.arc = 75;*/
 	camera.clip_far = 5000; //set this as low as possible to increase performance AND visuals!
 	
 	//set resolution before calling sc_setup
@@ -83,43 +79,9 @@ void main()
 	//enable/disable Shade-C effects. You have to set these before calling sc_setup()
 	//If you want to change these during runtime, simply call sc_setup() again after you enabled/disabled an effect
 	// -> more info in sc_core.h, in struct SC_SETTINGS
-	sc_screen_default.settings.forward.enabled = 0; //enable if you need particles or custom materials which can't be rendered in the deferred pipeline
-	sc_screen_default.settings.refract.enabled = 0; //enable for refractive effects such as heat haze and glass
-	sc_screen_default.settings.hdr.enabled = 1; //enable Bloom/HDR
-	sc_screen_default.settings.hdr.lensflare.enabled = 1; //enable for a nice lensflare effect in combination with HDR/Bloom
-	sc_screen_default.settings.dof.enabled = 0; //enable Depth of Field Effect
-	sc_screen_default.settings.ssao.enabled = 1; //enable to activate SSAO
-	sc_screen_default.settings.lights.sunShadows = 1; //enable shadows for the sun
-	sc_screen_default.settings.lights.sunShadowResolution = 256; //reduce shadow resolution as we are blurring the shadowmap and therefore can get away with low res shadows
-	sc_screen_default.settings.lights.sunPssmBlurSplits = 2; //blur the first two pssm splits
-	sc_screen_default.settings.lights.sunPssmSplitWeight = 0.7; //high res near splits, low res far splits
+	sc_screen_default.settings.antialiasing.enabled = 1; //enable antialiasing
 	
 	
 	//initialize shade-c, use default screen object
 	sc_setup(sc_screen_default);
-	//wait(3); //wait for Shade-C
-	
-	//tweak effect parameters anytime you want
-	// -> more info in sc_core.h, in struct SC_SETTINGS
-	sc_screen_default.settings.hdr.brightpass = 0.65;
-	sc_screen_default.settings.hdr.intensity = 1.0;
-	sc_screen_default.settings.hdr.lensflare.brightpass = 0.0;
-	sc_screen_default.settings.hdr.lensflare.intensity = 0.5;
-	sc_screen_default.settings.dof.focalPos = 300;
-	sc_screen_default.settings.dof.focalWidth = 600;
-	sc_screen_default.settings.ssao.radius = 25;	
-	sc_screen_default.settings.ssao.intensity = 5;
-	sc_screen_default.settings.ssao.selfOcclusion = 0.0004; //we want a bit of self occlusion... lower values result in even more self occlusion
-	
-	/*
-	while(1)
-  {
-    sun_angle.pan += time_frame; 
-    sun_angle.pan %= 360; 
-    sun_angle.tilt = fsin(sun_angle.pan, 45) + 45;
-    sun_light = sun_angle.tilt;
-    wait(1);
-  }
-  */
-	
 }

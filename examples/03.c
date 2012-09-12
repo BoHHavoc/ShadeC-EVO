@@ -1,6 +1,6 @@
 /***************************************************************************
 
-Basic Example on how to use lights and materials
+Basic Example on how to use terrains
 
 
 ***************************************************************************/
@@ -48,15 +48,15 @@ void v_camera()
 void main()
 {
 	shadow_stencil = -1; //turn off all engine intern shadow calculations. THIS IS IMPORTANT!
-	level_load("02.wmb");
+	level_load("");
 	wait(5); //wait for level load
 	//set suncolor to zero (setting sun_color in WED to zero does NOTHING! This is a bug in gamestudio)
 	//if suncolor == 0, sun will not be rendered. Set this for pure indoor scenes to boost performance!
-	//vec_set(sun_color, vector(0,0,0)); 
-	vec_set(sun_color, vector(155,140,130)); 
+	vec_set(sun_color, vector(0,0,0)); 
+	//vec_set(sun_color, vector(155,140,130)); 
 	//set ambient color to zero as we want a dark level with nice shadows ;)
 	//vec_set(ambient_color, vector(0,0,0));
-	vec_set(ambient_color, vector(180,180,180));
+	//vec_set(ambient_color, vector(180,180,180));
 		
 	//create a camera object so we can move around the scene
 	you = ent_create(NULL, vector(168,-478, 212), v_camera);
@@ -68,6 +68,11 @@ void main()
 	you.tilt = -44;
 	camera.arc = 75;*/
 	camera.clip_far = 5000; //set this as low as possible to increase performance AND visuals!
+	
+	//load terrain
+	you = ent_create("terrain01.mdl", nullvector, NULL);
+	sc_ent_terrain(you, "assets/terrainTextures/terrainAtlas01.dds");
+	set(you, SHADOW);
 	
 	//set resolution before calling sc_setup
 	//if you want to change resolution again, simple call sc_setup() again after you changed the resolution
@@ -85,11 +90,11 @@ void main()
 	// -> more info in sc_core.h, in struct SC_SETTINGS
 	sc_screen_default.settings.forward.enabled = 0; //enable if you need particles or custom materials which can't be rendered in the deferred pipeline
 	sc_screen_default.settings.refract.enabled = 0; //enable for refractive effects such as heat haze and glass
-	sc_screen_default.settings.hdr.enabled = 1; //enable Bloom/HDR
+	sc_screen_default.settings.hdr.enabled = 0; //enable Bloom/HDR
 	sc_screen_default.settings.hdr.lensflare.enabled = 1; //enable for a nice lensflare effect in combination with HDR/Bloom
 	sc_screen_default.settings.dof.enabled = 0; //enable Depth of Field Effect
-	sc_screen_default.settings.ssao.enabled = 1; //enable to activate SSAO
-	sc_screen_default.settings.lights.sunShadows = 1; //enable shadows for the sun
+	sc_screen_default.settings.ssao.enabled = 0; //enable to activate SSAO
+	sc_screen_default.settings.lights.sunShadows = 0; //enable shadows for the sun
 	sc_screen_default.settings.lights.sunShadowResolution = 256; //reduce shadow resolution as we are blurring the shadowmap and therefore can get away with low res shadows
 	sc_screen_default.settings.lights.sunPssmBlurSplits = 2; //blur the first two pssm splits
 	sc_screen_default.settings.lights.sunPssmSplitWeight = 0.7; //high res near splits, low res far splits
@@ -121,5 +126,4 @@ void main()
     wait(1);
   }
   */
-	
 }
