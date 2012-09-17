@@ -82,6 +82,9 @@ float4 mainPS(psIn In):COLOR
 		//ssao.xyz = 0;
 	}
 	
+	//gamma correction
+	diffuseAndSpecular.xyz = pow(diffuseAndSpecular.xyz, 1.f/2.2f);
+	//diffuseAndSpecular.xyz = (diffuseAndSpecular.xyz*(6.2*diffuseAndSpecular.xyz+0.5))/(diffuseAndSpecular.xyz*(6.2*diffuseAndSpecular.xyz+1.7)+0.06);
 	
 	half4 output;// = 1;
 	//output.xyz = albedoAndEmissiveMask.xyz * diffuseAndSpecular.xyz + diffuseAndSpecular.w*diffuseAndSpecular.xyz*specularMask;

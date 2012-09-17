@@ -109,14 +109,14 @@ void main()
 	sc_screen_default.settings.dof.focalPos = 300;
 	sc_screen_default.settings.dof.focalWidth = 600;
 	sc_screen_default.settings.ssao.radius = 30;	
-	sc_screen_default.settings.ssao.intensity = 4;
+	sc_screen_default.settings.ssao.intensity = 5;
 	sc_screen_default.settings.ssao.selfOcclusion = 0.0004; //we want a bit of self occlusion... lower values result in even more self occlusion
 	sc_screen_default.settings.ssao.brightOcclusion = 0.2; //low value: ssao will only be visible in shadows and dark areas. high value: ssao will always be visible. Range: 0-1
 	
 	
 	//create a spotlight which we will rotate later
 	//please note that the light's red color value is above 255, which makes this an hdr light
-	ENTITY* spotlight = sc_light_create(vector(-86,-82,322), 1000, vector(512,256,0), SC_LIGHT_SPOT | SC_LIGHT_SHADOW);
+	ENTITY* spotlight = sc_light_create(vector(-86,-82,322), 1000, vector(1024,512,0), SC_LIGHT_SPOT | SC_LIGHT_SHADOW);
 	//set initial rotation
 	spotlight.pan = 188;
 	spotlight.tilt = -43;
