@@ -415,17 +415,21 @@ ENTITY* sc_light_createFunc(int inType, var inRange, VECTOR* inColor, VECTOR* in
 
 void sc_light_update(ENTITY* inLight)
 {
-	//sc_light_updateSpotDir(inLight);
-	sc_light_updateSpotMtx(inLight);
-	//sc_light_updatePointMtx(inLight);
-	
 	SC_OBJECT* ObjData = (SC_OBJECT*)(inLight.SC_SKILL);
 	if(ObjData.light.view != NULL)
 	{
 		ObjData.light.view.pan = inLight.pan;
 		ObjData.light.view.tilt = inLight.tilt;
 		ObjData.light.view.roll = inLight.roll;
+		ObjData.light.view.x = inLight.x;
+		ObjData.light.view.y = inLight.y;
+		ObjData.light.view.z = inLight.z;
+		ObjData.light.view.arc = ObjData.light.arc;
 	}
+	
+	//sc_light_updateSpotDir(inLight);
+	sc_light_updateSpotMtx(inLight);
+	//sc_light_updatePointMtx(inLight);
 }
 
 int sc_lpp_getLightType(unsigned int inBitflag)
