@@ -303,7 +303,7 @@ void sc_ent_heatHaze(ENTITY* ent, VECTOR* color, var softness, var speed, var st
 
 
 //Terrain
-
+/*
 void sc_ent_terrain(ENTITY* ent, STRING* sAtlas)
 {
 	//create atlas
@@ -321,7 +321,7 @@ void sc_ent_terrain(ENTITY* ent, STRING* sAtlas)
 	}
 	
 }
-
+*/
 /*
 // Water
 //
