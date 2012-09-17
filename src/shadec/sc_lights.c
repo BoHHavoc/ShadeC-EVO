@@ -18,6 +18,17 @@ void sc_light_updateSpotMtx(ENTITY* inLight)
 {
 	SC_OBJECT* ObjData = (SC_OBJECT*)(inLight.SC_SKILL);
 	
+	
+	float fTexAdj[16] =
+		{ 0.5, 0.0, 0.0, 0.0,
+		  0.0,-0.5,	0.0, 0.0,
+		  0.0, 0.0, 1.0, 0.0,
+		  0.0, 0.0, 0.0, 1.0 };
+		  
+	fTexAdj[12] = 0.5 + ((float)0.5/(float)256);
+	fTexAdj[13] = 0.5 + ((float)0.5/(float)256);
+	
+	
 	VECTOR lightDir;
 
 	//lightDir = malloc(sizeof(VECTOR));
@@ -31,6 +42,23 @@ void sc_light_updateSpotMtx(ENTITY* inLight)
 	
 	sc_skill(inLight, SC_OBJECT_LIGHT_DIR, lightDir);
 	//if(lightDir.y == -90) lightDir.y = 80; //might have to comment this in again (?)
+	
+	/*
+	//if spotlight has a shadowview attached
+	if(ObjData.light.view != NULL)
+	{
+		D3DXMATRIX matView_, matProj_;
+		view_to_matrix(ObjData.light.view, &matView_, &matProj_);
+		mat_multiply(&matView_, &matProj_);
+		mat_multiply(&matView_, fTexAdj);
+		sc_skill(inLight, SC_OBJECT_LIGHT_MATRIX, &matView_);
+		
+		ptr_remove(matView_);
+		ptr_remove(matProj_);
+		return;
+	}
+	*/
+	
 	
 	//create lightViewMatrix
 	D3DXVECTOR3 vEyePt;
@@ -62,29 +90,29 @@ void sc_light_updateSpotMtx(ENTITY* inLight)
 	//pass projection matrix to light	
 	D3DXMATRIX mtxLightWorldViewProj;
 	//mtxLightWorldViewProj = sys_malloc(sizeof(D3DXMATRIX));
-	mat_set(mtxLightWorldViewProj, mtxLightView);
-	mat_multiply(mtxLightWorldViewProj, mtxLightProj);
+	mat_set(&mtxLightWorldViewProj, &mtxLightView);
+	mat_multiply(&mtxLightWorldViewProj, &mtxLightProj);
+	mat_multiply(&mtxLightWorldViewProj, fTexAdj);
 	
+	sc_skill(inLight, SC_OBJECT_LIGHT_MATRIX, &mtxLightWorldViewProj);
 	
-	float fTexAdj[16] =
-		{ 0.5, 0.0, 0.0, 0.0,
-		  0.0,-0.5,	0.0, 0.0,
-		  0.0, 0.0, 1.0, 0.0,
-		  0.0, 0.0, 0.0, 1.0 };
-		  
-	fTexAdj[12] = 0.5 + ((float)0.5/(float)256);
-	fTexAdj[13] = 0.5 + ((float)0.5/(float)256);
-
-	mat_multiply(mtxLightWorldViewProj, fTexAdj);
-	
-	sc_skill(inLight, SC_OBJECT_LIGHT_MATRIX, mtxLightWorldViewProj);
-	
+	/*
+	//this lags like hell
 	sys_free(vEyePt);
 	sys_free(vLookatPt);
 	sys_free(vUpVec);
 	sys_free(mtxLightView);
 	sys_free(mtxLightProj);
 	sys_free(mtxLightWorldViewProj);
+	*/
+	
+	//better
+	ptr_remove(vEyePt);
+	ptr_remove(vLookatPt);
+	ptr_remove(vUpVec);
+	ptr_remove(mtxLightView);
+	ptr_remove(mtxLightProj);
+	ptr_remove(mtxLightWorldViewProj);
 }
 
 

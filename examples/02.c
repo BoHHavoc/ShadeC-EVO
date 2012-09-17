@@ -56,7 +56,7 @@ void main()
 	vec_set(sun_color, vector(255,240,230)); 
 	//set ambient color to zero as we want a dark level with nice shadows ;)
 	//vec_set(ambient_color, vector(0,0,0));
-	vec_set(ambient_color, vector(64,64,64));
+	vec_set(ambient_color, vector(96,96,96));
 	//vec_set(ambient_color, vector(180,180,180));
 		
 	//create a camera object so we can move around the scene
@@ -109,7 +109,7 @@ void main()
 	sc_screen_default.settings.dof.focalPos = 300;
 	sc_screen_default.settings.dof.focalWidth = 600;
 	sc_screen_default.settings.ssao.radius = 30;	
-	sc_screen_default.settings.ssao.intensity = 5;
+	sc_screen_default.settings.ssao.intensity = 4;
 	sc_screen_default.settings.ssao.selfOcclusion = 0.0004; //we want a bit of self occlusion... lower values result in even more self occlusion
 	sc_screen_default.settings.ssao.brightOcclusion = 0.2; //low value: ssao will only be visible in shadows and dark areas. high value: ssao will always be visible. Range: 0-1
 	

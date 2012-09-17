@@ -233,8 +233,10 @@ int sc_physics_intersectViewView(VIEW* view1, VIEW* view2)
 	
 	//check if views intersect
 	int res = sc_physics_intersectOBBOBB(obb1, obb2);
-	sys_free(obb1);
-	sys_free(obb2);
+	//sys_free(obb1);
+	//sys_free(obb2);
+	ptr_remove(obb1);
+	ptr_remove(obb2);
 	
 	return res;
 }
