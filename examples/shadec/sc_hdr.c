@@ -26,13 +26,17 @@ void sc_hdr_MaterialEventHDR()
 			screen.views.preHDR.bmap = screen.renderTargets.full0;
 			screen.views.hdrDownsample.bmap = screen.renderTargets.quarter0;
 			break;
-			
+		
+		case screen.views.hdrScatter:
+			screen.views.hdrScatter.bmap = screen.renderTargets.quarter1;
+			break;
+		
 		case screen.views.hdrBlurX:
-			screen.views.hdrBlurX.bmap = screen.renderTargets.quarter1;
+			screen.views.hdrBlurX.bmap = screen.renderTargets.quarter0;
 			break;
 		
 		case screen.views.hdrBlurY:
-			screen.views.hdrBlurY.bmap = screen.renderTargets.quarter0;
+			screen.views.hdrBlurY.bmap = screen.renderTargets.quarter1;
 			break;
 		
 		case screen.views.hdrLensflareDownsample:
@@ -48,7 +52,7 @@ void sc_hdr_MaterialEventHDR()
 			break;
 			
 		case screen.views.hdrLensflareUpsample:
-			screen.views.hdrLensflareUpsample.bmap = screen.renderTargets.quarter1;
+			screen.views.hdrLensflareUpsample.bmap = screen.renderTargets.quarter0;
 			break;
 		
 		default:
@@ -66,8 +70,8 @@ void sc_hdr_init(SC_SCREEN* screen)
 		screen.materials.hdr = mtl_create();
 		effect_load(screen.materials.hdr, sc_hdr_sMaterialHDR);
 		screen.materials.hdr.skin1 = screen.renderTargets.full0;// this contains the current scene without hdr
-		if(screen.settings.hdr.lensflare.enabled == 1) screen.materials.hdr.skin2 = screen.renderTargets.quarter1;// this contains the bloom and lensflare
-		else screen.materials.hdr.skin2 = screen.renderTargets.quarter0;// this contains the bloom
+		if(screen.settings.hdr.lensflare.enabled == 1) screen.materials.hdr.skin2 = screen.renderTargets.quarter0;// this contains the bloom and lensflare
+		else screen.materials.hdr.skin2 = screen.renderTargets.quarter1;// this contains the bloom
 		screen.materials.hdr.skill1 = floatv(0.25); // inverted downsample factor
 		
 		//lensflare activated?
@@ -97,21 +101,28 @@ void sc_hdr_init(SC_SCREEN* screen)
 			//lensflare downsample
 			screen.materials.hdrLensflareDownsample = mtl_create();
 			effect_load(screen.materials.hdrLensflareDownsample, sc_hdr_sMaterialHDRLensflareDownsample);
-			screen.materials.hdrLensflareDownsample.skin1 = screen.renderTargets.quarter0;// this contains the bloom
+			screen.materials.hdrLensflareDownsample.skin1 = screen.renderTargets.quarter1;// this contains the bloom
 			screen.materials.hdrLensflareDownsample.skill1 = floatv(2); //downsample factor
 		}
 		
 		//blur y
 		screen.materials.hdrBlurY = mtl_create();
 		effect_load(screen.materials.hdrBlurY, sc_hdr_sMaterialHDRBlurY);
-		screen.materials.hdrBlurY.skin1 = screen.renderTargets.quarter1;// this contains the x blurred bloom
+		screen.materials.hdrBlurY.skin1 = screen.renderTargets.quarter0;// this contains the x blurred bloom
 		screen.materials.hdrBlurY.skill1 = floatv(screen.settings.hdr.blurY); //blur strength
 			
 		//blur x
 		screen.materials.hdrBlurX = mtl_create();
 		effect_load(screen.materials.hdrBlurX, sc_hdr_sMaterialHDRBlurX);
-		screen.materials.hdrBlurX.skin1 = screen.renderTargets.quarter0;// this contains the brightpass
+		screen.materials.hdrBlurX.skin1 = screen.renderTargets.quarter1;// this contains the scattered brightpass
 		screen.materials.hdrBlurX.skill1 = floatv(screen.settings.hdr.blurX); //blur strength
+		
+		//scatter
+		screen.materials.hdrScatter = mtl_create();
+		effect_load(screen.materials.hdrScatter, sc_hdr_sMaterialHDRScatter);
+		screen.materials.hdrScatter.skin1 = screen.renderTargets.quarter0;// this contains the brightpass
+		screen.materials.hdrScatter.skin2 = screen.renderTargets.gBuffer[SC_GBUFFER_NORMALS_AND_DEPTH];// this contains the brightpass
+		screen.materials.hdrScatter.skill1 = floatv(screen.settings.hdr.scatter); //scatter strength
 		
 		//downsample and highpass
 		screen.materials.hdrDownsample = mtl_create();
@@ -252,6 +263,22 @@ void sc_hdr_init(SC_SCREEN* screen)
 		screen.views.hdrBlurX.stage = screen.views.hdrBlurY;
 		screen.views.hdrBlurX.bmap = screen.renderTargets.quarter0; //assign temp render target so Acknex does not automatically create a new one
 		
+		//scatter
+		screen.views.hdrScatter = view_create(2);
+		set(screen.views.hdrScatter, PROCESS_TARGET);
+		set(screen.views.hdrScatter, UNTOUCHABLE);
+		set(screen.views.hdrBlurX, NOSHADOW);
+		reset(screen.views.hdrScatter, AUDIBLE);
+		set(screen.views.hdrScatter, CHILD);
+		screen.views.hdrScatter.size_x = screen.views.main.size_x/4;
+		screen.views.hdrScatter.size_y = screen.views.main.size_y/4;
+		screen.materials.hdrScatter.event = sc_hdr_MaterialEventHDR;
+		screen.materials.hdrScatter.SC_SKILL = screen;
+		set(screen.materials.hdrScatter, ENABLE_VIEW);
+		screen.views.hdrScatter.material = screen.materials.hdrScatter;
+		screen.views.hdrScatter.stage = screen.views.hdrBlurX;
+		screen.views.hdrScatter.bmap = screen.renderTargets.quarter0; //assign temp render target so Acknex does not automatically create a new one
+		
 		//downsample and highpass
 		screen.views.hdrDownsample = view_create(2);
 		set(screen.views.hdrDownsample, PROCESS_TARGET);
@@ -265,7 +292,7 @@ void sc_hdr_init(SC_SCREEN* screen)
 		screen.materials.hdrDownsample.SC_SKILL = screen;
 		set(screen.materials.hdrDownsample, ENABLE_VIEW);
 		screen.views.hdrDownsample.material = screen.materials.hdrDownsample;
-		screen.views.hdrDownsample.stage = screen.views.hdrBlurX;
+		screen.views.hdrDownsample.stage = screen.views.hdrScatter;
 		screen.views.hdrDownsample.bmap = screen.renderTargets.quarter0; //assign temp render target so Acknex does not automatically create a new one
 		
 		
@@ -319,7 +346,7 @@ void sc_hdr_frm(SC_SCREEN* screen)
 		screen.materials.hdrBlurY.skill1 = floatv(screen.settings.hdr.blurY); //blur strength
 		screen.materials.hdrBlurX.skill1 = floatv(screen.settings.hdr.blurX); //blur strength
 		screen.materials.hdrDownsample.skill2 = floatv(screen.settings.hdr.brightpass); //brightpass threshold
-		screen.materials.hdrDownsample.skill3 = floatv(screen.settings.hdr.intensity); //brightpass rescale/strength
+		screen.materials.hdrDownsample.skill3 = floatv(screen.settings.hdr.intensity*0.2); //brightpass rescale/strength
 		
 		if(screen.views.hdrLensflare != NULL)
 		{

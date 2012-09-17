@@ -1,9 +1,12 @@
 //#include <scUnpackSpecularData>
+#include <scUnpackLighting>
+
+float4 vecSkill1; //xyz = ambient_color
 
 texture mtlSkin1; //albedo and emissive mask
 texture mtlSkin2; //lighting, diffuse and specular
 texture mtlSkin3; //brdf data
-texture mtlSkin4; // ssao
+texture mtlSkin4; //ssao
 
 sampler2D albedoAndEmissiveMaskSampler = sampler_state
 {
@@ -58,12 +61,12 @@ struct psIn
 float4 mainPS(psIn In):COLOR
 {
 	half4 albedoAndEmissiveMask = tex2D(albedoAndEmissiveMaskSampler, In.Tex);
-	half4 diffuseAndSpecular = tex2D(diffuseAndSpecularSampler, In.Tex); //get lighting
+	half4 diffuseAndSpecular = UnpackLighting(tex2D(diffuseAndSpecularSampler, In.Tex));
 	half4 materialData = tex2D(materialDataSampler, In.Tex);
-	diffuseAndSpecular.w = diffuseAndSpecular.a/length(diffuseAndSpecular.xyz) * 2; //unpack specular
-	diffuseAndSpecular.xyz *= 2; //rescale
+	//diffuseAndSpecular.w = diffuseAndSpecular.a/length(diffuseAndSpecular.xyz) * 2; //unpack specular
+	//diffuseAndSpecular.xyz *= 2; //rescale
 	//diffuseAndSpecular.w *= 2;
-	//apply ssao
+	//get ssao
 	half4 ssao = tex2D(ssaoSampler, In.Tex);
 	diffuseAndSpecular.xyz *= ssao.w;
 	diffuseAndSpecular.xyz += ssao.xyz;
@@ -75,15 +78,22 @@ float4 mainPS(psIn In):COLOR
 	{
 		diffuseAndSpecular.xyz = 1;
 		diffuseAndSpecular.w = 0;
+		//ssao.w = 1;
+		//ssao.xyz = 0;
 	}
 	
 	
-	half4 output = 1;
+	half4 output;// = 1;
 	//output.xyz = albedoAndEmissiveMask.xyz * diffuseAndSpecular.xyz + diffuseAndSpecular.w*diffuseAndSpecular.xyz*specularMask;
 	//output.xyz = albedoAndEmissiveMask.xyz * diffuseAndSpecular.xyz + diffuseAndSpecular.w*diffuseAndSpecular.xyz*specularMask;
 	//output.xyz = pow(albedoAndEmissiveMask.xyz,2) //convert color to linear space for later gamma correction
-	output.xyz = albedoAndEmissiveMask.xyz
-					 * diffuseAndSpecular.xyz  + diffuseAndSpecular.w*diffuseAndSpecular.xyz*materialData.z;
+	output.xyz = albedoAndEmissiveMask.xyz * diffuseAndSpecular.xyz //pow(albedoAndEmissiveMask.xyz,2.2f) * diffuseAndSpecular.xyz
+					 + diffuseAndSpecular.w*diffuseAndSpecular.xyz*materialData.z;
+					 //* (((diffuseAndSpecular.xyz+vecSkill1.xyz)*ssao.w)+ssao.xyz)  + diffuseAndSpecular.w*diffuseAndSpecular.xyz*materialData.z*ssao.w;
+					 
+	//gamma correction
+	//output.xyz = pow(output.xyz,1.f/2.2f);
+	//output.xyz = (output.xyz*(6.2*output.xyz+0.5))/(output.xyz*(6.2*output.xyz+1.7)+0.06);
 	
 	//emissive
 	output.xyz += albedoAndEmissiveMask.xyz * albedoAndEmissiveMask.w;
@@ -96,18 +106,17 @@ float4 mainPS(psIn In):COLOR
 	//output.xyz = pow(output.xyz, (float)1.0/(float)2.2); //gamma correction
 	
 	//output.xyz = materialData.r;
-	//output.xyz = diffuseAndSpecular.xyz;
+	//output.xyz = diffuseAndSpecular.xyz + diffuseAndSpecular.xyz * diffuseAndSpecular.a;
 	//output.xyz = albedoAndEmissiveMask.xyz;
 	
 	//output.xyz = diffuseAndSpecular.xyz;
 	//output.xyz = ssao.w;
-	
+	//output.xyz = UnpackLighting(tex2D(diffuseAndSpecularSampler, In.Tex)).xyz * tex2D(albedoAndEmissiveMaskSampler, In.Tex).xyz;
+	//if(dot(output.xyz,1) > 3) output.xyz = 0;
+	//output.xyz = diffuseAndSpecular.w;
 	output.w = 1;
 	
-	
-	
 	return output;
-	
 }
 
 technique t1

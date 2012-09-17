@@ -57,9 +57,10 @@ float4 dofHBlur_PS(float2 texcoord0 : TEXCOORD0) : COLOR
 	float3 pixel = 0;
 	for(int i = 0; i < g_c_PixelOffsetSize; i++)
 	{
-		pixel += 1 * tex2D(currentScene,(texcoord0-vecViewPort.zw+PixelOffset_fix) + PixelOffsets[i].yx * vecSkill1.x).rgb * BlurWeights[i];	
+		pixel += tex2D(currentScene,(texcoord0-vecViewPort.zw+PixelOffset_fix) + PixelOffsets[i].yx * vecSkill1.x).rgb * BlurWeights[i];	
 	}
-
+	//pixel = tex2D(currentScene, texcoord0).xyz;
+	//pixel /= g_c_PixelOffsetSize;
 	return float4(pixel,1);
 	
 }

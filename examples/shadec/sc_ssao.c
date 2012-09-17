@@ -123,7 +123,29 @@ void sc_ssao_init(SC_SCREEN* screen)
 		*/
 		//ssao
 		screen.materials.ssao = mtl_create();
-		effect_load(screen.materials.ssao, sc_ssao_sMaterialSSAOLow);
+		//effect_load(screen.materials.ssao, sc_ssao_sMaterialSSAOLow);
+		switch(screen.settings.ssao.quality)
+		{
+			case SC_LOW:
+				effect_load(screen.materials.ssao, sc_ssao_sMaterialSSAOLow);
+			break;
+			
+			case SC_MEDIUM:
+				effect_load(screen.materials.ssao, sc_ssao_sMaterialSSAOMedium);
+			break;
+			
+			case SC_HIGH:
+				effect_load(screen.materials.ssao, sc_ssao_sMaterialSSAOHigh);
+			break;
+			
+			case SC_ULTRA:
+				effect_load(screen.materials.ssao, sc_ssao_sMaterialSSAOUltra);
+			break;
+			
+			default:
+				effect_load(screen.materials.ssao, sc_ssao_sMaterialSSAOLow);
+			break;
+		}
 		screen.materials.ssao.skin1 = screen.renderTargets.gBuffer[SC_GBUFFER_NORMALS_AND_DEPTH];
 		screen.materials.ssao.skin2 = screen.renderTargets.gBuffer[SC_GBUFFER_ALBEDO_AND_EMISSIVE_MASK];
 		screen.materials.ssao.skin3 = screen.renderTargets.deferredLighting;
@@ -245,6 +267,7 @@ void sc_ssao_frm(SC_SCREEN* screen)
 		screen.materials.ssao.skill1 = floatv(screen.settings.ssao.intensity); //intensity
 		screen.materials.ssao.skill2 = floatv(screen.settings.ssao.radius); //ssao radius
 		screen.materials.ssao.skill3 = floatv(screen.settings.ssao.selfOcclusion); //anti self occlusion
+		screen.materials.ssao.skill4 = floatv(screen.settings.ssao.brightOcclusion); //occlude bright objects? if so, how much? 0-1
 		
 		//pass frustum far plane points to shader
 		screen.materials.ssao.skill5 = floatv(screen.frustumPoints.x);

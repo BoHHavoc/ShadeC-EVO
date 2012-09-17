@@ -111,6 +111,7 @@ void sc_settings_setDefaults(SC_SETTINGS* settings)
 {
 	//HDR
 	settings.hdr.enabled = 0;
+	settings.hdr.scatter = 8;
 	settings.hdr.blurX = 8;
 	settings.hdr.blurY = 12;
 	settings.hdr.brightpass = 0.25;
@@ -136,8 +137,9 @@ void sc_settings_setDefaults(SC_SETTINGS* settings)
 	settings.ssao.enabled = 0;
 	settings.ssao.radius = 25;
 	settings.ssao.intensity = 1;
-	//settings.ssao.selfOcclusion = 0.85;
-	settings.ssao.selfOcclusion = 0.0004; //0.0005 gets rid of almost all self occlusion
+	settings.ssao.brightOcclusion = 0.1;
+	settings.ssao.selfOcclusion = 0.0005; //0.0005 gets rid of almost all self occlusion
+	settings.ssao.quality = SC_LOW;
 	
 	//SUN
 	settings.lights.sunShadows = 0;

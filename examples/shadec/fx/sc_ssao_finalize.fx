@@ -29,7 +29,7 @@ sampler2D ssaoSampler = sampler_state {
 	AddressU = MIRROR;
 	AddressV = MIRROR;
 };
-
+/*
 //Texture mtlSkin1;
 sampler2D colorSampler = sampler_state {
 	texture = <mtlSkin1>;
@@ -59,49 +59,7 @@ sampler2D depthHalfSampler = sampler_state {
 	AddressU = MIRROR;
 	AddressV = MIRROR;
 };
-
-//decode normals
-half3 decodeNormals(half2 enc)
-{
-	
-	/*
-	//r12f
-   half4 nn = half4(enc,0,0)*half4(2,2,0,0) + half4(-1,-1,1,-1);
-   half l = dot(nn.xyz,-nn.xyw);
-   nn.z = l;
-   nn.xy *= sqrt(l);
-   return nn.xyz * 2 + half3(0,0,-1);
-   */ 
-   
-   
-   //argb8
-   //half3 n;
-	//n.xy=enc.xy*2-1;
-	//n.z=-sqrt(1-dot(n.xy,n.xy));
-	//return n;
-	
-	//spheremap
-	float3 n;
-	n.xy = -enc*enc+enc;
-	n.z = -1;
-	float f = dot(n, float3(1,1,0.25));
-	float m = sqrt(f);
-	n.xy = (enc*8-4) * m;
-	n.z = 1 - 8*f;
-	return n;
-	
-	/*
-	//Lambert Azimuthal
-	half2 fenc = enc*4-2;
-	half f = dot(fenc,fenc);
-	half g = sqrt(1-f/4);
-	half3 n;
-	n.xy = fenc*g;
-	n.z = 1-f/2;
-	return n;
-	*/
-}
-
+*/
 
 float4 mainPS(in float2 inTex:TEXCOORD0, in float2 inPos:VPOS):COLOR0
 {
@@ -127,6 +85,17 @@ float4 mainPS(in float2 inTex:TEXCOORD0, in float2 inPos:VPOS):COLOR0
 	vecViewPort.z = 1.0f/(vecViewPort.x);
 	vecViewPort.w = 1.0f/(vecViewPort.y);
 	
+	/*
+	//dilate filter to get rid of 1 pixel halo
+	half4 output = 0;//tex2D(ssaoSampler, inTex/2);
+	output = tex2D(ssaoSampler, (inTex/2) + float2(vecViewPort.z, vecViewPort.w)*2 );
+	output = min(output, tex2D(ssaoSampler, (inTex/2) + float2(-vecViewPort.z, vecViewPort.w)*2 ));
+	output = min(output, tex2D(ssaoSampler, (inTex/2) + float2(vecViewPort.z, -vecViewPort.w)*2 ));
+	output = min(output, tex2D(ssaoSampler, (inTex/2) + float2(-vecViewPort.z, -vecViewPort.w)*2 ));
+	return output;///4;
+	*/
+	
+	
 	//cheap blur to get rid of noise dots
 	half4 output = 0;//tex2D(ssaoSampler, inTex/2);
 	output += tex2D(ssaoSampler, (inTex/2) + float2(vecViewPort.z, vecViewPort.w)*2 );
@@ -134,9 +103,6 @@ float4 mainPS(in float2 inTex:TEXCOORD0, in float2 inPos:VPOS):COLOR0
 	output += tex2D(ssaoSampler, (inTex/2) + float2(vecViewPort.z, -vecViewPort.w)*2 );
 	output += tex2D(ssaoSampler, (inTex/2) + float2(-vecViewPort.z, -vecViewPort.w)*2 );
 	return output/4;
-	
-	
-	
 	
 	
 	/*

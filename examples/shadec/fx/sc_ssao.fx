@@ -3,8 +3,9 @@ float4x4 matProjInv; //needed for viewspace position reconstruction
 #include <scUnpackNormals>
 #include <scUnpackDepth>
 #include <scCalculatePosVSQuad>
-#include <scNormalsFromPosition>
-#include <scNormalsFromDepth>
+//#include <scNormalsFromPosition>
+//#include <scNormalsFromDepth>
+#include <scUnpackLighting>
 
 bool AUTORELOAD;
 
@@ -126,7 +127,8 @@ float compareDepths( in float depth1, in float depth2, in half aorange, in half3
 	//float diff = sqrt(clamp(1.0-(depth1-depth2) / (aorange/(far-near)),0.0,1.0));
 	//float ao = min(aoCap,max(0-SelfOcclusion,depth1-depth2-depthTolerance) * aoMultiplier) * diff;
 	float diff = sqrt(clamp(1.0-(depth1-depth2) / (aorange/(far-1)),0.0,1.0));
-	return min(1,max(-vecSkill1.z,depth1-depth2) * vecSkill1.x*100) * diff;
+	//return min(1,max(-vecSkill1.z,depth1-depth2) * vecSkill1.x*100) * diff;
+	return min(1,max(-vecSkill1.z,depth1-depth2) * 100) * diff;
 
 //	float3 diff = depth2 - depth1;
 //	const float3 v = normalize(diff);
@@ -198,7 +200,9 @@ float4 mainPS(float2 inTex:TEXCOORD0):COLOR0
 	depth2 = UnpackDepth(tex2D(normalsAndDepthSampler, samp_UV).zw);
 	ao += compareDepths(gBuffer.w,depth2, (aoRadius+3)*2, normal);
 	
-	ao = 1-saturate(ao/5);
+	ao = ((ao/5));
+	ao = 1-saturate(ao*(1-saturate(UnpackLighting(tex2D(lightingSampler, inTex)).xyz))*vecSkill1.x);
+	//ao = saturate( ao + saturate(UnpackLighting(tex2D(lightingSampler, inTex)).xyz) );
 	//ao =  lighting;
 	//ao = ao*(1-(tex2D(lightingSampler, inTex).xyz*2));
 

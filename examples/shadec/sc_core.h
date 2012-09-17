@@ -64,6 +64,12 @@ BMAP* sc_map_random = "sc_random.png";
 #define SC_PASS_FORWARD 1
 #define SC_PASS_REFRACT 2
 
+//Quality Settings
+#define SC_LOW 0
+#define SC_MEDIUM 0
+#define SC_HIGH 0
+#define SC_ULTRA 0
+
 //SC_MATERIAL
 //#define SC_MATERIAL_LIGHT 0
 #define SC_MATERIAL_LIGHT_SHADOWMAP 1
@@ -184,6 +190,7 @@ typedef struct{
 	VIEW* refract;
 	VIEW* hdr;
 	VIEW* hdrDownsample;
+	VIEW* hdrScatter;
 	VIEW* hdrBlurX;
 	VIEW* hdrBlurY;
 	VIEW* hdrLensflareDownsample;
@@ -235,6 +242,7 @@ typedef struct{
 	MATERIAL* deferred;
 	MATERIAL* hdr;
 	MATERIAL* hdrDownsample;
+	MATERIAL* hdrScatter;
 	MATERIAL* hdrBlurX;
 	MATERIAL* hdrBlurY;
 	MATERIAL* hdrLensflareDownsample;
@@ -264,6 +272,7 @@ typedef struct{
 	float blurY;
 	float brightpass;
 	float intensity;
+	float scatter;
 	SC_SETTINGS_HDR_LENSFLARE lensflare;
 }SC_SETTINGS_HDR;
 
@@ -280,6 +289,8 @@ typedef struct{
 	float intensity;
 	float radius;
 	float selfOcclusion;
+	float brightOcclusion;
+	int quality;
 	
 }SC_SETTINGS_SSAO;
 

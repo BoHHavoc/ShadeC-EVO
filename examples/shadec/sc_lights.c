@@ -164,24 +164,26 @@ void sc_light_checkSpotFrustum()
 		}
 		else
 		{
+			set(ObjData.light.view,SHOW);
+			/*
 			//lightview intersects with camera? OBB-OBB check
 			if( sc_physics_intersectViewView(playerView, ObjData.light.view) )
 			{
 				set(ObjData.light.view, SHOW);
 				
-				/*
-				//lightview intersects with camera? cone-sphere check
-				if( sc_physics_intersectViewSphere(screen.views.main, inLight.x, ObjData.light.range) )
-				{
-					//sc_light_setColor(inLight, vector(255, 0,0) );
-					reset(ObjData.light.view, SHOW);
-				}
-				else
-				{
-					//sc_light_setColor(inLight, vector(0, 255,0) );
-					set(ObjData.light.view, SHOW);
-				}
-				*/
+				
+//				//lightview intersects with camera? cone-sphere check
+//				if( sc_physics_intersectViewSphere(screen.views.main, inLight.x, ObjData.light.range) )
+//				{
+//					//sc_light_setColor(inLight, vector(255, 0,0) );
+//					reset(ObjData.light.view, SHOW);
+//				}
+//				else
+//				{
+//					//sc_light_setColor(inLight, vector(0, 255,0) );
+//					set(ObjData.light.view, SHOW);
+//				}
+				
 				
 				
 			}
@@ -190,6 +192,7 @@ void sc_light_checkSpotFrustum()
 				//sc_light_setColor(inLight, vector(255, 0,0) );
 				reset(ObjData.light.view, SHOW);
 			}
+			*/
 		}
 		
 		#else
@@ -376,7 +379,7 @@ ENTITY* sc_light_createFunc(int inType, var inRange, VECTOR* inColor, VECTOR* in
 			shadowView.stage = blurView;
 			blurView.bmap = shadowBmap;
 			blurView.material = mtl_create();
-			effect_load(blurView.material, "sc_lights_shadowmapLocalBlur.fx");
+			effect_load(blurView.material, sc_lights_sMaterialShadowmapBlur);
 			blurView.material.skill1 = floatv((float)1/(float)shadowView.size_x);
 			//
 
@@ -697,7 +700,7 @@ void sc_lights_initSun(SC_SCREEN* screen)
 			screen.views.sunShadowDepth[i].stage = blurView;
 			blurView.bmap = screen.renderTargets.sunShadowDepth[i];
 			blurView.material = mtl_create();
-			effect_load(blurView.material, "sc_lights_shadowmapLocalBlur.fx");
+			effect_load(blurView.material, sc_lights_sMaterialShadowmapBlur);
 			//blurView.material.skill1 = floatv((float)(2.25-i)/(float)screen.settings.lights.sunShadowResolution);
 			if(i==0) blurView.material.skill1 = floatv((float)(1.5)/(float)screen.settings.lights.sunShadowResolution);
 			if(i==1) blurView.material.skill1 = floatv((float)(0.75)/(float)screen.settings.lights.sunShadowResolution);

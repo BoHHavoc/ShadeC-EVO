@@ -1,6 +1,15 @@
+#define SPOT
+//#define SPECULAR
+#define SHADOW
+
+#include <scLights>
+
+
+/*
 #include <scUnpackNormals>
 #include <scUnpackDepth>
 #include <scGetShadow>
+#include <scPackLighting>
 //#include <scUnpackSpecularData>
 
 //#define STENCILMASK
@@ -238,9 +247,7 @@ float4 mainPS(vsOut In):COLOR0
 	//color.rgb += brdfData1.rgb*color.rgb;
 	//color.rgb=GetShadow(shadowSampler, lightProj.xy/lightProj.z, lightProj.z/vecSkill1.w, vecSkill1.w);
 	
-	
-	color.rgb *= 0.5;
-	color.a *= length(color.rgb);
+	color = PackLighting(color.rgb, color.a);
 	
    return color;
 }
@@ -287,8 +294,10 @@ technique outside
 		ZFunc = GREATEREQUAL;
 		AlphablendEnable = TRUE;
 		CullMode = CW;
-    	Srcblend = One;
-    	Destblend = One; 
+    	//Srcblend = One;
+    	//Destblend = One; 
+    	Srcblend = DestColor;
+    	Destblend = Zero; 
     	FogEnable = FALSE;
     	ZEnable = true;
 		
@@ -308,4 +317,4 @@ technique outside
 
 	}
 }
-
+*/

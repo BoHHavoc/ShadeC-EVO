@@ -53,7 +53,7 @@ void main()
 	wait(5); //wait for level load
 	//set suncolor to zero (setting sun_color in WED to zero does NOTHING! This is a bug in gamestudio)
 	//if suncolor == 0, sun will not be rendered. Set this for pure indoor scenes to boost performance!
-	vec_set(sun_color, vector(0,0,0)); 
+	//vec_set(sun_color, vector(0,0,0)); 
 	//vec_set(sun_color, vector(155,140,130)); 
 	//set ambient color to zero as we want a dark level with nice shadows ;)
 	//vec_set(ambient_color, vector(0,0,0));
@@ -95,7 +95,7 @@ void main()
 	sc_screen_default.settings.hdr.lensflare.enabled = 1; //enable for a nice lensflare effect in combination with HDR/Bloom
 	sc_screen_default.settings.dof.enabled = 0; //enable Depth of Field Effect
 	sc_screen_default.settings.ssao.enabled = 0; //enable to activate SSAO
-	sc_screen_default.settings.lights.sunShadows = 0; //enable shadows for the sun
+	sc_screen_default.settings.lights.sunShadows = 1; //enable shadows for the sun
 	sc_screen_default.settings.lights.sunShadowResolution = 256; //reduce shadow resolution as we are blurring the shadowmap and therefore can get away with low res shadows
 	sc_screen_default.settings.lights.sunPssmBlurSplits = 2; //blur the first two pssm splits
 	sc_screen_default.settings.lights.sunPssmSplitWeight = 0.7; //high res near splits, low res far splits

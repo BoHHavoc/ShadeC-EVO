@@ -847,6 +847,76 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	}
 #endif
 
+//section: scRGBtoLogLUV - RGB to LUV //
+#ifndef include_scRGBtoLogLUV
+#define include_scRGBtoLogLUV
+	// M matrix, for encoding
+	const static float3x3 M = float3x3(
+	    0.2209, 0.3390, 0.4184,
+	    0.1138, 0.6780, 0.7319,
+	    0.0102, 0.1130, 0.2969);
+
+	float4 RGBtoLogLUV(in float3 vRGB) 
+	{		 
+	    float4 vResult; 
+	    float3 Xp_Y_XYZp = mul(vRGB, M);
+	    Xp_Y_XYZp = max(Xp_Y_XYZp, float3(1e-6, 1e-6, 1e-6));
+	    vResult.xy = Xp_Y_XYZp.xy / Xp_Y_XYZp.z;
+	    float Le = 2 * log2(Xp_Y_XYZp.y) + 127;
+	    vResult.w = frac(Le);
+	    vResult.z = (Le - (floor(vResult.w*255.0f))/255.0f)/255.0f;
+	    return vResult;
+	}
+#endif
+
+//section: scLogLuvDecode - LUV to RGB //
+#ifndef include_scLogLUVtoRGB
+#define include_scLogLUVtoRGB
+	// Inverse M matrix, for decoding
+	const static float3x3 InverseM = float3x3(
+		6.0013,	-2.700,	-1.7995,
+		-1.332,	3.1029,	-5.7720,
+		.3007,	-1.088,	5.6268);	
+	
+	float3 LogLUVtoRGB(in float4 vLogLuv)
+	{	
+		float Le = vLogLuv.z * 255 + vLogLuv.w;
+		float3 Xp_Y_XYZp;
+		Xp_Y_XYZp.y = exp2((Le - 127) / 2);
+		Xp_Y_XYZp.z = Xp_Y_XYZp.y / vLogLuv.y;
+		Xp_Y_XYZp.x = vLogLuv.x * Xp_Y_XYZp.z;
+		float3 vRGB = mul(Xp_Y_XYZp, InverseM);
+		return max(vRGB, 0);
+	}
+#endif
+
+//section: scPackLighting - packs lighting (diffuse + specular)
+#ifndef include_scPackLighting
+#define include_scPackLighting
+	float4 PackLighting(in float3 vRGB, in float Specular) 
+	{	
+		//return float4(vRGB, Specular);
+		//return float4(vRGB*0.5, Specular);
+		return float4(exp2(-vRGB), exp2(-Specular*length(vRGB)));//Specular);
+	    
+	}
+#endif
+
+//section: scUnpackLighting - unpacks lighting (diffuse + specular)
+#ifndef include_scUnpackLighting
+#define include_scUnpackLighting
+	float4 UnpackLighting(in float4 inPackage) 
+	{
+		//return inPackage;
+		//return float4(inPackage.xyz*2, inPackage.w);
+		//return float4(-log2(inPackage.xyz), -log2(inPackage.w));
+		float4 output;
+		output.xyz = -log2(inPackage.xyz);
+		output.w = (-log2(inPackage.w))/length(output.xyz);
+		return output;
+		
+	}
+#endif
 
 //section: scPackSpecularData - packs specular data //
 #ifndef include_scPackSpecularData
@@ -1100,6 +1170,11 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 //section: scCalculatePosVSQuad - returns the viewspace position for a screenspace quad. Needs screenspace texcoords and linear depth * clip_far //
 #ifndef include_scCalculatePosVSQuad
 #define include_scCalculatePosVSQuad
+
+	#ifndef MATPROJINV
+	#define MATPROJINV
+		float4x4 matProjInv;
+	#endif
 	float3 CalculatePosVSQuad(float2 inTex, float inDepth)
 	{
 		float4 viewRay;
@@ -1364,6 +1439,429 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	}
 #endif
 
+//section: scLights - contains all needed stuff to compute deferred lighting  //
+#ifndef include_scLights
+#define include_scLights
+	
+	#ifdef SPOT
+		#ifndef PROJECTION
+			#define PROJECTION
+		#endif
+	#endif
+	
+	#ifndef SUN
+		bool PASS_SOLID;
+	#endif
+	
+	float4x4 matView;
+	#ifndef SUN
+		float4x4 matWorldView;
+		float4x4 matProj;
+	#endif
+	#ifdef PROJECTION
+		float4x4 matMtl; //LightMatrix (Cookie, Shadows)
+		#ifdef POINT
+			float4x4 matViewInv;
+		#endif
+	#endif
+	
+	#include <scUnpackNormals>
+	#include <scUnpackDepth>
+	#include <scPackLighting>
+	
+	#ifdef SUN
+		#include <scCalculatePosVSQuad>
+	#endif
+	#ifdef SHADOW //((SUN) && (SHADOW))
+		#ifdef SUN
+			float4x4 matViewInv; //needed for PSSM, TEMP ONLY, remove this from shader!
+			float4x4 matTex[4]; // set up from the pssm script
+			#include <scGetPssm>
+		#endif
+		#ifdef SPOT
+			#include <scGetShadow>
+		#endif
+	#endif
+	
+	
+	float4 vecSkill1; //lightpos (xyz), lightrange (w)
+	float4 vecSkill5; //light color (xyz), scene depth (w)
+	float4 vecSkill9; //light dir (xyz), stencil ref (w)
+	#ifdef SHADOW //((SUN) && (SHADOW))
+		#ifdef SUN
+			float4 vecSkill13; // number of pssm splits (x)
+		#endif
+	#endif
+	#ifdef SUN
+		float sun_light_var;
+	#endif
+	//float4 frustumPoints;
+	
+	float4 vecViewDir;
+	#ifndef SUN
+		float4 vecViewPort;
+	#endif
+	
+	texture mtlSkin1; //normals (xy) depth (zw)
+	#ifdef PROJECTION
+		texture mtlSkin2; //projection map
+		#ifdef SHADOW
+			texture mtlSkin3; //shadow depthmap
+		#endif
+	#endif
+	texture mtlSkin4; //material id (x), specular power (y), specular intensity (z), environment map id (w)
+	texture texBRDFLut; //brdf equations stored in volumetric texture
+	texture texMaterialLUT; //material data texture -> x = lighting equation Lookup Texture index // y = diffuse roughness // z = diffuse wraparound
+	
+	#ifdef PROJECTION
+		sampler projSampler = sampler_state 
+		{ 
+		   Texture = <mtlSkin2>; 
+		   MinFilter = LINEAR;
+			MagFilter = LINEAR;
+			MipFilter = LINEAR;
+			AddressU = Border;
+			AddressV = Border;
+			//BorderColor = 0xFFFFFFFF;
+			BorderColor = 0x00000000;
+		};
+	#endif
+	
+	sampler normalsAndDepthSampler = sampler_state 
+	{ 
+	   Texture = <mtlSkin1>; 
+	   MinFilter = NONE;
+		MagFilter = NONE;
+		MipFilter = NONE;
+		AddressU = Border;
+		AddressV = Border;
+		//BorderColor = 0xFFFFFFFF;
+		BorderColor = 0x00000000;
+	};
+	
+	sampler materialDataSampler = sampler_state 
+	{ 
+	   Texture = <mtlSkin4>; 
+	   MinFilter = NONE;
+		MagFilter = NONE;
+		MipFilter = NONE;
+		AddressU = Border;
+		AddressV = Border;
+		//BorderColor = 0xFFFFFFFF;
+		BorderColor = 0x00000000;
+	};
+	
+	#ifdef SHADOW //((SUN) && (SHADOW))
+		#ifdef SUN
+			texture shadowTex1;
+			texture shadowTex2;
+			texture shadowTex3;
+			texture shadowTex4;
+			
+			sampler shadowDepth1Sampler = sampler_state 
+			{ 
+			   Texture = <shadowTex1>; 
+			   MinFilter = LINEAR;
+				MagFilter = LINEAR;
+				MipFilter = LINEAR;
+				AddressU = Border;
+				AddressV = Border;
+				//BorderColor = 0xFFFFFFFF;
+				BorderColor = 0x00000000;
+			};
+			sampler shadowDepth2Sampler = sampler_state 
+			{ 
+			   Texture = <shadowTex2>; 
+			   MinFilter = LINEAR;
+				MagFilter = LINEAR;
+				MipFilter = LINEAR;
+				AddressU = Border;
+				AddressV = Border;
+				//BorderColor = 0xFFFFFFFF;
+				BorderColor = 0x00000000;
+			};
+			sampler shadowDepth3Sampler = sampler_state 
+			{ 
+			   Texture = <shadowTex3>; 
+			   MinFilter = LINEAR;
+				MagFilter = LINEAR;
+				MipFilter = LINEAR;
+				AddressU = Border;
+				AddressV = Border;
+				//BorderColor = 0xFFFFFFFF;
+				BorderColor = 0x00000000;
+			};
+			sampler shadowDepth4Sampler = sampler_state 
+			{ 
+			   Texture = <shadowTex4>; 
+			   MinFilter = LINEAR;
+				MagFilter = LINEAR;
+				MipFilter = LINEAR;
+				AddressU = Border;
+				AddressV = Border;
+				//BorderColor = 0xFFFFFFFF;
+				BorderColor = 0x00000000;
+			};
+		#endif
+		
+		#ifdef SPOT
+			sampler2D shadowSampler = sampler_state 
+			{ 
+			   Texture = <mtlSkin3>; 
+			   MinFilter = LINEAR;
+				MagFilter = LINEAR;
+				MipFilter = LINEAR;
+				AddressU = Border;
+				AddressV = Border;
+				//BorderColor = 0xFFFFFFFF;
+				BorderColor = 0x00000000;
+			};
+		#endif
+	#endif
+	
+	sampler1D materialLUTSampler = sampler_state 
+	{ 
+	   Texture = <texMaterialLUT>; 
+	   AddressU = CLAMP; 
+	   AddressV = CLAMP;
+		MinFilter = NONE;
+		MagFilter = NONE;
+		MipFilter = NONE;
+	};
+	
+	sampler3D brdfLUTSampler = sampler_state 
+	{
+		Texture = <texBRDFLut>;
+	   AddressU = CLAMP; 
+		AddressV = CLAMP;
+		AddressW = WRAP;
+		MIPFILTER = NONE;
+		MINFILTER = LINEAR; //fade between brdfs
+		MAGFILTER = LINEAR; //fade between brdfs
+		//MINFILTER = NONE; // dont fade between brdfs
+		//MAGFILTER = NONE; // dont fade between brdfs
+	};
+	
+	struct vsOut
+	{
+		float4 Pos : POSITION;
+		#ifdef SUN
+			half2 Tex : TEXCOORD0;
+		#else
+			float3 Tex : TEXCOORD0;
+			float4 posVS : TEXCOORD1;
+		#endif
+	};
+	
+	#ifndef SUN
+		struct vsIn
+		{
+			float4 Pos : POSITION;
+			float2 Tex : TEXCOORD0;
+		};
+		
+		vsOut mainVS(vsIn In)
+		{
+			vsOut Out = (vsOut)0;
+			
+			Out.posVS = mul(In.Pos, matWorldView);
+			Out.Pos = mul(Out.posVS,matProj);
+		   Out.Tex = Out.Pos.xyw;
+		
+			return Out;
+		}
+	#endif
+	
+	
+	//float4 mainPS(in float2 inTex:TEXCOORD0):COLOR0
+	float4 mainPS(vsOut In):COLOR
+	{
+		//je nach tiefe clippen...
+		//discard;
+		
+		half4 color = 1;
+		
+		//projective texcoords
+		#ifndef SUN
+			//float2 projTex;
+			In.Tex.x = In.Tex.x/In.Tex.z/2.0f +0.5f + (0.5/vecViewPort.x);
+	   	In.Tex.y = -In.Tex.y/In.Tex.z/2.0f +0.5f + (0.5/vecViewPort.y);
+	   #endif
+	   
+	   //clip sky
+	   //clip( (1-materialData.r)-0.1 );
+	   
+	   
+	   //get gBuffer
+	   half4 gBuffer = tex2D(normalsAndDepthSampler, In.Tex.xy);
+		gBuffer.w = UnpackDepth(gBuffer.zw);
+	   
+	   //get specular data
+	   //half2 glossAndPower = UnpackSpecularData(tex2D(emissiveAndSpecularSampler, inTex).w);
+	   
+	   
+	   //clip pixels which can't be seen
+	   //not really needed anymore due to correct zbuffer culling :)
+	   //float junk = ((In.posVS.z/vecSkill5.w))-(gBuffer.w);//length(gBuffer.w-(In.posVS.z/vecSkill5.w));
+	   //clip(((In.posVS.z/vecSkill5.w))-(gBuffer.w));
+	   
+	   //decode normals
+	   gBuffer.xyz = UnpackNormals(gBuffer.xy);
+	   
+	   //get view pos
+	   #ifndef SUN
+	   	float3 posVS = gBuffer.w * In.posVS.xyz * (vecSkill5.w/In.posVS.z);
+	   #else
+	   	float3 posVS = CalculatePosVSQuad(In.Tex.xy, gBuffer.w*vecSkill5.w);
+	   #endif
+	   
+	   
+	   #ifdef PROJECTION
+	   	#ifdef SPOT
+		   	half4 lightProj = mul( half4(posVS,1), matMtl );
+			   color.rgb *= tex2D(projSampler, lightProj.xy/lightProj.z).rgb;
+			#endif
+		#endif
+	   
+	   
+	   //half3 Ln = mul(float4(vecSkill1.xzy,1),matView).xyz - posVS.xyz; //SUN
+	   half3 Ln = mul(vecSkill1.xzy,matView).xyz - posVS.xyz;
+	   #ifndef SUN
+	   	color.rgb *= saturate(1-length(Ln)/vecSkill1.w); //attenuation
+   		//clip(dot(color.rgb,1)-0.001);
+   	#endif
+	   //return PackLighting(color.rgb,0);
+	   
+	   Ln = normalize(Ln);
+	   #ifdef PROJECTION
+	   	#ifdef POINT
+				//color.rgb = texCUBE(projSampler, mul(mul(half4(Ln,0), matViewInv),matMtl)).rgb;
+				color.rgb *= texCUBE(projSampler, -mul(half4(Ln,0), matViewInv).rgb).rgb;
+				//return PackLighting(color.rgb, 0);
+			#endif
+		#endif
+	   #ifdef SPOT
+	   	clip(saturate(dot( mul(-vecSkill9.xzy,matView) , Ln))-0.0001); //clip backprojection
+		#endif
+	   //half3 Vn = normalize(matView[0].xyz - posVS);//normalize(IN.WorldView);
+	   half3 Vn = normalize(vecViewDir.xyz - posVS); //same as above but less arithmetic instructions
+	   half3 Hn = normalize(Vn + Ln);
+	   
+	   //half4 brdfData = (tex2D(materialDataSampler, inTex)); //get brdf gBuffer
+	   //half2 light = lit(dot(Ln,gBuffer.xyz), dot(Hn, gBuffer.xyz),brdfData.g*255).yz;
+		//color.rgb = light.x * vecSkill5.xyz * att;//vecSkill5.xyz;
+	   //color.a = light.y;// * glossAndPower.x;
+	   //color.rgb = dot(Ln,gBuffer.xyz)*att*vecSkill5.xyz;
+	   
+	   
+	   //material data
+	   half2 materialData = (tex2D(materialDataSampler, In.Tex.xy)).xy; //get material ID and specular power
+	   //half4 brdfData1 = tex3D( matData1Sampler,half3(In.texCoord, materialData.r) ); // x = lighting equation Lookup Texture index // y = diffuse roughness // z = diffuse wraparound
+	   half4 brdfData1 = tex1D( materialLUTSampler, materialData.x ); // x = lighting equation Lookup Texture index // y = diffuse roughness // z = diffuse wraparound
+	   //brdfData1.r = 0.0039;
+	   
+	   //materialData.r = brdfData1.r;
+	     
+	   half2 OffsetUV;
+	   OffsetUV.x = (brdfData1.y-0.5)*2;//+brdfTest1; //diffuse roughness
+	   OffsetUV.y = (brdfData1.z-0.5)*2;//+brdfTest2; //diffuse wraparound/velvety
+	   //half2 nuv = float2((0.5+saturate(dot(Ln,gBuffer.xyz)+OffsetUV.x)/2.0),	saturate(1.0 - (0.5+dot(gBuffer.xyz,Vn)/2.0)) + OffsetUV.y); //diffuse brdf uv, no options
+	  	half2 lightingUV = half2( (dot(Vn, gBuffer.xyz)+OffsetUV.x) , ((dot(Ln, gBuffer.xyz) + 1) * 0.5)+OffsetUV.y ); //diffuse brdf uv. options (OffsetUV.x/V)
+	  	color.rgb *= tex3D( brdfLUTSampler,half3(lightingUV , brdfData1.r) ).rgb * vecSkill5.xyz;
+	   
+	   #ifdef SPOT
+	   	#ifdef SHADOW
+	   		color.rgb *= GetShadow(shadowSampler, lightProj.xy/lightProj.z, lightProj.z/vecSkill1.w, vecSkill1.w);
+	   	#endif
+	   #endif
+	   
+	   //additional clipping based on diffuse lighting. clip non-lit parts
+	   #ifdef SPOT
+	   	clip(dot(color.rgb,1)-0.003);
+	   #endif
+	   
+	   #ifdef SPECULAR
+		   //fps hungry....
+		   //half2 specularUV = ( dot(Ln,Hn) , dot(gBuffer.xyz,Hn)-materialData.g ); //isotropic
+		   lightingUV = ( dot(Ln,Hn) , dot(gBuffer.xyz,Hn)); //isotropic
+		   //anisotropic
+		   	//specularUV.x = 0.5+dot(Ln,gBuffer.xyz)/2.0;
+		   	//specularUV.y = 1-(0.5+dot(gBuffer.xyz,Hn)/2.0);
+		   color.a = tex3D( brdfLUTSampler, half3(lightingUV, brdfData1.r) ).a;
+		   color.a = pow(color.a+0.005, materialData.g*255);
+		   //...
+		   //conventional specular
+		   //color.a = pow(dot(gBuffer.xyz,Hn),materialData.g*255);
+		#else
+			color.a = 0;
+		#endif
+	   
+	    
+	   //color.rgb = pow(diffuse,diffuseRoughness) * att * vecSkill5.xyz;
+	   //color.a = (saturate(pow(specular,materialData.g*255)));
+	      
+		//pack
+		//color.rgb /= 1.5;
+		//color.rgb += brdfData1.rgb*color.rgb;
+		
+		
+		
+		
+		#ifdef SHADOW //((SUN) && (SHADOW))
+			#ifdef SUN
+				//PSSM---------------------
+				half4 posWorld = mul(float4(posVS,1), matViewInv);
+				//half pssm_numsplits = 3;
+				half4 shadowTexcoord[4];
+				shadowTexcoord[0] = shadowTexcoord[1] = shadowTexcoord[2] = shadowTexcoord[3] = float4(0,0,0,0);
+				for(int i=0;i<vecSkill13.x;i++)
+					shadowTexcoord[i] = mul(posWorld,matTex[i]);
+			
+				color.rgb *= GetPssm(shadowTexcoord, posVS.z, vecSkill1.w, vecSkill13.x,  shadowDepth1Sampler, shadowDepth2Sampler, shadowDepth3Sampler, shadowDepth4Sampler);
+				//-------------------------
+			#endif
+		#endif
+		
+		#ifdef SUN
+			color.rgb *= sun_light_var*0.01; //brightness based on sun_light
+		#endif
+		
+
+		color = PackLighting(color.rgb, color.a);
+		
+	
+	   return color;
+	}
+	
+	technique t1
+	{
+		pass p0
+		{
+			#ifndef SUN
+				VertexShader = compile vs_2_0 mainVS();
+				PixelShader = compile ps_2_a mainPS();
+			#else
+				PixelShader = compile ps_3_0 mainPS();
+			#endif
+			
+			#ifdef SUN
+				AlphablendEnable = False;
+			#else
+				ColorWriteEnable = 0xFFFFFF;
+				ZWriteEnable = FALSE;
+				ZFunc = GREATEREQUAL;
+				AlphablendEnable = TRUE;
+				CullMode = CW;
+		    	//Srcblend = One;
+		    	//Destblend = One; 
+		    	Srcblend = DestColor;
+		    	Destblend = Zero; 
+		    	FogEnable = FALSE;
+		    	ZEnable = true;
+			#endif	
+		}
+	}
+#endif
 
 //////////////////////////////////////////////////////////////////////
 //section: end

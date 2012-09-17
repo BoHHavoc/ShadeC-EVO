@@ -341,6 +341,7 @@ PixelToFrame mainPS(vsOut In)
 	//PSOut.normalsAndDepth.w = 1;
 	//PSOut.albedoAndEmissiveMask.w = 1;
 	//PSOut.emissiveAndSpecular.w = 1;
+	//PSOut.albedoAndEmissiveMask.xyz = pow(PSOut.albedoAndEmissiveMask.xyz, 2.2);
 	
 	return PSOut;
 }

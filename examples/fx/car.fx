@@ -297,6 +297,7 @@ PixelToFrame mainPS(vsOut In)
 	#else
 		PSOut.albedoAndEmissiveMask.xyz = SKIN_ALBEDO;
 	#endif
+	
 	//(team)color
 	#ifdef OBJECTCOLOR_A7
 		PSOut.albedoAndEmissiveMask.xyz += SKIN_COLOR * vecDiffuse;
@@ -325,7 +326,7 @@ PixelToFrame mainPS(vsOut In)
 	
 	//material data
 	PSOut.materialData.x = materialID; //material ID
-	PSOut.materialData.y = fPower/(float)255;//vecSkill17.z; //material Specular Power
+	PSOut.materialData.y = fPower/255.f;//vecSkill17.z; //material Specular Power
 	#ifdef GLOSSMAP
 		PSOut.materialData.z = SKIN_GLOSS; //material Specular Intensity
 	#else
@@ -341,6 +342,11 @@ PixelToFrame mainPS(vsOut In)
 	//PSOut.normalsAndDepth.w = 1;
 	//PSOut.albedoAndEmissiveMask.w = 1;
 	//PSOut.emissiveAndSpecular.w = 1;
+	
+	//Gamma Correction
+	//PSOut.albedoAndEmissiveMask.xyz = max(0, PSOut.albedoAndEmissiveMask.xyz-0.004);
+	//PSOut.albedoAndEmissiveMask.xyz = (PSOut.albedoAndEmissiveMask.xyz*(6.2*PSOut.albedoAndEmissiveMask.xyz+0.5))/(PSOut.albedoAndEmissiveMask.xyz*(6.2*PSOut.albedoAndEmissiveMask.xyz+1.7)+0.06);
+	//PSOut.albedoAndEmissiveMask.xyz = pow(PSOut.albedoAndEmissiveMask.xyz,2.2);
 	
 	return PSOut;
 }
