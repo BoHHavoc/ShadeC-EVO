@@ -1,6 +1,6 @@
 #define SPOT
-//#define SPECULAR
-#define SHADOW
+#define SPECULAR
+//#define SHADOW
 
 #include <scLights>
 

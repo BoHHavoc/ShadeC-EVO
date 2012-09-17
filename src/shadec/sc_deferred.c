@@ -65,4 +65,10 @@ void sc_deferred_destroy(SC_SCREEN* screen)
 
 void sc_deferred_frm(SC_SCREEN* screen)
 {
+	if(screen.views.deferred != NULL)
+	{
+		screen.materials.deferred.skill1 = floatv(ambient_color.red/255);
+		screen.materials.deferred.skill2 = floatv(ambient_color.green/255);
+		screen.materials.deferred.skill3 = floatv(ambient_color.blue/255);
+	}
 }

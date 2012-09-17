@@ -42,20 +42,29 @@ var sc_viewEvent_event()
 		case screen.views.deferredLighting:
 			IDirect3DDevice9* pd3dDev = (IDirect3DDevice9*)(pd3ddev);
 			if (!pd3dDev) return;
-			pd3dDev->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_ARGB(0, ambient_color.red/2, ambient_color.green/2, ambient_color.blue/2), 1.0, 0);
-			//pd3dDevice->Clear(0, NULL, D3DCLEAR_ZBUFFER, D3DCOLOR_ARGB(0, 0, 0, 0), 0.0, 0);
+			//pd3dDev->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_ARGB(0, ambient_color.red/2, ambient_color.green/2, ambient_color.blue/2), 1.0, 0);
+			//pd3dDev->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_ARGB(255, 255, 255, 255), 1.0, 0);
+			pd3dDev->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_ARGB(255, 255-(ambient_color.red/2), 255-(ambient_color.green/2), 255-(ambient_color.blue/2)), 1.0, 0);
+			//pd3dDev->Clear(0, NULL, D3DCLEAR_ZBUFFER, D3DCOLOR_ARGB(0, 0, 0, 0), 0.0, 0);
 			
 			if(screen.views.sun != NULL)
 			{
+				
+				
 				//put code for rendering directional lights here
 				//draw fullscreen quad,apply directional light shader and blend
 				//set render states
 				pd3dDev->SetRenderState(D3DRS_LIGHTING, FALSE);
 				pd3dDev->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-				pd3dDev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-				pd3dDev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
+				pd3dDev->SetRenderState(D3DRS_BLENDOP, 1); // = D3DBLENDOP_ADD
+				//pd3dDev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE); //normal blending
+				//pd3dDev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE); //normal blending
+				pd3dDev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_DESTCOLOR); //needed for lighting pack algorythm
+				pd3dDev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ZERO); //needed for lighting pack algorythm
 				pd3dDev->SetRenderState(D3DRS_ZENABLE, FALSE);
 				pd3dDev->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
+				
+				
 				// now draw the screen aligned quad
 				pd3dDev->SetFVF(SC_D3DFVF_SCREENQUAD);
 				//pd3dDev->SetTexture (0, screen.renderTargets.gBuffer[0].d3dtex);

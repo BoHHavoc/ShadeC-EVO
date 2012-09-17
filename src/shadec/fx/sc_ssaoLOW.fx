@@ -1,5 +1,4 @@
 float4x4 matProj;
-float4x4 matProjInv; //needed for viewspace position reconstruction
 #include <scUnpackNormals>
 #include <scUnpackDepth>
 #include <scCalculatePosVSQuad>
@@ -9,7 +8,7 @@ float4x4 matProjInv; //needed for viewspace position reconstruction
 
 bool AUTORELOAD;
 
-float4 vecSkill1; // x = intensity, y = radius, z = anti self occlusion
+float4 vecSkill1; // x = intensity, y = radius, z = anti self occlusion, w = ssao-on-bright-objects strength
 //float4 vecSkill5; //frustum points
 float4 vecSkill9; //x = clip far
 //float3 sc_camPosScreenCoords_var;
@@ -184,24 +183,25 @@ float4 mainPS(float2 inTex:TEXCOORD0):COLOR0
 	half ao = compareDepths(gBuffer.w,depth2, (aoRadius+3)*2, normal);
 	
 	
-	samp_UV = inTex + (((normal.xy + normal.yx)/2 * aoRadius) / (gBuffer.w * (vecViewPort.xy*4)));
+	samp_UV = inTex + (((normal.xy + normal.yx)*0.5 * aoRadius) / (gBuffer.w * (vecViewPort.xy*4)));
 	depth2 = UnpackDepth(tex2D(normalsAndDepthSampler, samp_UV).zw);
 	ao += compareDepths(gBuffer.w,depth2, (aoRadius+3)*2, normal);
 	
-	samp_UV = inTex + (((normal.xy - normal.yx)/2 * aoRadius) / (gBuffer.w * (vecViewPort.xy*4)));
+	samp_UV = inTex + (((normal.xy - normal.yx)*0.5 * aoRadius) / (gBuffer.w * (vecViewPort.xy*4)));
 	depth2 = UnpackDepth(tex2D(normalsAndDepthSampler, samp_UV).zw);
 	ao += compareDepths(gBuffer.w,depth2, (aoRadius+3)*2, normal);
 	
-	samp_UV = inTex + (((normal.yx)/2 * aoRadius) / (gBuffer.w * (vecViewPort.xy*4)));
+	samp_UV = inTex + (((normal.yx)*0.5 * aoRadius) / (gBuffer.w * (vecViewPort.xy*4)));
 	depth2 = UnpackDepth(tex2D(normalsAndDepthSampler, samp_UV).zw);
 	ao += compareDepths(gBuffer.w,depth2, (aoRadius+3)*2, normal);
 	
-	samp_UV = inTex + (((-normal.yx)/2 * aoRadius) / (gBuffer.w * (vecViewPort.xy*4)));
+	samp_UV = inTex + (((-normal.yx)*0.5 * aoRadius) / (gBuffer.w * (vecViewPort.xy*4)));
 	depth2 = UnpackDepth(tex2D(normalsAndDepthSampler, samp_UV).zw);
 	ao += compareDepths(gBuffer.w,depth2, (aoRadius+3)*2, normal);
+	
 	
 	ao = ((ao/5));
-	ao = 1-saturate(ao*(1-saturate(UnpackLighting(tex2D(lightingSampler, inTex)).xyz))*vecSkill1.x);
+	ao = 1-saturate(ao*max(vecSkill1.w, 1-saturate(UnpackLighting(tex2D(lightingSampler, inTex)).xyz))*vecSkill1.x);
 	//ao = saturate( ao + saturate(UnpackLighting(tex2D(lightingSampler, inTex)).xyz) );
 	//ao =  lighting;
 	//ao = ao*(1-(tex2D(lightingSampler, inTex).xyz*2));

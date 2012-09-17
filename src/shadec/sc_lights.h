@@ -42,8 +42,9 @@ int sc_lights_stencilRefCurrent = 1; //current Stencil Reference for lights. Wil
 //textures
 BMAP* sc_lights_map_defaultProjTex = "sc_lights_defaultProjTex.bmp";
 
-//materials
+//material Strings
 STRING* sc_lights_sMaterialShadowmapLocal = "sc_lights_shadowmapLocal.fx";
+STRING* sc_lights_sMaterialShadowmapBlur = "sc_lights_shadowmapBlur.fx";
 
 //model files
 STRING* sc_lights_mdlPointLight = "sc_lights_pointLight.mdl";
@@ -55,14 +56,14 @@ MATERIAL* sc_lights_mtlPointSpecProj = { effect = "sc_lights_pointSpecProj.fx"; 
 MATERIAL* sc_lights_mtlPointProj = { effect = "sc_lights_pointProj.fx"; }
 */
 
-MATERIAL* sc_lights_mtlPoint = {effect = "sc_lights_pointTest.fx"; flags = ENABLE_RENDER; event = sc_materials_event; }
-MATERIAL* sc_lights_mtlPointSpec = { effect = "sc_lights_pointTest.fx"; flags = ENABLE_RENDER; event = sc_materials_event; }
-MATERIAL* sc_lights_mtlPointSpecProj = { effect = "sc_lights_pointTest.fx"; flags = ENABLE_RENDER; event = sc_materials_event; }
-MATERIAL* sc_lights_mtlPointProj = { effect = "sc_lights_pointTest.fx"; flags = ENABLE_RENDER; event = sc_materials_event; }
+MATERIAL* sc_lights_mtlPoint = {effect = "sc_lights_point.fx"; flags = ENABLE_RENDER; event = sc_materials_event; }
+MATERIAL* sc_lights_mtlPointSpec = { effect = "sc_lights_pointSpecular.fx"; flags = ENABLE_RENDER; event = sc_materials_event; }
+MATERIAL* sc_lights_mtlPointSpecProj = { effect = "sc_lights_pointSpecularProjection.fx"; flags = ENABLE_RENDER; event = sc_materials_event; }
+MATERIAL* sc_lights_mtlPointProj = { effect = "sc_lights_pointProjection.fx"; flags = ENABLE_RENDER; event = sc_materials_event; }
 
-MATERIAL* sc_lights_mtlSpot = { effect = "sc_lights_spotShadow.fx"; flags = ENABLE_RENDER; event = sc_materials_event; }
-MATERIAL* sc_lights_mtlSpotSpec = { effect = "sc_lights_spotShadow.fx"; flags = ENABLE_RENDER; event = sc_materials_event; }
-MATERIAL* sc_lights_mtlSpotSpecShadow = { effect = "sc_lights_spotShadow.fx"; flags = ENABLE_RENDER; event = sc_materials_event; }
+MATERIAL* sc_lights_mtlSpot = { effect = "sc_lights_spot.fx"; flags = ENABLE_RENDER; event = sc_materials_event; }
+MATERIAL* sc_lights_mtlSpotSpec = { effect = "sc_lights_spotSpecular.fx"; flags = ENABLE_RENDER; event = sc_materials_event; }
+MATERIAL* sc_lights_mtlSpotSpecShadow = { effect = "sc_lights_spotSpecularShadow.fx"; flags = ENABLE_RENDER; event = sc_materials_event; }
 MATERIAL* sc_lights_mtlSpotShadow = { effect = "sc_lights_spotShadow.fx"; flags = ENABLE_RENDER; event = sc_materials_event; }
 
 

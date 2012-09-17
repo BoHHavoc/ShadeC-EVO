@@ -62,6 +62,7 @@ void sc_setup(SC_SCREEN* screen)
 	//sc_gammaCorrection_init(screen); //not used yet...
 	sc_viewEvent_init(screen);
 	
+	
 	//wait(2);
 	
 	screen.draw = 1;

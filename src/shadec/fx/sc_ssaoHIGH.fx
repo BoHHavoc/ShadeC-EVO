@@ -1,5 +1,4 @@
 float4x4 matProj;
-float4x4 matProjInv; //needed for viewspace position reconstruction
 #include <scUnpackNormals>
 #include <scUnpackDepth>
 #include <scCalculatePosVSQuad>
@@ -165,7 +164,7 @@ float4 mainPS(float2 inTex:TEXCOORD0):COLOR0
 	
 	//extrude texture coordinates along normals
 	//this effectively "scales" the objects/projection, just like in a vertexshader where you scale the size of an object by its normals!
-	half aoRadius = vecSkill1.y;
+	half aoRadius = vecSkill1.y;//*0.5;
 	//half3 normal = NormalsFromDepth(gBuffer.w * vecSkill9.x); //returns view space normals...just what we need!
 	half3 normal = gBuffer.xyz;
 	normal.y = -normal.y;
@@ -184,24 +183,70 @@ float4 mainPS(float2 inTex:TEXCOORD0):COLOR0
 	half ao = compareDepths(gBuffer.w,depth2, (aoRadius+3)*2, normal);
 	
 	
-	samp_UV = inTex + (((normal.xy + normal.yx)/2 * aoRadius) / (gBuffer.w * (vecViewPort.xy*4)));
+	samp_UV = inTex + (((normal.xy + normal.yx)*0.5 * aoRadius) / (gBuffer.w * (vecViewPort.xy*4)));
 	depth2 = UnpackDepth(tex2D(normalsAndDepthSampler, samp_UV).zw);
 	ao += compareDepths(gBuffer.w,depth2, (aoRadius+3)*2, normal);
 	
-	samp_UV = inTex + (((normal.xy - normal.yx)/2 * aoRadius) / (gBuffer.w * (vecViewPort.xy*4)));
+	samp_UV = inTex + (((normal.xy - normal.yx)*0.5 * aoRadius) / (gBuffer.w * (vecViewPort.xy*4)));
 	depth2 = UnpackDepth(tex2D(normalsAndDepthSampler, samp_UV).zw);
 	ao += compareDepths(gBuffer.w,depth2, (aoRadius+3)*2, normal);
 	
-	samp_UV = inTex + (((normal.yx)/2 * aoRadius) / (gBuffer.w * (vecViewPort.xy*4)));
+	samp_UV = inTex + (((normal.yx)*0.5 * aoRadius) / (gBuffer.w * (vecViewPort.xy*4)));
 	depth2 = UnpackDepth(tex2D(normalsAndDepthSampler, samp_UV).zw);
 	ao += compareDepths(gBuffer.w,depth2, (aoRadius+3)*2, normal);
 	
-	samp_UV = inTex + (((-normal.yx)/2 * aoRadius) / (gBuffer.w * (vecViewPort.xy*4)));
+	samp_UV = inTex + (((-normal.yx)*0.5 * aoRadius) / (gBuffer.w * (vecViewPort.xy*4)));
 	depth2 = UnpackDepth(tex2D(normalsAndDepthSampler, samp_UV).zw);
 	ao += compareDepths(gBuffer.w,depth2, (aoRadius+3)*2, normal);
 	
-	ao = ((ao/5));
-	ao = 1-saturate(ao*(1-saturate(UnpackLighting(tex2D(lightingSampler, inTex)).xyz))*vecSkill1.x);
+	
+	
+	normal.xyz += normal.xyz*rand;
+	samp_UV = inTex + ((normal.xy * aoRadius) / (gBuffer.w * (vecViewPort.xy*4)));
+	depth2 = UnpackDepth(tex2D(normalsAndDepthSampler, samp_UV).zw);
+	ao += compareDepths(gBuffer.w,depth2, (aoRadius+3)*2, normal);
+	
+	samp_UV = inTex + (((normal.xy + normal.yx)*0.5 * aoRadius) / (gBuffer.w * (vecViewPort.xy*4)));
+	depth2 = UnpackDepth(tex2D(normalsAndDepthSampler, samp_UV).zw);
+	ao += compareDepths(gBuffer.w,depth2, (aoRadius+3)*2, normal);
+	
+	samp_UV = inTex + (((normal.xy - normal.yx)*0.5 * aoRadius) / (gBuffer.w * (vecViewPort.xy*4)));
+	depth2 = UnpackDepth(tex2D(normalsAndDepthSampler, samp_UV).zw);
+	ao += compareDepths(gBuffer.w,depth2, (aoRadius+3)*2, normal);
+	
+	samp_UV = inTex + (((normal.yx)*0.5 * aoRadius) / (gBuffer.w * (vecViewPort.xy*4)));
+	depth2 = UnpackDepth(tex2D(normalsAndDepthSampler, samp_UV).zw);
+	ao += compareDepths(gBuffer.w,depth2, (aoRadius+3)*2, normal);
+	
+	samp_UV = inTex + (((-normal.yx)*0.5 * aoRadius) / (gBuffer.w * (vecViewPort.xy*4)));
+	depth2 = UnpackDepth(tex2D(normalsAndDepthSampler, samp_UV).zw);
+	ao += compareDepths(gBuffer.w,depth2, (aoRadius+3)*2, normal);
+	
+	
+	
+	normal.xyz += normal.xyz*rand;
+	samp_UV = inTex + ((normal.xy * aoRadius) / (gBuffer.w * (vecViewPort.xy*4)));
+	depth2 = UnpackDepth(tex2D(normalsAndDepthSampler, samp_UV).zw);
+	ao += compareDepths(gBuffer.w,depth2, (aoRadius+3)*2, normal);
+	
+	samp_UV = inTex + (((normal.xy + normal.yx)*0.5 * aoRadius) / (gBuffer.w * (vecViewPort.xy*4)));
+	depth2 = UnpackDepth(tex2D(normalsAndDepthSampler, samp_UV).zw);
+	ao += compareDepths(gBuffer.w,depth2, (aoRadius+3)*2, normal);
+	
+	samp_UV = inTex + (((normal.xy - normal.yx)*0.5 * aoRadius) / (gBuffer.w * (vecViewPort.xy*4)));
+	depth2 = UnpackDepth(tex2D(normalsAndDepthSampler, samp_UV).zw);
+	ao += compareDepths(gBuffer.w,depth2, (aoRadius+3)*2, normal);
+	
+	samp_UV = inTex + (((normal.yx)*0.5 * aoRadius) / (gBuffer.w * (vecViewPort.xy*4)));
+	depth2 = UnpackDepth(tex2D(normalsAndDepthSampler, samp_UV).zw);
+	ao += compareDepths(gBuffer.w,depth2, (aoRadius+3)*2, normal);
+	
+	samp_UV = inTex + (((-normal.yx)*0.5 * aoRadius) / (gBuffer.w * (vecViewPort.xy*4)));
+	depth2 = UnpackDepth(tex2D(normalsAndDepthSampler, samp_UV).zw);
+	ao += compareDepths(gBuffer.w,depth2, (aoRadius+3)*2, normal);
+			
+	ao = ((ao/15));
+	ao = 1-saturate(ao*max(vecSkill1.w, 1-saturate(UnpackLighting(tex2D(lightingSampler, inTex)).xyz))*vecSkill1.x);
 	//ao = saturate( ao + saturate(UnpackLighting(tex2D(lightingSampler, inTex)).xyz) );
 	//ao =  lighting;
 	//ao = ao*(1-(tex2D(lightingSampler, inTex).xyz*2));
@@ -219,6 +264,6 @@ technique ps20
       //ZWriteEnable = FALSE;
 		AlphaBlendEnable = FALSE;
       
-		PixelShader = compile ps_2_a mainPS();
+		PixelShader = compile ps_3_0 mainPS();
 	}
 }

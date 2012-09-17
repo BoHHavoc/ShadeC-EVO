@@ -4,6 +4,7 @@ void sc_hdr_frm(SC_SCREEN* screen);
 
 STRING* sc_hdr_sMaterialHDR = "sc_hdr.fx";
 STRING* sc_hdr_sMaterialHDRDownsample = "sc_hdr_downsample.fx";
+STRING* sc_hdr_sMaterialHDRScatter = "sc_hdr_scatter.fx";
 STRING* sc_hdr_sMaterialHDRBlurX = "sc_hdr_blurX.fx";
 STRING* sc_hdr_sMaterialHDRBlurY = "sc_hdr_blurY.fx";
 STRING* sc_hdr_sMaterialHDRLensflareDownsample = "sc_hdr_lensflareDownsample.fx";
