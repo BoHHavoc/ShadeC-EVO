@@ -389,6 +389,19 @@ ENTITY* sc_light_createFunc(int inType, var inRange, VECTOR* inColor, VECTOR* in
 				set(shadowView, NOFLAG1);
 			#endif
 			
+			//create shadowview material
+			shadowView.material = mtl_create();
+			effect_load(shadowView.material, sc_lights_sMaterialShadowmapLocal);
+			shadowView.material.event = sc_lights_mtlShadowmapLocalRenderEvent;
+			set(shadowView.material,ENABLE_RENDER);
+			set(shadowView.material,PASS_SOLID);
+			/*
+			shadowView.material.skill4 = floatv(inRange);
+			shadowView.material.skill5 = ent.x;
+			shadowView.material.skill6 = ent.y;
+			shadowView.material.skill7 = ent.z;	
+			*/
+			shadowView.material.skill30 = inRange;
 
 			//apply shadow rendertarget
 			#ifdef SC_CUSTOM_ZBUFFER
@@ -412,6 +425,7 @@ ENTITY* sc_light_createFunc(int inType, var inRange, VECTOR* inColor, VECTOR* in
 			//
 
 			//create shadowdepth material
+			/*
 			MATERIAL* shadowMtl = mtl_create();
 			effect_load(shadowMtl, sc_lights_sMaterialShadowmapLocal);
 			shadowMtl.event = sc_lights_mtlShadowmapLocalRenderEvent;
@@ -423,10 +437,11 @@ ENTITY* sc_light_createFunc(int inType, var inRange, VECTOR* inColor, VECTOR* in
 			shadowMtl.skill7 = ent.z;
 			//apply to view
 			shadowView.material = shadowMtl;
+			*/
 			
 			sc_skill(ent, SC_OBJECT_LIGHT_SHADOWMAP, shadowBmap);
 			sc_skill(ent, SC_OBJECT_LIGHT_VIEW, shadowView);
-			sc_material(ent, SC_MATERIAL_LIGHT_SHADOWMAP, shadowMtl);
+			//sc_material(ent, SC_MATERIAL_LIGHT_SHADOWMAP, shadowMtl);
 			
 			//sc_light_checkSpotFrustum(ent);
 			
@@ -453,6 +468,7 @@ void sc_light_update(ENTITY* inLight)
 		ObjData.light.view.y = inLight.y;
 		ObjData.light.view.z = inLight.z;
 		ObjData.light.view.arc = ObjData.light.arc;
+		ObjData.light.view.material.skill30 = ObjData.light.range;
 	}
 	
 	//sc_light_updateSpotDir(inLight);
@@ -569,23 +585,70 @@ ENTITY* sc_light_create(VECTOR* inPos, var inRange, VECTOR* inColor, int inType,
 
 var sc_lights_mtlShadowmapLocalRenderEvent()
 {
-	mtl.skill1 = floatv(0); //wind...
-	mtl.skill2 = floatv(0.5); //depth alpha clip
-	mtl.skill3 = floatv(0); //shadow bias
+	//mtl.skill1 = floatv(0); //wind...
+	//mtl.skill2 = floatv(0.5); //depth alpha clip
+	//mtl.skill3 = floatv(0); //shadow bias
 	if(my)
 	{
-		mtl.skill2 = floatv(1-(my.alpha/100));
+		#ifndef SC_A7
+				LPD3DXEFFECT pEffect = (LPD3DXEFFECT)mtl->d3deffect;
+		#else
+			LPD3DXEFFECT pEffect = (LPD3DXEFFECT)render_d3dxeffect;
+		#endif
+		//mtl.skill2 = floatv(1-(my.alpha/100));
+		pEffect->SetFloat("alphaClip", 1-(my.alpha/100));
+		pEffect->SetFloat("clipFar", mtl.skill30);
+		
 		if(my.SC_SKILL)
 		{
 			SC_OBJECT* ObjData = (SC_OBJECT*)(my.SC_SKILL);
-			if(ObjData == NULL) return(1);
+			//if(ObjData == NULL) return(1);
 		
-			//mtl.skill2 = floatv(ObjData.myDepthAlphaClip);
-			mtl.skill3 = floatv(ObjData.shadowBias);
+			//mtl.skill3 = floatv(ObjData.shadowBias);
 			
 			//check if object casts local shadows
 			if(ObjData.castShadow == 2 || ObjData.castShadow == 3)
 			{
+				
+				#ifndef SC_A7
+					//check if object has specific shadowmap material applied
+					if(ObjData.material.shadowmap != NULL)
+					{
+						//Set basic shadowmap parameters for new material			
+						LPD3DXEFFECT pEffect2 = (LPD3DXEFFECT)(ObjData.material.shadowmap->d3deffect);
+						if(pEffect2)
+						{
+							pEffect2->SetFloat("alphaClip", 1-(my.alpha/100));
+							pEffect2->SetFloat("clipFar", mtl.skill30);
+						}
+						
+						//change current material to new one
+						mtl = ObjData.material.shadowmap;
+						
+						//get material skills from object material
+						mtl.skill1 = my.material.skill1;
+						mtl.skill2 = my.material.skill2;
+						mtl.skill3 = my.material.skill3;
+						mtl.skill4 = my.material.skill4;
+						mtl.skill5 = my.material.skill5;
+						mtl.skill6 = my.material.skill6;
+						mtl.skill7 = my.material.skill7;
+						mtl.skill8 = my.material.skill8;
+						mtl.skill9 = my.material.skill9;
+						mtl.skill10 = my.material.skill10;
+						mtl.skill11 = my.material.skill11;
+						mtl.skill12 = my.material.skill12;
+						mtl.skill13 = my.material.skill13;
+						mtl.skill14 = my.material.skill14;
+						mtl.skill15 = my.material.skill15;
+						mtl.skill16 = my.material.skill16;
+						mtl.skill17 = my.material.skill17;
+						mtl.skill18 = my.material.skill18;
+						mtl.skill19 = my.material.skill19;
+						mtl.skill20 = my.material.skill20;
+					}
+				#endif
+				
 				//ptr_remove(screen);
 				return(0);
 			}
@@ -804,7 +867,7 @@ void sc_lights_destroySun(SC_SCREEN* screen)
 			//remove dof from view chain
 			VIEW* view_last;
 			view_last = screen.views.gBuffer;
-			while(view_last.stage != screen.views.sun)
+			while(view_last.stage != screen.views.sun && view_last.stage != NULL)
 			{
 				view_last = view_last.stage;
 			}
@@ -819,15 +882,16 @@ void sc_lights_destroySun(SC_SCREEN* screen)
 			//remove PSSM
 			int i=0;
 			for(i=0; i<4; i++) {
-//				if(screen.views.sunShadowDepth[i].material != NULL) ptr_remove(screen.views.sunShadowDepth[i].material);
-//				if(screen.views.sunShadowDepth[i].bmap != NULL) bmap_purge(screen.views.sunShadowDepth[i].bmap);
-//				if(screen.views.sunShadowDepth[i] != NULL) ptr_remove(screen.views.sunShadowDepth[i]);
-//				if(screen.renderTargets.sunShadowDepth[i] != NULL) bmap_purge(screen.renderTargets.sunShadowDepth[i]);
-				ptr_remove(screen.views.sunShadowDepth[i].material);
-				ptr_remove(screen.views.sunShadowDepth[i].bmap);
-				ptr_remove(screen.views.sunShadowDepth[i]);
-				ptr_remove(screen.renderTargets.sunShadowDepth[i]);
+				if(screen.views.sunShadowDepth[i] == NULL) continue;
+				if(screen.views.sunShadowDepth[i].material != NULL) ptr_remove(screen.views.sunShadowDepth[i].material);
+				if(screen.views.sunShadowDepth[i].bmap != NULL) {
+					bmap_purge(screen.views.sunShadowDepth[i].bmap);
+					ptr_remove(screen.views.sunShadowDepth[i].bmap);
+				}
+				if(screen.views.sunShadowDepth[i] != NULL) ptr_remove(screen.views.sunShadowDepth[i]);
+				if(screen.renderTargets.sunShadowDepth[i] != NULL) ptr_remove(screen.renderTargets.sunShadowDepth[i]);
 			}
+			
 		}
 	}
 	return 1;

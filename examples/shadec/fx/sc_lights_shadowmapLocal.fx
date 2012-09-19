@@ -1,3 +1,12 @@
+#define ALPHA //make use of alphamap on model
+
+#include <scHeaderLightShadowmap>
+// <-
+// add custom code here
+// ->
+#include <scLightShadowmap>
+
+/*
 bool AUTORELOAD;
 bool PASS_SOLID;
 
@@ -49,14 +58,7 @@ half4 CalculateShadowDepth(float Pos2D_Z)
 	half depth = ((Pos2D_Z)/vecSkill1.w);
 	depth += depth*vecSkill1.z;
 	//half depth = 1-(( (In.Pos2D)/vecSkill1.w ) + vecSkill1.z);
-	
-	/*
-	half4 outDepth = 0;
-	outDepth.x=floor(depth*255)/255;
-	outDepth.y=floor((depth-outDepth.x)*255*255)/255;
-	*/
-	
-	
+		
 	//return half4(PackDepth(depth),0,0);
 	return half4(depth,0,0,0);
 	//half3 Ln = vecSkill5.xzy - In.PosW.xyz;
@@ -101,3 +103,4 @@ technique t1_lm
 		pixelshader = compile ps_2_0 mainPS_lm();
 	}
 }
+*/

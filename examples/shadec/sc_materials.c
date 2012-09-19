@@ -135,20 +135,6 @@ var sc_materials_event()
 		
 			//LPD3DXEFFECT pEffect = (LPD3DXEFFECT)render_d3dxeffect;
 			
-			#ifndef SC_A7
-				LPD3DXEFFECT pEffect = (LPD3DXEFFECT)mtl->d3deffect;
-			#else
-				LPD3DXEFFECT pEffect = (LPD3DXEFFECT)render_d3dxeffect;
-			#endif
-			
-			if(pEffect != NULL)
-			{
-				pEffect->SetTexture("texBRDFLut", sc_deferredLighting_texBRDFLUT); //assign volumetric brdf lut
-				//pEffect->SetFloat("brdfTest1", brdfTest1);
-				//pEffect->SetFloat("brdfTest2", brdfTest2);
-				pEffect->SetTexture("texMaterialLUT", sc_materials_mapData.d3dtex);
-				//pEffect->SetTexture("texMatData1", sc_materials_texMatData1); //assign volumetric brdf data
-			}
 			if(my)
 			{	
 				if(my.SC_SKILL && render_view == screen.views.deferredLighting)
@@ -157,6 +143,21 @@ var sc_materials_event()
 					if(ObjData == NULL) return(1); //don't render entity if it's not a Shade-C Object 
 					if(ObjData.light.range > 0)
 					{
+						#ifndef SC_A7
+							LPD3DXEFFECT pEffect = (LPD3DXEFFECT)mtl->d3deffect;
+						#else
+							LPD3DXEFFECT pEffect = (LPD3DXEFFECT)render_d3dxeffect;
+						#endif
+						
+						if(pEffect != NULL)
+						{
+							pEffect->SetTexture("texBRDFLut", sc_deferredLighting_texBRDFLUT); //assign volumetric brdf lut
+							//pEffect->SetFloat("brdfTest1", brdfTest1);
+							//pEffect->SetFloat("brdfTest2", brdfTest2);
+							pEffect->SetTexture("texMaterialLUT", sc_materials_mapData.d3dtex);
+							//pEffect->SetTexture("texMatData1", sc_materials_texMatData1); //assign volumetric brdf data
+						}
+						
 						mtl.skin1 = screen.renderTargets.gBuffer[SC_GBUFFER_NORMALS_AND_DEPTH]; //point to gBuffer: normals and depth
 						mtl.skin2 = ObjData.light.projMap; //projection map
 						mtl.skin3 = ObjData.light.shadowMap; //shadowmap
@@ -209,6 +210,7 @@ var sc_materials_event()
 				//free(screen);
 			}
 			
+			/*
 			mtl.skill1 = floatv(0);
 			mtl.skill2 = floatv(0);
 			mtl.skill3 = floatv(0);
@@ -222,6 +224,7 @@ var sc_materials_event()
 			mtl.skill10 = floatv(0);
 			mtl.skill11 = floatv(0);
 			mtl.skill12 = floatv(0);
+			*/
 			
 			//clear the screen
 			//IDirect3DDevice9* pd3dDevice = (IDirect3DDevice9*)(pd3ddev);

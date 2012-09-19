@@ -170,7 +170,7 @@ void sc_dof_destroy(SC_SCREEN* screen)
 			//remove from view chain
 			VIEW* view_last;
 			view_last = screen.views.main;
-			while(view_last.stage != screen.views.dofDownsample)
+			while(view_last.stage != screen.views.dofDownsample && view_last.stage != NULL)
 			{
 				view_last = view_last.stage;
 			}

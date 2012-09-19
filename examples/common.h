@@ -20,7 +20,7 @@ MATERIAL* mtl_car =
 	flags = ENABLE_RENDER;
 	event = sc_materials_event;
 	
-	power = 200;
+	power = 50;
 }
 MATERIAL* mtl_metal2 = //mtl_metal2 because mtl_metal is already taken by gamestudio!
 {

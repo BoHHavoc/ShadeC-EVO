@@ -50,7 +50,7 @@ void sc_refract_destroy(SC_SCREEN* screen)
 			//find view before
 			VIEW* view_last;
 			view_last = screen.views.gBuffer;
-			while(view_last.stage != screen.views.refract)
+			while(view_last.stage != screen.views.refract && view_last.stage != NULL)
 			{
 				view_last = view_last.stage;
 			}

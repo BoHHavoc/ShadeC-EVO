@@ -64,10 +64,6 @@ void main()
 	you.pan = 123;
 	you.tilt = -18;
 	camera.arc = 75;
-	/*you = ent_create(NULL, vector(-224,-317, 119), v_camera);
-	you.pan = 138;
-	you.tilt = -44;
-	camera.arc = 75;*/
 	camera.clip_far = 5000; //set this as low as possible to increase performance AND visuals!
 	
 	//set resolution before calling sc_setup
@@ -95,10 +91,10 @@ void main()
 	sc_screen_default.settings.lights.sunShadowResolution = 256; //reduce shadow resolution as we are blurring the shadowmap and therefore can get away with low res shadows
 	sc_screen_default.settings.lights.sunPssmBlurSplits = 2; //blur the first two pssm splits
 	sc_screen_default.settings.lights.sunPssmSplitWeight = 0.7; //high res near splits, low res far splits
+	sc_screen_default.settings.antialiasing.enabled = 0; //enable antialiasing
 		
 	//initialize shade-c, use default screen object
 	sc_setup(sc_screen_default);
-	//wait(3); //wait for Shade-C
 	
 	//tweak effect parameters anytime you want
 	// -> more info in sc_core.h, in struct SC_SETTINGS
@@ -125,12 +121,14 @@ void main()
 	
 	while(1)
 	{
+		/*
 		//move the sun around the scene
 		sun_angle.pan += time_frame; 
 		sun_angle.pan %= 360; 
    	sun_angle.tilt = fsin(sun_angle.pan, 45) + 45;
    	//set the sunlight brightness
    	sun_light = sun_angle.tilt;
+   	*/
    	
    	//rotate the spotlight
    	spotlight.pan += time_step*5;

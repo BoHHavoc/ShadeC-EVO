@@ -62,7 +62,7 @@ void sc_deferredLighting_destroy(SC_SCREEN* screen)
 			//remove deferredLighting from view chain
 			VIEW* view_last;
 			view_last = screen.views.gBuffer;
-			while(view_last.stage != screen.views.deferredLighting)
+			while(view_last.stage != screen.views.deferredLighting && view_last.stage != NULL)
 			{
 				view_last = view_last.stage;
 			}

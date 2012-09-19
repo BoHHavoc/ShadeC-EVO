@@ -83,7 +83,9 @@ float4 mainPS(psIn In):COLOR
 	}
 	
 	//gamme correction
-	diffuseAndSpecular.xyz = pow(diffuseAndSpecular.xyz, 1.f/2.2f);
+	//diffuseAndSpecular.xyz = pow(diffuseAndSpecular.xyz, 1.f/2.2f);
+	//albedoAndEmissiveMask.xyz = pow(albedoAndEmissiveMask.xyz, 1.f/2.2f);
+	albedoAndEmissiveMask.xyz = pow(albedoAndEmissiveMask.xyz, 2.2);
 	
 	//diffuseAndSpecular.xyz = (diffuseAndSpecular.xyz*(6.2*diffuseAndSpecular.xyz+0.5))/(diffuseAndSpecular.xyz*(6.2*diffuseAndSpecular.xyz+1.7)+0.06);
 	half4 output;// = 1;
@@ -93,6 +95,8 @@ float4 mainPS(psIn In):COLOR
 	output.xyz = albedoAndEmissiveMask.xyz * diffuseAndSpecular.xyz //pow(albedoAndEmissiveMask.xyz,2.2f) * diffuseAndSpecular.xyz
 					 + diffuseAndSpecular.w*diffuseAndSpecular.xyz*materialData.z;
 					 //* (((diffuseAndSpecular.xyz+vecSkill1.xyz)*ssao.w)+ssao.xyz)  + diffuseAndSpecular.w*diffuseAndSpecular.xyz*materialData.z*ssao.w;
+	
+	output.xyz = pow(output.xyz, 1.0/2.2);
 	
 	/*				 
 	//gamma correction

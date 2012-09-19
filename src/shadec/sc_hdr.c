@@ -324,7 +324,7 @@ void sc_hdr_destroy(SC_SCREEN* screen)
 			//remove from view chain
 			VIEW* view_last;
 			view_last = screen.views.main;
-			while(view_last.stage != screen.views.hdrDownsample)
+			while(view_last.stage != screen.views.hdrDownsample && view_last.stage != NULL)
 			{
 				view_last = view_last.stage;
 			}

@@ -34,7 +34,7 @@ BMAP* sc_map_random = "sc_random.png";
 #define SC_OBJECT_LIGHT_STENCILREF 12
 
 #define SC_OBJECT_DEPTH 100
-#define SC_OBJECT_SHADOWBIAS 101
+//#define SC_OBJECT_SHADOWBIAS 101
 #define SC_OBJECT_CASTSHADOW 102
 #define SC_OBJECT_PASS 103
 #define SC_OBJECT_EMISSIVE 104
@@ -42,6 +42,7 @@ BMAP* sc_map_random = "sc_random.png";
 //#define SC_OBJECT_TERRAIN_ATLAS 106
 
 #define SC_OBJECT_MATERIAL_ID 200
+#define SC_OBJECT_MATERIAL_SHADOWMAP 201
 
 #define SC_OBJECT_DATA_1_X 250
 #define SC_OBJECT_DATA_1_Y 251
@@ -72,7 +73,7 @@ BMAP* sc_map_random = "sc_random.png";
 
 //SC_MATERIAL
 //#define SC_MATERIAL_LIGHT 0
-#define SC_MATERIAL_LIGHT_SHADOWMAP 1
+//#define SC_MATERIAL_LIGHT_SHADOWMAP 1
 //#define SC_MATERIAL_GBUFFER 2
 
 
@@ -356,13 +357,14 @@ typedef struct{
 	int stencilRef;
 	BMAP* projMap;
 	BMAP* shadowMap;
-	MATERIAL* materialShadowmap;
+	//MATERIAL* mtlShadowmap;
    D3DXMATRIX* matrix;   
    VIEW* view;
 }SC_OBJECT_LIGHT;
 
 typedef struct{
 	float id;
+	MATERIAL* shadowmap;
 }SC_OBJECT_MATERIAL;
 
 typedef struct{
@@ -378,7 +380,7 @@ typedef struct{
 	SC_OBJECT_DATA* data;
 	int depth;
 	int castShadow;
-	float shadowBias;
+	//float shadowBias;
 	int pass;
 	D3DXVECTOR4 emissive;
 	D3DXVECTOR4 color;

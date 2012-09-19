@@ -66,7 +66,7 @@ void sc_forward_destroy(SC_SCREEN* screen)
 			
 			VIEW* view_last;
 			view_last = screen.views.gBuffer;
-			while(view_last.stage != screen.views.main)
+			while(view_last.stage != screen.views.main && view_last.stage != NULL)
 			{
 				view_last = view_last.stage;
 			}

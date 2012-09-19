@@ -86,6 +86,7 @@ void sc_ssao_init(SC_SCREEN* screen)
 {
 	//create maps
 	if(screen.renderTargets.ssao == NULL) screen.renderTargets.ssao = bmap_createblack(screen.views.main.size_x, screen.views.main.size_y, 32);
+	//screen.renderTargets.ssao = bmap_createblack(screen.views.main.size_x, screen.views.main.size_y, 32);
 	
 	//generate sample kernel
 	sc_ssao_generateSampleKernel(screen);
@@ -206,7 +207,7 @@ void sc_ssao_init(SC_SCREEN* screen)
 		screen.views.ssao.material = screen.materials.ssao;
 		//screen.views.ssao.stage = screen.views.ssaoBlurX;
 		screen.views.ssao.stage = screen.views.ssaoFinalize;
-		screen.views.ssao.bmap = screen.renderTargets.quarter0;  //assign temp render target so Acknex does not automatically create a new one
+		screen.views.ssao.bmap = screen.renderTargets.half0;  //assign temp render target so Acknex does not automatically create a new one
 		
 		
 		
@@ -232,13 +233,18 @@ void sc_ssao_destroy(SC_SCREEN* screen)
 			
 			reset(screen.views.ssao,NOSHADOW);
 			//purge render targets
-			if(screen.renderTargets.ssao) bmap_purge(screen.renderTargets.ssao);
+			if(screen.renderTargets.ssao != NULL)
+			{
+				bmap_purge(screen.renderTargets.ssao);
+				ptr_remove(screen.renderTargets.ssao);
+				screen.renderTargets.ssao = NULL;
+			}
 			screen.views.ssaoFinalize.bmap = NULL;
 						
 			//remove from view chain
 			VIEW* view_last;
 			view_last = screen.views.gBuffer;
-			while(view_last.stage != screen.views.ssao)
+			while(view_last.stage != screen.views.ssao && view_last.stage != NULL)
 			{
 				view_last = view_last.stage;
 			}

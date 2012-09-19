@@ -429,13 +429,14 @@ void sc_getFrustumPoints(SC_SCREEN* screen)
 }
 
 
-void sc_skill_(ENTITY* ent,int objMode, var objVar)
+void sc_skill_(ENTITY* ent, int objMode, var objVar)
 {	
+	if(objMode == 0){return;}
 	VECTOR* objVec;
 	BMAP* objMap;
 	D3DXMATRIX* objMtx;
 	VIEW* objView;
-	if(objMode == 0){return;}
+	MATERIAL* objMaterial;
 	
 	SC_OBJECT* myData;// = sys_malloc(sizeof(SC_OBJECT));
 
@@ -480,6 +481,7 @@ void sc_skill_(ENTITY* ent,int objMode, var objVar)
 				
 			//material
 			myData->material.id = (float)1/(float)255;
+			myData->material.shadowmap = NULL;
 				
 			//data
 			myData->data->data1.x = 1;
@@ -497,7 +499,7 @@ void sc_skill_(ENTITY* ent,int objMode, var objVar)
 			
 			//general data
 			myData->depth = 0;
-			myData->shadowBias = 0;
+			//myData->shadowBias = 0;
 			myData->castShadow = 3;
 			myData->pass = SC_PASS_GBUFFER;
 			myData->emissive.x = 0;
@@ -563,13 +565,7 @@ void sc_skill_(ENTITY* ent,int objMode, var objVar)
 		myData->light.stencilRef = (int)objVar;
 	}
 	
-	//MATERIAL
-	if(objMode == SC_OBJECT_MATERIAL_ID){
-		myData->material.id = (float)objVar/(float)255;
-	}
-	
 	//DATA
-	
 	if(objMode == SC_OBJECT_DATA_1_X){
 		myData->data->data1.x = (float)objVar;
 	}
@@ -626,9 +622,9 @@ void sc_skill_(ENTITY* ent,int objMode, var objVar)
 	}
 	
 	//GENERAL
-	if(objMode == SC_OBJECT_SHADOWBIAS){
-		myData->shadowBias = objVar*0.0001;
-	}
+	//if(objMode == SC_OBJECT_SHADOWBIAS){
+	//	myData->shadowBias = objVar*0.0001;
+	//}
 	
 	if(objMode == SC_OBJECT_DEPTH){
 		myData->depth = objVar;
@@ -656,9 +652,21 @@ void sc_skill_(ENTITY* ent,int objMode, var objVar)
 		myData->color.z = (float)objVec.z/255;
 	}
 	
+	//MATERIALS
+	if(objMode == SC_OBJECT_MATERIAL_ID){
+		myData->material.id = (float)objVar/(float)255;
+	}
+	
+	if(objMode == SC_OBJECT_MATERIAL_SHADOWMAP)
+	{
+		objMaterial = (MATERIAL*)objVar;
+		myData->material.shadowmap = objMaterial;
+	}
+	
 	ent->SC_SKILL = myData;
 }
 
+/*
 void sc_material(ENTITY* ent,int objMode, MATERIAL* mat)
 {	
 	//SC_OBJECT* myData = sys_malloc(sizeof(SC_OBJECT));
@@ -705,6 +713,7 @@ void sc_material(ENTITY* ent,int objMode, MATERIAL* mat)
 				
 			//material
 			myData->material.id = (float)1/(float)255;
+			myData->material.shadowmap = NULL;
 				
 			//data
 			myData->data->data1.x = 1;
@@ -722,7 +731,7 @@ void sc_material(ENTITY* ent,int objMode, MATERIAL* mat)
 			
 			//general data
 			myData->depth = 0;
-			myData->shadowBias = 0;
+			//myData->shadowBias = 0;
 			myData->castShadow = 3;
 			myData->pass = SC_PASS_GBUFFER;
 			myData->emissive.x = 0;
@@ -736,44 +745,47 @@ void sc_material(ENTITY* ent,int objMode, MATERIAL* mat)
 		}
 	}
 	
-	/*
-	if(objMode == SC_MATREFRACT)
-	{
-		ent.material = sc_refract_mtl;
-		myData->myMatRefract = mat;
-	}
-	if(objMode == SC_MATSHADOW)
-	{
-		myData->myMatShadow = mat;
-	}
 	
-	if(objMode == SC_MATERIAL_GBUFFER)
-	{
-		myData->materials.gBuffer = mat;
-	}
-	if(objMode == SC_MATERIAL_LIGHT)
-	{
-		//ent.material = sc_lights_material;
-		//myData->light.material = mat;
-		
-		ent->material = mat;
-		//ent->material->flags = ENABLE_RENDER;
-		//ent->material->event = sc_materials_event;
-	}
-	*/
-	if(objMode == SC_MATERIAL_LIGHT_SHADOWMAP)
-	{
-		myData->light.materialShadowmap = mat;
-	}
-	/*
-	if(objMode == SC_MATPARTICLE)
-	{
-		myData->myMatParticle = mat;
-	}
-	*/
+//	if(objMode == SC_MATREFRACT)
+//	{
+//		ent.material = sc_refract_mtl;
+//		myData->myMatRefract = mat;
+//	}
+//	if(objMode == SC_MATSHADOW)
+//	{
+//		myData->myMatShadow = mat;
+//	}
+//	
+//	if(objMode == SC_MATERIAL_GBUFFER)
+//	{
+//		myData->materials.gBuffer = mat;
+//	}
+//	if(objMode == SC_MATERIAL_LIGHT)
+//	{
+//		//ent.material = sc_lights_material;
+//		//myData->light.material = mat;
+//		
+//		ent->material = mat;
+//		//ent->material->flags = ENABLE_RENDER;
+//		//ent->material->event = sc_materials_event;
+//	}
+//	
+//	
+//	if(objMode == SC_MATERIAL_LIGHT_SHADOWMAP)
+//	{
+//		myData->light.mtlShadowmap = mat;
+//	}
+//	
+//	
+//	if(objMode == SC_MATPARTICLE)
+//	{
+//		myData->myMatParticle = mat;
+//	}
+	
 	
 	ent->SC_SKILL = myData;
 }
+*/
 
 
 void sc_sky(ENTITY* ent)

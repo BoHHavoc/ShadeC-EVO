@@ -109,10 +109,12 @@ void sc_antialiasing_destroy(SC_SCREEN* screen)
 	if(!screen) return 0;
 	if(screen.views.antialiasing != NULL)
 	{
+		
 		if(is(screen.views.antialiasing,NOSHADOW))
 		{
 			
 			reset(screen.views.antialiasing,NOSHADOW);
+			
 			//purge render targets
 			//bmap_purge(screen.views.deferred.bmap);
 			//screen.views.deferred.bmap = NULL;
@@ -120,22 +122,26 @@ void sc_antialiasing_destroy(SC_SCREEN* screen)
 			//remove from view chain
 			VIEW* view_last;
 			view_last = screen.views.main;
-			while(view_last.stage != screen.views.antialiasingEdgeDetect)
+			while(view_last.stage != screen.views.antialiasingEdgeDetect && view_last.stage != NULL)
 			{
 				view_last = view_last.stage;
+				error("ping pong");
 			}
+			
 				
 			if(screen.views.antialiasing.stage) view_last.stage = screen.views.antialiasing.stage;
 			else view_last.stage = NULL;
 			
-			ptr_remove(screen.views.antialiasingBlendWeights.material);
-			ptr_remove(screen.views.antialiasingEdgeDetect.material);
-			ptr_remove(screen.views.antialiasing.material);
+			if(screen.views.antialiasingBlendWeights.material != NULL) ptr_remove(screen.views.antialiasingBlendWeights.material);
+			if(screen.views.antialiasingEdgeDetect.material != NULL) ptr_remove(screen.views.antialiasingEdgeDetect.material);
+			if(screen.views.antialiasing.material != NULL) ptr_remove(screen.views.antialiasing.material);
 			
 			
 			//if(screen.sc_dof_view.bmap) view_last.bmap = screen.sc_dof_mapOrgScene;
 			//else view_last.bmap = NULL;
+			
 		}
+		
 	}
 	return 1;
 }

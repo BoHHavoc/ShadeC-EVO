@@ -2,12 +2,14 @@
 	#include <d3d9.h>
 #endif
 
+
 #ifndef mtlFX
 	//needed for default.fx shader #includes
-	#define PRAGMA_PATH "%EXE_DIR%\\code"; // fx files
+	//#define PRAGMA_PATH "%EXE_DIR%\\code"; // fx files
 	#define PRAGMA_BIND "d3dcompiler_42.dll"; // DirectX 9.c shader compiler
 	char* fx_needs = "default.fx"; 	// for the WED resource window
 #endif
+
 
 #ifndef SHADEC
 	#define SHADEC

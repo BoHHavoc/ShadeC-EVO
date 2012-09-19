@@ -90,84 +90,6 @@ float3 DoBones(float3 Normal,int4 BoneIndices,float4 BoneWeights)
 #endif
 
 //////////////////////////////////////////////////////////////////////
-//section: sun - return the sun light on the surface /////////////////
-#ifndef include_sun
-#define include_sun
-
-float4 vecSunDir;
-float4 vecSunColor;
-float4 DoSunLight(float3 N)
-{
-	return vecSunColor * dot(N,-vecSunDir); // modulate sunlight by the surface angle
-}
-#endif
-
-//////////////////////////////////////////////////////////////////////
-//section: lights - return the dynamic light on the surface //////////
-#ifndef include_lights
-#define include_lights
-#include <define>
-
-int iLights;
-float4 vecLightPos[8];	 // light positions (xyz) and ranges (w)
-float4 vecLightColor[8]; // light colors
-
-// calculate the light attenuation factor
-float DoLightFactor(float4 Light,float3 Pos)
-{
-   float fac = 0.f;
-   if (Light.w > 0.f) {    
-      float LD = length(Light.xyz-Pos)/Light.w;
-#ifdef DXLIGHTING // DX falloff formula
-		if (LD < 1.0f)
-			fac = saturate(1.f/(0.f + 0.f*LD + 1.5f*LD*LD));	
-#else  // Acknex formula, linear lighting
-      if (LD < 1.f)
-         fac = saturate(1.f - LD);
-#endif  
-   }
-   return fac; // get the distance factor
-}
-
-// calculate the light attenuation factor on the front side
-float DoLightFactorBump(float4 Light,float3 P,float3 N)
-{
-#ifdef BUMPFALLOFF
-	float3 D = Light.xyz-P; // ray pointing from the light to the surface
-	float NdotL = dot(N,normalize(D));   // angle between surface and light ray
-	
-	if (NdotL >= 0.f) 
-	   return saturate(NdotL*8)*DoLightFactor(Light,P);
-	else
-	   return 0.f;
-#else
-     return DoLightFactor(Light,P);
-#endif
-}
-
-float DoLightFactorN(float4 Light,float3 P,float3 N)
-{
-	float3 D = Light.xyz-P; // ray pointing from the light to the surface
-	float NdotL = dot(N,normalize(D));   // angle between surface and light ray
-	
-	if (NdotL >= 0.f) 
-	   return 2 * NdotL * DoLightFactor(Light,P);
-	else
-	   return 0.f;
-}
-
-float4 DoPointLight(float3 P, float3 N, float4 Light, float4 LightColor)
-{
-	return LightColor * DoLightFactorN(Light,P,N);
-}
-
-float4 DoLight(float3 P, float3 N, int i)
-{
-	return DoPointLight(P,N,vecLightPos[i],vecLightColor[i]);
-}
-
-#endif
-//////////////////////////////////////////////////////////////////////
 //section: fog ///////////////////////////////////////////////////////
 #ifndef include_fog
 #define include_fog
@@ -327,22 +249,6 @@ float3 DoTangent(float3 inVector)
 #endif
 
 //////////////////////////////////////////////////////////////////////
-//section: vecskill - set vecSkill41 to default values ///////////////
-#ifndef include_vecskill
-#define include_vecskill
-
-float4 vecSkill41;
-
-float DoDefault(float vecSkill,float defVal)
-{
-   if (0 == vecSkill) 
-      return defVal;
-   else
-      return vecSkill;
-}
-#endif
-
-//////////////////////////////////////////////////////////////////////
 //section: srctex - set up the source for postprocessing shaders
 #ifndef include_srctex
 #define include_srctex
@@ -425,56 +331,6 @@ float3 DoPhong(float3 Diffuse, float fLight, float fHalf, float fSpecular)
 	return Diffuse * (saturate(fLight) * vecDiffuse.xyz + pow(saturate(fHalf),fPower) * fSpecular * vecSpecular.xyz);
 }
 #endif
-
-//////////////////////////////////////////////////////////////////////
-//section: bump_vs - bumpmapping vertex shader //////////////////////////
-#include <define>
-#include <transform>
-#include <fog>
-#include <pos>
-#include <normal>
-#include <tangent>
-#include <lights>
-#include <color>
-
-struct bumpOut
-{
-	float4 Pos: POSITION;
-	float  Fog:	FOG;
-	float4 Ambient:  COLOR0;
-	float4 Tex12:    TEXCOORD0;	
-	float3 ViewDir:  TEXCOORD1;
-	float3 LightDir1:	 TEXCOORD2;	
-	float3 LightDir2:	 TEXCOORD3;
-	float3 LightDir3:	 TEXCOORD4;	
-	float3 Diffuse1: TEXCOORD5;		
-	float3 Diffuse2: TEXCOORD6;		
-	float3 Diffuse3: TEXCOORD7;		
-};
-
-bumpOut bump_VS(vertexIn In)
-{
-	bumpOut Out;
-
-	Out.Pos	= DoTransform(In.Pos);
-	Out.Tex12 = float4(In.Tex1,In.Tex2);
-	Out.Fog	= DoFog(In.Pos);
-	Out.Ambient = DoAmbient();	
-
-	CreateTangents(In.Normal,In.Tangent);
-  float3 PosWorld = DoPos(In.Pos);
-	Out.ViewDir = DoTangent(vecViewPos-PosWorld);
-	Out.LightDir1 = DoTangent(vecLightPos[0].xyz-PosWorld);
-	Out.LightDir2 = DoTangent(vecLightPos[1].xyz-PosWorld);
-	Out.LightDir3 = DoTangent(vecLightPos[2].xyz-PosWorld);
-	
-  float3 Normal = DoNormal(In.Normal);
-	Out.Diffuse1 = DoLightFactorBump(vecLightPos[0],PosWorld,Normal) * vecLightColor[0];
-	Out.Diffuse2 = DoLightFactorBump(vecLightPos[1],PosWorld,Normal) * vecLightColor[1];
-	Out.Diffuse3 = DoLightFactorBump(vecLightPos[2],PosWorld,Normal) * vecLightColor[2];
-	
-	return Out;		
-}
 
 //////////////////////////////////////////////////////////////////////
 //section: tangent_vs - tangent creating vertex shader ///////////////
@@ -569,6 +425,7 @@ float4 DoPoisson(sampler smp,float2 tex,float fDist)
 
 #endif
 
+//////////////////////////////////////////////////////////////////////
 //section: box - box filter //////////////////////////////////
 #ifndef include_box
 #define include_box
@@ -593,6 +450,7 @@ float4 DoBox2x2(sampler smp,float2 tex,float fDist)
 
 #endif
 
+//////////////////////////////////////////////////////////////////////
 //section: gauss - gauss filter //////////////////////////////////
 #ifndef include_gauss
 #define include_gauss
@@ -630,14 +488,11 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 
 
 
-
-
-
-
 //////////////////////////////////////////////////////////////////////
 //                 SHADE-C
 //////////////////////////////////////////////////////////////////////
 
+//////////////////////////////////////////////////////////////////////
 //section: scPackNormals - packs normalized view space normals to 2x8bit //
 #ifndef include_scPackNormals
 #define include_scPackNormals
@@ -702,6 +557,7 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	
 #endif
 
+//////////////////////////////////////////////////////////////////////
 //section: scUnpackNormals - unpacks normals //
 #ifndef include_scUnpackNormals
 #define include_scUnpackNormals
@@ -764,6 +620,7 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	
 #endif
 
+//////////////////////////////////////////////////////////////////////
 //section: scNormalsFromPosition - creates flat normals from position//
 #ifndef include_scNormalsFromPosition
 #define include_scNormalsFromPosition
@@ -785,6 +642,7 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	
 #endif
 
+//////////////////////////////////////////////////////////////////////
 //section: scNormalsFromDepth - creates flat normals from linear depth//
 #ifndef include_scNormalsFromDepth
 #define include_scNormalsFromDepth
@@ -796,6 +654,7 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	}
 #endif
 
+//////////////////////////////////////////////////////////////////////
 //section: scPackDepth - packs linear depth to 2x8bit //
 #ifndef include_scPackDepth
 #define include_scPackDepth
@@ -828,6 +687,7 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	
 #endif
 
+//////////////////////////////////////////////////////////////////////
 //section: scUnpackDepth - unpacks depth //
 #ifndef include_scUnpackDepth
 #define include_scUnpackDepth
@@ -847,6 +707,7 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	}
 #endif
 
+//////////////////////////////////////////////////////////////////////
 //section: scRGBtoLogLUV - RGB to LUV //
 #ifndef include_scRGBtoLogLUV
 #define include_scRGBtoLogLUV
@@ -869,6 +730,7 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	}
 #endif
 
+//////////////////////////////////////////////////////////////////////
 //section: scLogLuvDecode - LUV to RGB //
 #ifndef include_scLogLUVtoRGB
 #define include_scLogLUVtoRGB
@@ -890,6 +752,7 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	}
 #endif
 
+//////////////////////////////////////////////////////////////////////
 //section: scPackLighting - packs lighting (diffuse + specular)
 #ifndef include_scPackLighting
 #define include_scPackLighting
@@ -902,6 +765,7 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	}
 #endif
 
+//////////////////////////////////////////////////////////////////////
 //section: scUnpackLighting - unpacks lighting (diffuse + specular)
 #ifndef include_scUnpackLighting
 #define include_scUnpackLighting
@@ -918,6 +782,7 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	}
 #endif
 
+//////////////////////////////////////////////////////////////////////
 //section: scPackSpecularData - packs specular data //
 #ifndef include_scPackSpecularData
 #define include_scPackSpecularData
@@ -965,7 +830,7 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	}
 #endif
 
-
+//////////////////////////////////////////////////////////////////////
 //section: scUnpackSpecularData - unpacks depth //
 #ifndef include_scUnpackSpecularData
 #define include_scUnpackSpecularData
@@ -1027,6 +892,7 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	} 
 #endif
 
+//////////////////////////////////////////////////////////////////////
 //section: scTriplanarProjection - returns tri planar mapping //
 #ifndef include_scTriplanarProjection
 #define include_scTriplanarProjection
@@ -1130,6 +996,7 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	}
 #endif
 
+//////////////////////////////////////////////////////////////////////
 //section: scTriplanarProjectionNM - returns tri planar mapping //
 #ifndef include_scTriplanarProjectionNM
 #define include_scTriplanarProjectionNM
@@ -1167,6 +1034,7 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	}
 #endif
 
+//////////////////////////////////////////////////////////////////////
 //section: scCalculatePosVSQuad - returns the viewspace position for a screenspace quad. Needs screenspace texcoords and linear depth * clip_far //
 #ifndef include_scCalculatePosVSQuad
 #define include_scCalculatePosVSQuad
@@ -1188,7 +1056,7 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	}
 #endif
 
-
+//////////////////////////////////////////////////////////////////////
 //section: scGetShadow - Calculate Shadows. Needs projective texcoords and original light->receiver depth//
 #ifndef include_scGetShadow
 #define include_scGetShadow
@@ -1210,7 +1078,7 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	
 	//static half2 shadow_blurSize_softness = half2(0.0025, 0.015);
 	//static half2 shadow_blurSize_softness = half2(0.0075, 0.02);
-	static half2 shadow_softness = 0.075;
+	static half2 shadow_softness = 0.085;
 	half GetShadow(sampler2D shadowSampler, float2 inTex, half inDepth, half maxDepth)
 	{
 		
@@ -1342,7 +1210,7 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	}
 #endif
 
-
+//////////////////////////////////////////////////////////////////////
 //section: scGetPssm - calculates PSSM shadows //
 #ifndef include_scGetPssm
 #define include_scGetPssm
@@ -1439,6 +1307,7 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	}
 #endif
 
+//////////////////////////////////////////////////////////////////////
 //section: scLights - contains all needed stuff to compute deferred lighting  //
 #ifndef include_scLights
 #define include_scLights
@@ -1860,6 +1729,725 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 		    	ZEnable = true;
 			#endif	
 		}
+	}
+#endif
+
+//////////////////////////////////////////////////////////////////////
+//section: scHeaderObject - Shade-C object ubershader2 //
+#ifndef include_scHeaderObject
+#define include_scHeaderObject
+	
+	/*
+	#ifndef SKIN_ALBEDO
+		#define SKIN_ALBEDO (skin1.xyz) //diffusemap
+	#endif
+	#ifndef SKIN_ALPHA
+		#define SKIN_ALPHA (skin1.w) //alpha
+	#endif
+	#ifndef SKIN_NORMAL
+		#define SKIN_NORMAL (skin2.xyz) //normalmap
+	#endif
+	#ifndef SKIN_GLOSS
+		#define SKIN_GLOSS (skin2.w) //glossmap
+	#endif
+	#ifndef SKIN_EMISSIVEMASK
+		#define SKIN_EMISSIVEMASK (skin3.x) //emissive mask
+	#endif
+	#ifndef SKIN_COLOR
+		#define SKIN_COLOR (skin3.y) //(team)color mask
+	#endif
+	*/
+	
+	#ifndef PASSSOLID
+	#define PASSSOLID
+		bool PASS_SOLID;
+	#endif
+	
+	#ifndef SKIN_ALBEDO
+		#define SKIN_ALBEDO half3(0.5, 0.5, 0.5)
+	#endif
+	#ifndef SKIN_ALPHA
+		#define SKIN_ALPHA 1;
+	#endif
+	#ifndef SKIN_NORMAL
+		#define SKIN_NORMAL half3(0.5, 0.5, 1)
+	#endif
+	#ifndef SKIN_GLOSS
+		#define SKIN_GLOSS 0
+	#endif
+	#ifndef SKIN_EMISSIVEMASK
+		#define SKIN_EMISSIVEMASK 0
+	#endif
+	#ifndef SKIN_COLOR
+		#define SKIN_COLOR 0
+	#endif
+	//#define SKIN_EMVMAPMASK (skin3.x) //environment mapping mask
+	//#define SKIN_VELVETYMASK (skin3.z) //velvety lighting mask
+	
+	#ifndef GLOSSSTRENGTH
+		#define GLOSSSTRENGTH 0
+	#endif
+		
+	
+	#ifndef SKIN1
+		#define SKIN1 entSkin1
+	#endif
+	#ifndef SKIN2
+		#define SKIN2 entSkin2
+	#endif
+	#ifndef SKIN3
+		#define SKIN3 entSkin3
+	#endif
+	#ifndef SKIN4
+		#define SKIN4 entSkin4
+	#endif
+	
+	#include <scPackNormals>
+	#include <scPackDepth>
+	
+	
+	#ifndef MATWORLDVIEWPROJ
+	#define MATWORLDVIEWPROJ
+		float4x4 matWorldViewProj;
+	#endif
+	#ifndef MATWORLD
+	#define MATWORLD
+		float4x4 matWorld;
+	#endif
+	#ifndef MATVIEW
+	#define MATVIEW
+		float4x4 matView;
+	#endif
+	#ifndef MATWORLDVIEW
+	#define MATWORLDVIEW
+		float4x4 matWorldView;
+	#endif
+	
+	#ifdef NORMALMAPPING
+		#ifndef MATTANGENT
+		#define MATTANGENT
+			float3x3 matTangent; // hint for the engine to create tangents in TEXCOORD2
+		#endif
+	#endif
+	
+	#ifndef VECDIFFUSE
+	#define VECDIFFUSE
+		float3 vecDiffuse;
+	#endif
+	
+	//emissive
+	#ifdef EMISSIVE_A7
+		#ifndef VECEMISSIVE
+		#define VECEMISSIVE
+			float3 vecEmissive;
+		#endif
+	#endif
+	#ifdef EMISSIVE_SHADEC
+		float3 vecEmissive_SHADEC;
+	#endif
+	
+	//(team)color
+	#ifdef OBJECTCOLOR_SHADEC
+		float3 vecColor_SHADEC;
+	#endif
+	
+	#ifndef FPOWER
+	#define FPOWER
+		float fPower;
+	#endif
+	#ifndef CLIPFAR
+	#define CLIPFAR
+		float clipFar;
+	#endif
+	#ifndef ALPHACLIP
+	#define ALPHACLIP
+		float alphaClip;
+	#endif
+	#ifndef MATERIALID
+	#define MATERIALID
+		float materialID;
+	#endif
+	
+	texture SKIN1;
+	texture SKIN2;
+	texture SKIN3;
+	texture SKIN4;
+	
+	/*
+	#ifdef MTL_SKIN1
+		#ifndef MTLSKIN1
+		#define MTLSKIN1
+			texture mtlSkin1;
+		#endif
+	#else
+		#ifndef ENTSKIN1
+		#define ENTSKIN1
+			texture entSkin1;
+		#endif
+	#endif
+	*/
+	
+	sampler2D sc_skin1Sampler = sampler_state
+	{
+		Texture = <SKIN1>;
+		/*
+		#ifdef MTL_SKIN1
+			Texture = <mtlSkin1>;
+		#else
+			Texture = <entSkin1>;
+		#endif
+		*/
+	
+		MinFilter = Linear;
+		MagFilter = Linear;
+		MipFilter = Linear;
+		AddressU = WRAP;
+		AddressV = WRAP;
+	};
+	
+	sampler2D sc_skin2Sampler = sampler_state
+	{
+		Texture = <SKIN2>;
+	
+		MinFilter = Linear;
+		MagFilter = Linear;
+		MipFilter = Linear;
+		AddressU = WRAP;
+		AddressV = WRAP;
+	};
+	
+	sampler2D sc_skin3Sampler = sampler_state
+	{
+		Texture = <SKIN3>;
+	
+		MinFilter = Linear;
+		MagFilter = Linear;
+		MipFilter = Linear;
+		AddressU = WRAP;
+		AddressV = WRAP;
+	};
+	
+	sampler2D sc_skin4Sampler = sampler_state
+	{
+		Texture = <SKIN4>;
+			
+		MinFilter = Linear;
+		MagFilter = Linear;
+		MipFilter = Linear;
+		AddressU = WRAP;
+		AddressV = WRAP;
+	};
+	
+	
+	struct vsIn
+	{
+		float4 Pos : POSITION;
+		half2 Tex : TEXCOORD0;
+		half2 TexShadow : TEXCOORD1;
+		half3 Normal : NORMAL;
+		#ifdef NORMALMAPPING
+			half4 Tangent: TEXCOORD2;
+		#endif
+	};
+	
+	struct vsOut
+	{
+		float4 Pos : POSITION;
+		float Pos2D : TEXCOORD0;
+		float4 Tex : TEXCOORD1;
+		float3 Normal : TEXCOORD2;
+		#ifdef NORMALMAPPING
+			float3 Tangent : TEXCOORD3;
+			float3 Binormal : TEXCOORD4;
+		#endif
+	};
+	
+	struct psOut
+	{
+	    float4 NormalsAndDepth : COLOR0;
+	    half4 AlbedoAndEmissiveMask : COLOR1;
+	    float4 MaterialData : COLOR2;
+	    //float4 lightmapAnd : COLOR3;
+	};
+#endif
+
+//////////////////////////////////////////////////////////////////////
+//section: scObject - Shade-C object ubershader //
+#ifndef include_scObject
+#define include_scObject	
+	vsOut mainVS(vsIn In)
+	{
+		vsOut Out = (vsOut)0;
+		
+		/*
+		//WIND ANIMATION
+		if(vecSkill1.w == 1)
+		{
+			float3 P = mul(In.Pos, matWorld);
+			float force_x = DoDefault(vecSkill41.x*(0.1/50),0.1); 
+			float force_y = DoDefault(vecSkill41.y*(0.1/50),0.1);
+			float speed = sin((vecTime.w+0.2*(P.x+P.y+P.z)) * DoDefault(vecSkill41.z*(0.05/50),0.05));
+			
+			if (In.Pos.y > 0 ) // move only upper part of tree
+			{
+				In.Pos.x += speed * force_x * In.Pos.y;
+				In.Pos.z += speed * force_y * In.Pos.y;
+				In.Pos.y -= 0.1*abs(speed*(force_x+force_y)) * In.Pos.y;
+			}
+		}
+		*/
+		
+		#ifndef CUSTOM_VS_POSITION
+			Out.Pos = mul(In.Pos,matWorldViewProj);
+		#else
+			Out.Pos = Custom_VS_Position(In);
+		#endif
+		Out.Pos2D = mul(In.Pos,matWorldView).z;
+		
+		#ifndef CUSTOM_VS_TEX
+			Out.Tex.xy = In.Tex;
+		#else
+			Out.Tex.xy = Custom_VS_Tex(In);
+		#endif
+		
+		#ifndef CUSTOM_VS_TEXSHADOW
+			Out.Tex.zw = In.TexShadow;
+		#else
+			Out.Tex.zw = Custom_VS_TexShadow(In);
+		#endif
+		
+		#ifndef CUSTOM_VS_NORMAL
+			Out.Normal = mul(In.Normal.xyz,matWorldView);
+		#else
+			Out.Normal = Custom_VS_Normal(In);
+		#endif
+		
+		#ifdef NORMALMAPPING
+			#ifndef CUSTOM_VS_TANGENT
+				Out.Tangent = mul(In.Tangent.xyz, matWorldView); 
+			#else
+				Out.Tangent = Custom_VS_Tangent(In);
+			#endif
+			
+			#ifndef CUSTOM_VS_BINORMAL
+	   		Out.Binormal = mul(cross(In.Tangent.xyz, In.Normal.xyz), matWorldView); 
+	   	#else
+	   		Out.Binormal = Custom_VS_Binormal(In);
+	   	#endif
+	   	//Out.Tangent = normalize(Out.Tangent);
+	   	//Out.Binormal = normalize(Out.Binormal);
+	   #endif
+	   //Out.Normal = normalize(Out.Normal);
+		
+		#ifdef CUSTOM_VS_EXTEND
+			Out = Custom_VS_Extend(In, Out);
+		#endif
+		
+		return Out;	
+	}
+	
+	/*
+	float4 EncodeFloatRGBA( float v ) {
+	  float4 enc = float4(1.0, 255.0, 65025.0, 160581375.0) * v;
+	  enc = frac(enc);
+	  enc -= enc.yzww * float4(1.0/255.0,1.0/255.0,1.0/255.0,0.0);
+	  return enc;
+	}
+	float DecodeFloatRGBA( float4 rgba ) {
+	  return dot( rgba, float4(1.0, 1/255.0, 1/65025.0, 1/160581375.0) );
+	}
+	*/
+	
+	
+	
+	
+	psOut mainPS(vsOut In)
+	{
+		psOut PSOut = (psOut)0;
+		
+		//get skins
+		#ifndef CUSTOM_PS_SKIN1
+			#ifndef NO_SKIN1
+				half4 skin1 = tex2D(sc_skin1Sampler,In.Tex);
+			#else
+				half4 skin1 = 0;
+			#endif
+		#else
+			//CUSTOM CODE
+			half4 skin1 = Custom_PS_Skin1(In);
+		#endif
+		#ifndef CUSTOM_PS_SKIN2
+			#ifndef NO_SKIN2
+				half4 skin2 = tex2D(sc_skin2Sampler,In.Tex);
+			#else
+				half4 skin2 = 0;
+			#endif
+		#else
+			//CUSTOM CODE
+			half4 skin2 = Custom_PS_Skin2(In);
+		#endif
+		#ifndef CUSTOM_PS_SKIN3
+			#ifndef NO_SKIN3
+				half4 skin3 = tex2D(sc_skin3Sampler,In.Tex);
+			#else
+				half4 skin3 = 0;
+			#endif
+		#else
+			//CUSTOM CODE
+			half4 skin3 = Custom_PS_Skin3(In);
+		#endif
+		#ifndef CUSTOM_PS_SKIN4
+			#ifndef NO_SKIN4
+				half4 skin4 = tex2D(sc_skin4Sampler,In.Tex);
+			#else
+				half4 skin4 = 0;
+			#endif
+		#else
+			//CUSTOM CODE
+			half4 skin4 = Custom_PS_Skin4(In);
+		#endif
+		
+		
+		//alphatest
+		#ifndef CUSTOM_PS_ALPHA
+			#ifdef ALPHA
+				clip(SKIN_ALPHA-alphaClip);
+			#endif
+		#else
+			//CUSTOM CODE
+			clip( Custom_PS_Alpha(In, SKIN_ALPHA) );
+		#endif
+		
+		//initial w values
+		PSOut.AlbedoAndEmissiveMask.w = 0;
+		
+		//normals
+		#ifndef CUSTOM_PS_NORMALMAPPING
+			#ifdef NORMALMAPPING
+				half3 bump = SKIN_NORMAL*2-1;
+				In.Normal.rgb += (bump.x * In.Tangent.xyz + bump.y * In.Binormal.xyz);
+			#endif
+		#else
+			//CUSTOM CODE
+			In.Normal.rgb = Custom_PS_Normalmapping(In, SKIN_NORMAL);
+		#endif
+		//PSOut.normalsAndDepth.xy = PackNormals( normalize(In.Normal.rgb) ); //normals
+		PSOut.NormalsAndDepth.xyz = (In.Normal.rgb); //normals
+			
+		//depth
+		#ifndef CUSTOM_PS_DEPTH
+			PSOut.NormalsAndDepth.w = (In.Pos2D/clipFar);
+		#else
+			//CUSTOM CODE
+			PSOut.NormalsAndDepth.w = Custom_PS_Depth(In);
+		#endif
+		
+		//albedo
+		#ifndef CUSTOM_PS_DIFFUSE
+			#ifdef USE_VEC_DIFFUSE
+				PSOut.AlbedoAndEmissiveMask.xyz = SKIN_ALBEDO * vecDiffuse;
+			#else
+				PSOut.AlbedoAndEmissiveMask.xyz = SKIN_ALBEDO;
+			#endif
+		#else
+			//CUSTOM CODE
+			PSOut.AlbedoAndEmissiveMask.xyz = Custom_PS_Diffuse(In, SKIN_ALBEDO);
+		#endif
+		
+		//(team)color
+		#ifndef CUSTOM_PS_COLOR
+			#ifdef OBJECTCOLOR_A7
+				PSOut.AlbedoAndEmissiveMask.xyz += SKIN_COLOR * vecDiffuse;
+			#endif
+			#ifdef OBJECTCOLOR_SHADEC
+				PSOut.AlbedoAndEmissiveMask.xyz += SKIN_COLOR * vecColor_SHADEC;
+			#endif
+		#else
+			//CUSTOM CODE
+			PSOut.AlbedoAndEmissiveMask.xyz += Custom_PS_Color(In, SKIN_COLOR);
+		#endif
+				
+		//emissiveMask
+		#ifndef CUSTOM_PS_EMISSIVEMASK
+			#ifdef EMISSIVEMASK
+				//Set EmissiveMask
+				PSOut.AlbedoAndEmissiveMask.w = SKIN_EMISSIVEMASK;
+				#ifdef EMISSIVE_A7
+					PSOut.AlbedoAndEmissiveMask.xyz =  clamp(PSOut.AlbedoAndEmissiveMask.xyz - PSOut.AlbedoAndEmissiveMask.w,0,1);
+					PSOut.AlbedoAndEmissiveMask.xyz =  clamp(PSOut.AlbedoAndEmissiveMask.xyz + (PSOut.AlbedoAndEmissiveMask.w * vecEmissive.xyz ),0,1);
+				#endif
+				#ifdef EMISSIVE_SHADEC
+					PSOut.AlbedoAndEmissiveMask.xyz =  clamp(PSOut.AlbedoAndEmissiveMask.xyz - PSOut.AlbedoAndEmissiveMask.w,0,1);
+					PSOut.AlbedoAndEmissiveMask.xyz =  clamp(PSOut.AlbedoAndEmissiveMask.xyz + (PSOut.AlbedoAndEmissiveMask.w * vecEmissive_SHADEC.xyz ),0,1);
+				#endif
+			#endif
+		#else
+			//CUSTOM CODE
+			PSOut.AlbedoAndEmissiveMask.w = Custom_PS_EmissiveMask(In, SKIN_EMISSIVEMASK);
+		#endif
+		
+		//material ID
+		#ifndef CUSTOM_PS_MATERIALID
+			PSOut.MaterialData.x = materialID; //material ID
+		#else
+			//CUSTOM CODE
+			PSOut.MaterialData.x = Custom_PS_MaterialID(In);
+		#endif
+		
+		//Specular Power
+		#ifndef CUSTOM_PS_SPECULARPOWER
+			PSOut.MaterialData.y = fPower/(float)255;//vecSkill17.z; //material Specular Power
+		#else
+			//CUSTOM CODE
+			PSOut.MaterialData.y = Custom_PS_SpecularPower(In);
+		#endif
+		
+		//Specular Gloss
+		#ifndef CUSTOM_PS_GLOSS
+			#ifdef GLOSSMAP
+				PSOut.MaterialData.z = SKIN_GLOSS; //material Specular Intensity
+			#else
+				PSOut.MaterialData.z = GLOSSSTRENGTH;
+			#endif
+		#else
+			//CUSTOM CODE
+			PSOut.MaterialData.z = Custom_PS_Gloss(In, SKIN_GLOSS);
+		#endif
+		PSOut.MaterialData.w = 0; //environment map ID - not used yet
+		
+		//Extend Pixelshader
+		#ifdef CUSTOM_PS_EXTEND
+			PSOut = Custom_PS_Extend(In, PSOut);
+		#endif
+		
+		
+		//Packing---------------------
+		//PSOut.normalsAndDepth.xy = PackNormals( mul((In.Normal.rgb) ,matView) ); //normals
+		PSOut.NormalsAndDepth.xy = PackNormals(normalize(PSOut.NormalsAndDepth.xyz)); //normals
+		//depth
+		PSOut.NormalsAndDepth.zw = PackDepth(PSOut.NormalsAndDepth.w);
+		
+		
+		return PSOut;
+	}
+	
+	technique Object
+	{
+		#ifdef ZPREPASS
+		pass zPrePass
+		{
+			ColorWriteEnable = 0;
+			cullmode = ccw;
+			zwriteenable = true;	
+			alphablendenable = false;
+			stencilenable = false;
+		}
+		#endif
+		
+		pass p0
+		{
+			cullmode = ccw;
+			#ifndef ZPREPASS
+				zwriteenable = true;
+			#endif
+			alphablendenable = false;
+			VertexShader = compile vs_2_0 mainVS();
+			PixelShader = compile ps_2_a mainPS();
+			FogEnable = False;
+			
+			#ifdef ZPREPASS
+				ColorWriteEnable = RED | GREEN | BLUE | ALPHA;
+				zenable = true;
+				zwriteenable = false;
+		    	ZFunc = LESSEQUAL;
+			#endif
+		}
+	}
+#endif
+
+//////////////////////////////////////////////////////////////////////
+//section: scHeaderLightShadowmap - shadowmap calculation //
+#ifndef include_scHeaderLightShadowmap
+#define include_scHeaderLightShadowmap
+	
+	#ifndef PASSSOLID
+	#define PASSSOLID
+		bool PASS_SOLID;
+	#endif
+	
+	#include <scPackDepth>
+	
+	#ifndef MATWORLDVIEWPROJ
+		#define MATWORLDVIEWPROJ
+		float4x4 matWorldViewProj;
+	#endif
+	//float4x4 matProj;
+	
+	/*
+	#ifndef VECSKILL1
+	#define VECSKILL1
+		float4 vecSkill1; //depthmap stuff, x = | y = alpha clip | z = bias | w = maxDepth
+	#endif
+	*/
+	
+	#ifndef CLIPFAR
+	#define CLIPFAR
+		float clipFar;
+	#endif
+	#ifndef ALPHACLIP
+	#define ALPHACLIP
+		float alphaClip;
+	#endif
+	
+	#ifdef ALPHA
+		#ifndef ENTSKIN1
+		#define ENTSKIN1
+			texture entSkin1;
+		#endif
+		
+		sampler2D sc_skin1Sampler = sampler_state
+		{
+			Texture = <entSkin1>;
+			AddressU = WRAP;
+			AddressV = WRAP;
+		};
+	#endif
+	
+	struct vsIn
+	{
+		float4 Pos : POSITION;
+		float2 Tex : TEXCOORD0;
+	};
+	
+	struct vsOut
+	{
+		float4 Pos : POSITION;
+		float Pos2D : TEXCOORD0;
+		float2 Tex : TEXCOORD1;
+	};
+	
+	struct psOut
+	{
+		float4 Color : COLOR;
+	};
+	
+#endif
+
+//////////////////////////////////////////////////////////////////////
+//section: scLightShadowmap - shadowmap calculation //
+#ifndef include_scLightShadowmap
+#define include_scLightShadowmap
+	vsOut mainVS(vsIn In)
+	{
+		vsOut Out = (vsOut)0;	
+		
+		/*
+		float4 pos = mul(In.Pos,matWorldViewProj);
+		Out.Pos2D = pos.z;
+		Out.Pos = pos;//mul(pos,matProj);
+		Out.Tex = In.Tex;	
+		*/
+		
+		#ifndef CUSTOM_VS_POSITION
+			Out.Pos = mul(In.Pos,matWorldViewProj);
+		#else
+			Out.Pos = Custom_VS_Position(In);
+		#endif
+		Out.Pos2D = Out.Pos.z;
+		Out.Tex = In.Tex;	
+		
+		#ifdef CUSTOM_VS_Extend
+			Out = Custom_VS_Extend(In, Out);
+		#endif
+		
+		return Out;
+		
+	}
+	
+	half4 CalculateShadowDepth(float Pos2D_Z)
+	{
+		//half depth = ((Pos2D_Z)/vecSkill1.w);
+		half depth = ((Pos2D_Z)/clipFar);
+		//depth += depth*vecSkill1.z;
+		
+		//return half4(PackDepth(depth),0,0);
+		return half4(depth,0,0,0);
+	}
+	
+	psOut mainPS(vsOut In)
+	{
+		psOut Out = (psOut)0;
+		
+		//alpha clip
+		#ifndef CUSTOM_PS_ALPHA
+			#ifdef ALPHA
+				//clip(tex2D(skin1Sampler,In.Tex).a-vecSkill1.y);
+				clip(tex2D(sc_skin1Sampler,In.Tex).a-alphaClip);
+			#endif
+		#else
+			#ifdef ALPHA
+				clip( Custom_PS_Alpha(In, tex2D(sc_skin1Sampler,In.Tex).a) );
+			#else
+				clip( Custom_PS_Alpha(In, 1) );
+			#endif
+		#endif
+		
+		Out.Color = CalculateShadowDepth(In.Pos2D);
+		
+		#ifdef CUSTOM_PS_EXTEND
+			Out = Custom_PS_Extend(In, Out);
+		#endif
+		
+		return Out;
+	}
+	
+	psOut mainPS_lm(vsOut In)
+	{
+		psOut Out = (psOut)0;
+		
+		Out.Color = CalculateShadowDepth(In.Pos2D);
+		
+		#ifdef CUSTOM_PS_EXTEND
+			Out = Custom_PS_Extend(In, Out);
+		#endif
+		
+		return Out;
+	}
+	
+	technique LightShadowmap
+	{
+		pass p0
+		{
+			cullmode = ccw;
+			FogEnable = False;
+			alphablendenable = false;
+			zwriteenable = true;
+			vertexshader = compile vs_2_0 mainVS();
+			pixelshader = compile ps_2_0 mainPS();
+		}
+	}
+	
+	technique LightShadowmap_lm
+	{
+		pass p0
+		{
+			cullmode = ccw;
+			FogEnable = False;
+			alphablendenable = false;
+			zwriteenable = true;
+			vertexshader = compile vs_2_0 mainVS();
+			pixelshader = compile ps_2_0 mainPS_lm();
+		}
+	}
+#endif
+
+//////////////////////////////////////////////////////////////////////
+//section: scDummy - calculates PSSM shadows //
+#ifndef include_scDummy
+#define include_scDummy
+	half2 test()
+	{
+		return half2(1,1);
 	}
 #endif
 
