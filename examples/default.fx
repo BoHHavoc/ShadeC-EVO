@@ -731,7 +731,7 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 #endif
 
 //////////////////////////////////////////////////////////////////////
-//section: scLogLuvDecode - LUV to RGB //
+//section: scLogLUVtoRGB - LUV to RGB //
 #ifndef include_scLogLUVtoRGB
 #define include_scLogLUVtoRGB
 	// Inverse M matrix, for decoding
@@ -1078,7 +1078,7 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	
 	//static half2 shadow_blurSize_softness = half2(0.0025, 0.015);
 	//static half2 shadow_blurSize_softness = half2(0.0075, 0.02);
-	static half2 shadow_softness = 0.085;
+	static half2 shadow_softness = 0.075;
 	half GetShadow(sampler2D shadowSampler, float2 inTex, half inDepth, half maxDepth)
 	{
 		

@@ -79,7 +79,6 @@ MATERIAL* mtlDissolve =
 	
 	power = 25;
 }
-
 MATERIAL* mtlDissolveShadow =
 {
 	//this effect does the same as the effect above, but this time its for the shadowmap shader
@@ -127,8 +126,7 @@ void main()
 	//set ambient color to zero as we want a dark level with nice shadows ;)
 	vec_set(ambient_color, vector(0,0,0));
 	//vec_set(ambient_color, vector(96,96,96));
-	//vec_set(ambient_color, vector(180,180,180));
-		
+
 	//create a camera object so we can move around the scene
 	you = ent_create(NULL, vector(-800,0, 200), v_camera);
 	you.tilt = -10;

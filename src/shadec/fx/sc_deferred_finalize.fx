@@ -83,7 +83,6 @@ float4 mainPS(psIn In):COLOR
 	}
 	
 	//gamme correction
-	//diffuseAndSpecular.xyz = pow(diffuseAndSpecular.xyz, 1.f/2.2f);
 	//albedoAndEmissiveMask.xyz = pow(albedoAndEmissiveMask.xyz, 1.f/2.2f);
 	albedoAndEmissiveMask.xyz = pow(albedoAndEmissiveMask.xyz, 2.2);
 	

@@ -130,6 +130,7 @@ void main()
    	sun_light = sun_angle.tilt;
    	*/
    	
+   	
    	//rotate the spotlight
    	spotlight.pan += time_step*5;
    	//update the spotlight
@@ -137,7 +138,4 @@ void main()
    	
 	   wait(1);
   }
-  
-  
-	
 }
