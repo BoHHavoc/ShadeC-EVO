@@ -20,7 +20,7 @@ MATERIAL* mtl_car =
 	flags = ENABLE_RENDER;
 	event = sc_materials_event;
 	
-	power = 50;
+	power = 200;
 }
 MATERIAL* mtl_metal2 = //mtl_metal2 because mtl_metal is already taken by gamestudio!
 {
@@ -53,6 +53,8 @@ MATERIAL* mtl_levelDefault =
 	effect = "levelDefault.fx";
 	flags = ENABLE_RENDER;
 	event = sc_materials_event;
+	
+	power = 5;
 }
 
 MATERIAL* mtl_levelDefaultNM = 

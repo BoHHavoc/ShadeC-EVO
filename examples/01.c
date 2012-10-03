@@ -51,6 +51,7 @@ void main()
 	you = ent_create(NULL, nullvector, v_camera);
 	you.pan = 211;
 	you.tilt = 21;
+	camera.arc = 75;
 	
 	//set resolution before calling sc_setup
 	//if you want to change resolution again, simple call sc_setup() again after you changed the resolution
@@ -81,7 +82,7 @@ void main()
 	
 	//tweak effect parameters anytime you want
 	// -> more info in sc_core.h, in struct SC_SETTINGS
-	sc_screen_default.settings.hdr.lensflare.brightpass = 0.2;
+	sc_screen_default.settings.hdr.lensflare.brightpass = 0.4;
 	sc_screen_default.settings.hdr.lensflare.intensity = 0.8;
 	
 	while(1) {

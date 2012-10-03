@@ -154,7 +154,7 @@ void main()
 	//tweak effect parameters anytime you want
 	// -> more info in sc_core.h, in struct SC_SETTINGS
 	sc_screen_default.settings.hdr.brightpass = 0.85;
-	sc_screen_default.settings.hdr.intensity = 1;
+	sc_screen_default.settings.hdr.intensity = 2;
 	sc_screen_default.settings.hdr.lensflare.brightpass = 0.0;
 	sc_screen_default.settings.hdr.lensflare.intensity = 0.25;
 	

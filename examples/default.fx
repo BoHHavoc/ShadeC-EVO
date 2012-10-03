@@ -1366,9 +1366,15 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	#endif
 	//float4 frustumPoints;
 	
-	float4 vecViewDir;
+	#ifndef VECVIEWDIR
+	#define VECVIEWDIR
+		float4 vecViewDir;
+	#endif
 	#ifndef SUN
-		float4 vecViewPort;
+		#ifndef VECVIEWPORT
+		#define VECVIEWPORT
+			float4 vecViewPort;
+		#endif
 	#endif
 	
 	texture mtlSkin1; //normals (xy) depth (zw)
@@ -1503,7 +1509,12 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 		Texture = <texBRDFLut>;
 	   AddressU = CLAMP; 
 		AddressV = CLAMP;
-		AddressW = WRAP;
+		//AddressU = Border;
+		//AddressV = Border;
+		//BorderColor = 0xFFFFFFFF;
+		//BorderColor = 0x00000000;
+		//AddressW = WRAP;
+		AddressW = CLAMP;
 		MIPFILTER = NONE;
 		MINFILTER = LINEAR; //fade between brdfs
 		MAGFILTER = LINEAR; //fade between brdfs
@@ -1651,16 +1662,31 @@ float4 DoGauss(sampler smp,float2 tex,float2 fDist)
 	   
 	   #ifdef SPECULAR
 		   //fps hungry....
-		   //half2 specularUV = ( dot(Ln,Hn) , dot(gBuffer.xyz,Hn)-materialData.g ); //isotropic
-		   lightingUV = ( dot(Ln,Hn) , dot(gBuffer.xyz,Hn)); //isotropic
+		   //half2 specularUV = half2( dot(Ln,Hn) , dot(gBuffer.xyz,Hn)-materialData.g ); //isotropic
+		   //isotropic
+		   //lightingUV = half2( dot(Ln,Hn) , dot(gBuffer.xyz,Hn)); //isotropic WHY IS THIS WRONG?
+		   //lightingUV = half2( dot(gBuffer.xyz,Hn) , dot(Ln,Hn)); //isotropic WHY IS THIS WRONG?
+		   //lightingUV.x = dot(Ln,Hn);
+		   //lightingUV.y = dot(gBuffer.xyz, Hn);
+		   //lightingUV.x = saturate( dot(Hn,gBuffer.xyz) );//pow(saturate( dot(Hn,gBuffer.xyz) ),materialData.g*255);
+		   lightingUV.x = pow( ( dot(Hn,gBuffer.xyz) ),materialData.g*255);
+		   //lightingUV.x = pow( dot(Hn,gBuffer.xyz)*2-1 ,materialData.g*32)*0.5+0.5;
+		   lightingUV.y = dot(Ln,Hn);//dot(Ln, gBuffer.xyz);
+		   //lightingUV = ( dot(Ln,Hn) , dot(gBuffer.xyz,Hn)); //isotropic WHY IS THIS NOT WRONG?
 		   //anisotropic
+		   	//lightingUV.x = saturate(color.xyz);
+		   	//lightingUV.y = dot(Hn, gBuffer.xyz);
+		   	//lightingUV = half2( dot(Ln,gBuffer.xyz) , dot(Hn,gBuffer.xyz));
 		   	//specularUV.x = 0.5+dot(Ln,gBuffer.xyz)/2.0;
 		   	//specularUV.y = 1-(0.5+dot(gBuffer.xyz,Hn)/2.0);
+		   //color.a = tex3D( brdfLUTSampler, half3(lightingUV, brdfData1.r) ).a;
 		   color.a = tex3D( brdfLUTSampler, half3(lightingUV, brdfData1.r) ).a;
-		   color.a = pow(color.a+0.005, materialData.g*255);
+		   //color.a = pow(color.a+0.001, materialData.g*255);
 		   //...
 		   //conventional specular
 		   //color.a = pow(dot(gBuffer.xyz,Hn),materialData.g*255);
+		   //color.xyz = color.a;
+		   
 		#else
 			color.a = 0;
 		#endif

@@ -1,6 +1,13 @@
 //#include <scUnpackSpecularData>
 #include <scUnpackLighting>
 
+/*
+float3 vecViewDir;
+#include <scUnpackNormals>
+#include <scUnpackDepth>
+#include <scCalculatePosVSQuad>
+*/
+
 float4 vecSkill1; //xyz = ambient_color
 
 texture mtlSkin1; //albedo and emissive mask
@@ -57,6 +64,16 @@ struct psIn
 	float4 Pos : POSITION;
 	half2 Tex : TEXCOORD0;
 };
+
+
+float4 OffsetMapping (float NdotL, float NdotV, sampler2D tex)
+{
+   //float fNdotL = dot(vecNormal, vecLight);
+   //float fNdotE = saturate(dot(vecNormal, vecView));
+   float4 texBrdf = tex2D(tex, float2((NdotL * .5 + .5), NdotV));
+
+   return texBrdf;
+}
 
 float4 mainPS(psIn In):COLOR
 {
@@ -130,8 +147,28 @@ float4 mainPS(psIn In):COLOR
 	//output.xyz = ssao.w;
 	//output.xyz = UnpackLighting(tex2D(diffuseAndSpecularSampler, In.Tex)).xyz * tex2D(albedoAndEmissiveMaskSampler, In.Tex).xyz;
 	//if(dot(output.xyz,1) > 3) output.xyz = 0;
-	//output.xyz = diffuseAndSpecular.w;
+	//output.xyz = diffuseAndSpecular.xyz;// + diffuseAndSpecular.w * diffuseAndSpecular.xyz;
+	//output.xyz = diffuseAndSpecular.xyz + diffuseAndSpecular.w * diffuseAndSpecular.xyz;
 	output.w = 1;
+	
+	/*
+	//Offset Mapping
+	float4 gBuffer = tex2D(ssaoSampler, In.Tex);
+	gBuffer.w = UnpackDepth(gBuffer.zw);
+	gBuffer.xyz = UnpackNormals(gBuffer.xy);
+	float3 posVS = CalculatePosVSQuad(In.Tex, gBuffer.w*5000);
+	float3 vecView = normalize(vecViewDir.xyz - posVS);
+	float NdotV = saturate(dot(gBuffer.xyz, vecView));
+	
+	
+	vecView.y = -vecView.y;
+	half2 offset = half2(gBuffer.x, gBuffer.y)*0.02*(1-gBuffer.w) * vecView.xy*NdotV;
+	output.xyz = tex2D(albedoAndEmissiveMaskSampler, In.Tex + offset).xyz;
+	output.xyz *= UnpackLighting(tex2D(diffuseAndSpecularSampler, In.Tex + offset)).xyz;
+	//output.xyz = OffsetMapping(saturate(diffuseAndSpecular.xyz), NdotV, albedoAndEmissiveMaskSampler).xyz;
+	//output.xyz = gBuffer.w;
+	//output.xyz = NdotV;
+	*/
 	
 	return output;
 }

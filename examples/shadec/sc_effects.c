@@ -5,6 +5,7 @@
 //		scatter = random position scatter (if > 0)
 //		duration = duration of effect
 //		map = pointer to normalmap
+// 	inView = view to apply scatter effect to
 var sc_effect_explosionRefractScreen_(VECTOR* entPos, var inStrength, var inScatter, var inDuration, BMAP* map, VIEW* inView)
 {
 	proc_mode = PROC_GLOBAL;

@@ -32,8 +32,12 @@ float4 mainPS(float2 inTex:TEXCOORD0):COLOR
 {
 	inTex *= vecSkill1.x;
 	half3 color = tex2D(currentSceneSampler, inTex).xyz;
-	//inTex *= vecSkill1.x;
-	color += tex2D(bloomSampler, inTex).xyz;
+	//additive blend
+	//color += tex2D(bloomSampler, inTex).xyz;
+	//screen blend
+	half3 bloom = tex2D(bloomSampler, inTex).xyz;
+	color = (color + bloom) - (color * bloom);
+	
 	//color = pow(color.xyz, 1.0/2.2);
 	return half4(color,1);
 }

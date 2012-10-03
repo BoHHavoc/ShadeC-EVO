@@ -7,6 +7,7 @@ void sc_deferred_init(SC_SCREEN* screen)
 	screen.materials.deferred.skin2 = screen.renderTargets.deferredLighting;
 	screen.materials.deferred.skin3 = screen.renderTargets.gBuffer[SC_GBUFFER_MATERIAL_DATA];
 	screen.materials.deferred.skin4 = screen.renderTargets.ssao;
+	//screen.materials.deferred.skin4 = screen.renderTargets.gBuffer[SC_GBUFFER_NORMALS_AND_DEPTH];
 	
 	//setup views
 	screen.views.deferred = view_create(-997);
