@@ -88,12 +88,11 @@ void main()
 	
 	sc_screen_default.settings.forward.enabled = 0; //enable if you need particles or custom materials which can't be rendered in the deferred pipeline
 	sc_screen_default.settings.refract.enabled = 0; //enable for refractive effects such as heat haze and glass
-	sc_screen_default.settings.hdr.enabled = 0; //enable Bloom/HDR
+	sc_screen_default.settings.hdr.enabled = 1; //enable Bloom/HDR
 	sc_screen_default.settings.hdr.lensflare.enabled = 1; //enable for a nice lensflare effect in combination with HDR/Bloom
 	sc_screen_default.settings.dof.enabled = 0; //enable Depth of Field Effect
 	sc_screen_default.settings.ssao.quality = SC_LOW; //set ssao quality. SC_LOW, SC_MEDIUM, SC_HIGH, SC_ULTRA
 	sc_screen_default.settings.ssao.enabled = 1; //enable to activate SSAO
-	
 	sc_screen_default.settings.lights.sunShadows = 1; //enable shadows for the sun
 	sc_screen_default.settings.lights.sunShadowResolution = 512; //reduce shadow resolution as we are manually setting the shadow range to 5000 and can therefor get away with a small shadowmap
 	sc_screen_default.settings.lights.sunPssmSplitWeight = 0.7; //high res near splits, low res far splits

@@ -41,6 +41,7 @@ void sc_antialiasing_init(SC_SCREEN* screen)
 	set(screen.views.antialiasing, PROCESS_TARGET);
 	set(screen.views.antialiasing, UNTOUCHABLE);
 	set(screen.views.antialiasing, NOSHADOW);
+	//set(screen.views.antialiasing, NOSKY);
 	reset(screen.views.antialiasing, AUDIBLE);
 	set(screen.views.antialiasing, CHILD);
 	screen.views.antialiasing.size_x = screen.views.main.size_x;
@@ -59,6 +60,7 @@ void sc_antialiasing_init(SC_SCREEN* screen)
 	set(screen.views.antialiasingBlendWeights, PROCESS_TARGET);
 	set(screen.views.antialiasingBlendWeights, UNTOUCHABLE);
 	set(screen.views.antialiasingBlendWeights, NOSHADOW);
+	//set(screen.views.antialiasingBlendWeights, NOSKY);
 	reset(screen.views.antialiasingBlendWeights, AUDIBLE);
 	set(screen.views.antialiasingBlendWeights, CHILD);
 	screen.views.antialiasingBlendWeights.size_x = screen.views.main.size_x;
