@@ -47,6 +47,9 @@ void v_camera()
 
 void main()
 {
+	
+	
+	
 	shadow_stencil = -1; //turn off all engine intern shadow calculations. THIS IS IMPORTANT!
 	level_load("02.wmb");
 	wait(5); //wait for level load
@@ -56,7 +59,7 @@ void main()
 	vec_set(sun_color, vector(255,240,230)); 
 	//set ambient color to zero as we want a dark level with nice shadows ;)
 	//vec_set(ambient_color, vector(0,0,0));
-	vec_set(ambient_color, vector(96,96,96));
+	vec_set(ambient_color, vector(32,32,32));
 	//vec_set(ambient_color, vector(180,180,180));
 		
 	//create a camera object so we can move around the scene
@@ -65,6 +68,8 @@ void main()
 	you.tilt = -18;
 	camera.arc = 75;
 	camera.clip_far = 5000; //set this as low as possible to increase performance AND visuals!
+	
+	//mtl_particle = myMtl_particle;
 	
 	//set resolution before calling sc_setup
 	//if you want to change resolution again, simple call sc_setup() again after you changed the resolution
@@ -88,10 +93,11 @@ void main()
 	sc_screen_default.settings.ssao.quality = SC_LOW; //set ssao quality. SC_LOW, SC_MEDIUM, SC_HIGH, SC_ULTRA
 	sc_screen_default.settings.ssao.enabled = 1; //enable to activate SSAO
 	sc_screen_default.settings.lights.sunShadows = 1; //enable shadows for the sun
-	sc_screen_default.settings.lights.sunShadowResolution = 256; //reduce shadow resolution as we are blurring the shadowmap and therefore can get away with low res shadows
-	sc_screen_default.settings.lights.sunPssmBlurSplits = 2; //blur the first two pssm splits
+	sc_screen_default.settings.lights.sunShadowResolution = 512; //reduce shadow resolution as we are manually setting the shadow range to 5000 and can therefor get away with a small shadowmap
 	sc_screen_default.settings.lights.sunPssmSplitWeight = 0.7; //high res near splits, low res far splits
-	sc_screen_default.settings.antialiasing.enabled = 0; //enable antialiasing
+	sc_screen_default.settings.lights.sunShadowRange = 5000; //manually set the shadow range...we don't need realtime shadows in the far distant! If set to 0 (default) shadow range will be set to camera.clip_far
+	sc_screen_default.settings.lights.sunShadowBias = 0.001; //manually set the shadow bias
+	sc_screen_default.settings.antialiasing.enabled = 1; //enable antialiasing
 		
 	//initialize shade-c, use default screen object
 	sc_setup(sc_screen_default);
@@ -121,14 +127,14 @@ void main()
 	
 	while(1)
 	{
-		/*
-		//move the sun around the scene
-		sun_angle.pan += time_frame; 
-		sun_angle.pan %= 360; 
-   	sun_angle.tilt = fsin(sun_angle.pan, 45) + 45;
-   	//set the sunlight brightness
-   	sun_light = sun_angle.tilt;
-   	*/
+		
+//		//move the sun around the scene
+//		sun_angle.pan += time_frame; 
+//		sun_angle.pan %= 360; 
+//   	sun_angle.tilt = fsin(sun_angle.pan, 45) + 45;
+//   	//set the sunlight brightness
+//   	sun_light = sun_angle.tilt;
+   	
    	
    	
    	//rotate the spotlight
@@ -138,4 +144,5 @@ void main()
    	
 	   wait(1);
   }
+  
 }

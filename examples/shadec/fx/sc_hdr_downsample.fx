@@ -61,7 +61,8 @@ float4 mainPS(float2 inTex:TEXCOORD0):COLOR0
 	*/
 	
 	//output brightpass and emissive	
-	return half4( (result*color.xyz*vecSkill1.z)+emissive.xyz ,0);
+	//return half4( (result*color.xyz*vecSkill1.z)+emissive.xyz*vecSkill1.w ,0);
+	return half4( max((result*color.xyz*vecSkill1.z),emissive.xyz*vecSkill1.w) ,0);
 	
 //	half3 color = tex2D(currentSceneSampler, inTex*vecSkill1.x).xyz;
 //	return half4(color,1);

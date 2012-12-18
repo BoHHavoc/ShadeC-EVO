@@ -41,6 +41,7 @@ half4 mainPS(float2 inTex : TEXCOORD0):COLOR0
 	float2 sample_vector = (image_center - inTex) * FLARE_DISPERSAL;
 	float2 halo_vector = normalize(sample_vector) * FLARE_HALO_WIDTH;
 	
+
 	//float3 result = tex2D(bloomSampler, inTex + halo_vector).rgb;
 	half3 result = textureDistorted(bloomSampler, inTex + halo_vector, halo_vector, FLARE_CHROMA_DISTORTION).rgb;
 	

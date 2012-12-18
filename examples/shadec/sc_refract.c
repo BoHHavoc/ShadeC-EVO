@@ -14,11 +14,11 @@ void sc_refract_init(SC_SCREEN* screen)
 	screen.views.refract.size_y = screen.views.main.size_y;
 	reset(screen.views.refract, SHOW);
 	reset(screen.views.refract, AUDIBLE);
-	set(screen.views.refract, PROCESS_SCREEN); //keep zBuffer
+	//set(screen.views.refract, PROCESS_SCREEN); //keep zBuffer //DONT SET THIS! PARTICLES WON'T RENDER CORRECT!
 	set(screen.views.refract, NOSKY); //keep zBuffer
 	set(screen.views.refract, CHILD);
 	set(screen.views.refract,NOSHADOW);
-	//set(screen.views.refract,NOPARTICLE);
+	set(screen.views.refract,NOPARTICLE);
 	set(screen.views.refract,UNTOUCHABLE);
 	//screen.views.refract.bmap =  bmap_createblack(screen.views.main.size_x, screen.views.main.size_y, 32);
 	//screen.views.main.material = screen.materials.forward;

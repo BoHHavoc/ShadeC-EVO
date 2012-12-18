@@ -86,7 +86,7 @@ float4 mainPS(in float2 inTex:TEXCOORD0, in float2 inPos:VPOS):COLOR0
 	vecViewPort.w = 1.0f/(vecViewPort.y);
 	
 	/*
-	//dilate filter to get rid of 1 pixel halo
+	//dilate / convolute filter to get rid of 1 pixel halo
 	half4 output = 0;//tex2D(ssaoSampler, inTex/2);
 	output = tex2D(ssaoSampler, (inTex/2) + float2(vecViewPort.z, vecViewPort.w)*2 );
 	output = min(output, tex2D(ssaoSampler, (inTex/2) + float2(-vecViewPort.z, vecViewPort.w)*2 ));
@@ -97,6 +97,7 @@ float4 mainPS(in float2 inTex:TEXCOORD0, in float2 inPos:VPOS):COLOR0
 	
 	
 	//cheap blur to get rid of noise dots
+	//also: slight convolute filter
 	half4 output = 0;//tex2D(ssaoSampler, inTex/2);
 	output += tex2D(ssaoSampler, (inTex/2) + float2(vecViewPort.z, vecViewPort.w)*2 );
 	output += tex2D(ssaoSampler, (inTex/2) + float2(-vecViewPort.z, vecViewPort.w)*2 );

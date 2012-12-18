@@ -274,6 +274,7 @@ typedef struct{
 	float brightpass;
 	float intensity;
 	float scatter;
+	float emissiveIntensity;
 	SC_SETTINGS_HDR_LENSFLARE lensflare;
 }SC_SETTINGS_HDR;
 
@@ -310,6 +311,8 @@ typedef struct{
 	int sunPssmSplits;
 	var sunPssmSplitWeight;
 	int sunPssmBlurSplits;
+	int sunShadowRange;
+	float sunShadowBias;
 }SC_SETTINGS_LIGHTS;
 
 typedef struct{

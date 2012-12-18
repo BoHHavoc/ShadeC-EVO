@@ -39,6 +39,8 @@ float4 mainPS(float2 inTex:TEXCOORD0):COLOR
 	//screen blend
 	half3 bloom = tex2D(bloomSampler, inTex).xyz;
 	color = (color + bloom) - (color * bloom);
+	//color += bloom;
+	
 	
 	//color = pow(color.xyz, 1.0/2.2);
 	return half4(color,1);

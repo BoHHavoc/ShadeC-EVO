@@ -10,17 +10,26 @@ void sc_forward_init(SC_SCREEN* screen, int mode)
 	
 	if(mode == SC_FORWARD_RENDER) //forward rendering
 	{
+		
 		set(screen.views.main, UNTOUCHABLE);
 		reset(screen.views.gBuffer,AUDIBLE);
 		//setup view
 		reset(screen.views.main, SHOW);
 		set(screen.views.main, CHILD);
 		
-		set(screen.views.main, PROCESS_SCREEN); //keep zBuffer
-		if(screen.settings.refract.enabled == 1) set(screen.views.main, NOPARTICLE);
+		//set(screen.views.main, PROCESS_SCREEN); //keep zBuffer //DONT SET THIS! PARTICLES WON'T RENDER CORRECT!
+		//if(screen.settings.refract.enabled == 1) set(screen.views.main, NOPARTICLE);
+		//set(screen.views.main, NOPARTICLE);
 		set(screen.views.main, NOSKY); //keep zBuffer
 		set(screen.views.main,NOSHADOW);
 		//screen.views.main.material = screen.materials.forward;
+		
+		
+//		set(screen.views.main, UNTOUCHABLE);
+//		reset(screen.views.gBuffer,AUDIBLE);
+//		set(screen.views.main, CHILD);
+
+
 	}
 	else if(mode == SC_FORWARD_PASSTHROUGH) //just pass through the deferred buffer
 	{
@@ -44,6 +53,21 @@ void sc_forward_init(SC_SCREEN* screen, int mode)
 	view_last.stage = screen.views.main;
 	screen.views.preForward = view_last;
 	screen.views.preForward.bmap = bmap_createblack(screen.views.main.size_x, screen.views.main.size_y, 32);
+	
+	
+	
+	
+	/*
+	VIEW* particleView = view_create(900);
+	set(particleView, SHOW);
+	set(particleView, CHILD);
+	view_last = screen.views.main;
+	while(view_last.stage != NULL)
+	{
+		view_last = view_last.stage;
+	}
+	view_last.stage = particleView;
+	*/
 }
 
 void sc_forward_destroy(SC_SCREEN* screen)

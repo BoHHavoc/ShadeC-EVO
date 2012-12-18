@@ -1,3 +1,21 @@
+void sc_destroy(SC_SCREEN* screen)
+{
+	if(screen == NULL) return;
+	if(screen.draw == 1) screen.draw = 0;
+	sc_viewEvent_destroy(screen);
+	//sc_gammaCorrection_destroy(screen); //not used yet...
+	sc_hdr_destroy(screen);
+	sc_dof_destroy(screen);
+	sc_refract_destroy(screen);
+	sc_forward_destroy(screen);
+	sc_antialiasing_destroy(screen);
+	sc_deferred_destroy(screen);
+	sc_ssao_destroy(screen);
+	sc_deferredLighting_destroy(screen);
+	sc_lights_destroySun(screen);
+	sc_gBuffer_destroy(screen);
+}
+
 void sc_setup(SC_SCREEN* screen)
 {
 	//deactivate stencil shadows
@@ -31,18 +49,7 @@ void sc_setup(SC_SCREEN* screen)
 	screen.renderTargets.eighth1 = bmap_createblack(screen.views.main.size_x/8, screen.views.main.size_y/8, 32);
 	
 	//destroy previous effects
-	sc_viewEvent_destroy(screen);
-	//sc_gammaCorrection_destroy(screen); //not used yet...
-	sc_hdr_destroy(screen);
-	sc_dof_destroy(screen);
-	sc_refract_destroy(screen);
-	sc_forward_destroy(screen);
-	sc_antialiasing_destroy(screen);
-	sc_deferred_destroy(screen);
-	sc_ssao_destroy(screen);
-	sc_deferredLighting_destroy(screen);
-	sc_lights_destroySun(screen);
-	sc_gBuffer_destroy(screen);
+	sc_destroy(screen);
 	
 	wait(2);
 	

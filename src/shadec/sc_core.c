@@ -112,10 +112,11 @@ void sc_settings_setDefaults(SC_SETTINGS* settings)
 	//HDR
 	settings.hdr.enabled = 0;
 	settings.hdr.scatter = 8;
-	settings.hdr.blurX = 8;
-	settings.hdr.blurY = 12;
+	settings.hdr.blurX = 6;
+	settings.hdr.blurY = 9;
 	settings.hdr.brightpass = 0.25;
 	settings.hdr.intensity = 1;
+	settings.hdr.emissiveIntensity = 0.3;
 	settings.hdr.lensflare.enabled = 0;
 	settings.hdr.lensflare.brightpass = 0.3;
 	settings.hdr.lensflare.intensity = 0.5;
@@ -143,10 +144,12 @@ void sc_settings_setDefaults(SC_SETTINGS* settings)
 	
 	//SUN
 	settings.lights.sunShadows = 0;
-	settings.lights.sunPssmSplits = 3;
-	settings.lights.sunPssmSplitWeight = 0.5;
+	settings.lights.sunPssmSplits = 4;
+	settings.lights.sunPssmSplitWeight = 0.6;
 	settings.lights.sunPssmBlurSplits = 0;
 	settings.lights.sunShadowResolution = 1024;
+	settings.lights.sunShadowRange = 0;
+	settings.lights.sunShadowBias = 0.001;
 	
 	//Antialiasing
 	settings.antialiasing.enabled = 0;

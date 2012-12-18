@@ -705,9 +705,12 @@ void sc_lights_MaterialEventSun()
 			//pEffect->SetFloat("clipFar", screen.views.main.clip_far);
 			pEffect->SetTexture("texBRDFLut", sc_deferredLighting_texBRDFLUT); //assign volumetric brdf lut
 			pEffect->SetTexture("texMaterialLUT", sc_materials_mapData.d3dtex);
+			pEffect->SetInt("shadowmapSize", (screen.settings.lights.sunShadowResolution) );
+			pEffect->SetFloat("shadowBias", (screen.settings.lights.sunShadowBias) );
 		}
 	}
 }
+
 
 void sc_lights_initSun(SC_SCREEN* screen)
 {
@@ -779,7 +782,8 @@ void sc_lights_initSun(SC_SCREEN* screen)
 			//create rendertarget
 			screen.renderTargets.sunShadowDepth[i] = bmap_createblack(screen.settings.lights.sunShadowResolution, screen.settings.lights.sunShadowResolution, 14);
 			
-			
+			/*
+			//BLUR SHADOWMAP (ESM SHADOWS ONLY)
 			if(i < screen.settings.lights.sunPssmBlurSplits)
 			{
 			//assign rendertarget
@@ -800,12 +804,15 @@ void sc_lights_initSun(SC_SCREEN* screen)
 			if(i==0) blurView.material.skill1 = floatv((float)(1.5)/(float)screen.settings.lights.sunShadowResolution);
 			if(i==1) blurView.material.skill1 = floatv((float)(0.75)/(float)screen.settings.lights.sunShadowResolution);
 			if(i==2) blurView.material.skill1 = floatv((float)(0.25)/(float)screen.settings.lights.sunShadowResolution);
+			if(i==3) blurView.material.skill1 = floatv((float)(0.125)/(float)screen.settings.lights.sunShadowResolution);
 			//
 			}
 			else
 			{
 				screen.views.sunShadowDepth[i].bmap = screen.renderTargets.sunShadowDepth[i];
 			}
+			*/
+			screen.views.sunShadowDepth[i].bmap = screen.renderTargets.sunShadowDepth[i];
 			
 			//create material
 			screen.views.sunShadowDepth[i].material = mtl_create();
@@ -863,8 +870,9 @@ void sc_lights_destroySun(SC_SCREEN* screen)
 			//purge render targets
 			if(screen.views.sun.bmap) bmap_purge(screen.views.sun.bmap);
 			screen.views.sun.bmap = NULL;
-		
-			//remove dof from view chain
+			
+			
+			//remove sun from view chain
 			VIEW* view_last;
 			view_last = screen.views.gBuffer;
 			while(view_last.stage != screen.views.sun && view_last.stage != NULL)
@@ -883,18 +891,58 @@ void sc_lights_destroySun(SC_SCREEN* screen)
 			int i=0;
 			for(i=0; i<4; i++) {
 				if(screen.views.sunShadowDepth[i] == NULL) continue;
-				if(screen.views.sunShadowDepth[i].material != NULL) ptr_remove(screen.views.sunShadowDepth[i].material);
+				//if(screen.views.sunShadowDepth[i].material != NULL) ptr_remove(screen.views.sunShadowDepth[i].material);
 				if(screen.views.sunShadowDepth[i].bmap != NULL) {
 					bmap_purge(screen.views.sunShadowDepth[i].bmap);
-					ptr_remove(screen.views.sunShadowDepth[i].bmap);
+					//ptr_remove(screen.views.sunShadowDepth[i].bmap);
 				}
-				if(screen.views.sunShadowDepth[i] != NULL) ptr_remove(screen.views.sunShadowDepth[i]);
-				if(screen.renderTargets.sunShadowDepth[i] != NULL) ptr_remove(screen.renderTargets.sunShadowDepth[i]);
+				//if(screen.views.sunShadowDepth[i] != NULL) ptr_remove(screen.views.sunShadowDepth[i]);
+				//if(screen.renderTargets.sunShadowDepth[i] != NULL) ptr_remove(screen.renderTargets.sunShadowDepth[i]);
 			}
+			
 			
 		}
 	}
 	return 1;
+}
+
+// Calculate a practical split scheme
+// weight parameter scales between logarithmic and uniform distances
+// if maxRange >= 0, the there will be no shadows after maxRange in the scene
+function sc_lights_pssm_split(VIEW* view,var num,var weight, var maxRange)
+{
+	var _maxRange = maxRange;
+	//check if _maxRange is bigger than view.clip_near
+	//fallback to _maxRange = view.clip_far if its smaller or equal
+	if(_maxRange <= view->clip_near && _maxRange > 0)
+	{
+		_maxRange = view->clip_far;
+	}
+	
+	if(_maxRange > view->clip_far)
+	{
+		_maxRange = view->clip_far;
+	}
+	
+	if(_maxRange == 0)
+	{
+		_maxRange = view->clip_far;
+	}
+	
+	var i;
+	for(i=0; i<num; i++)
+	{
+		var idm = i/num;
+		//var cli = view->clip_near * pow(view->clip_far/view->clip_near,idm);
+		//var cui = view->clip_near + (view->clip_far-view->clip_near)*idm;
+		var cli = view->clip_near * pow(_maxRange/view->clip_near,idm);
+		var cui = view->clip_near + (_maxRange-view->clip_near)*idm;
+		
+		pssm_splitdist[i] = cli*weight + cui*(1-weight);
+	}
+	pssm_splitdist[0] = view->clip_near;
+	//pssm_splitdist[num] = view->clip_far;
+	pssm_splitdist[num] = _maxRange;
 }
 
 void sc_lights_frmSun(SC_SCREEN* screen)
@@ -942,7 +990,8 @@ void sc_lights_frmSun(SC_SCREEN* screen)
 		//	proc_mode = PROC_LATE;
 	
 		// set up the split distances and the shadow view
-			pssm_split(screen.views.main, screen.settings.lights.sunPssmSplits, screen.settings.lights.sunPssmSplitWeight);
+			sc_lights_pssm_split(screen.views.main, screen.settings.lights.sunPssmSplits, screen.settings.lights.sunPssmSplitWeight, screen.settings.lights.sunShadowRange);
+			//pssm_split(screen.views.main, screen.settings.lights.sunPssmSplits, screen.settings.lights.sunPssmSplitWeight);
 			//pssm_viewcpy(screen.views.main, screen.views.sun);
 	
 		// set up the split view transformation matrices
@@ -957,7 +1006,7 @@ void sc_lights_frmSun(SC_SCREEN* screen)
 	
 		// calculate the split view clipping borders and transformation matrix			
 				view_to_split(screen.views.main, pssm_splitdist[i],pssm_splitdist[i+1], screen.views.sunShadowDepth[i], &matSplit[i]);
-				LPD3DXEFFECT fx = screen.views.sunShadowDepth[i]->material->d3deffect; 
+				LPD3DXEFFECT fx = screen.views.sunShadowDepth[i]->material->d3deffect;
 				if(fx) fx->SetMatrix("matSplitViewProj",&matSplit[i]);
 				
 		// create a texture matrix from the split view proj matrix			
@@ -983,6 +1032,8 @@ void sc_lights_frmSun(SC_SCREEN* screen)
 				if(screen.views.sunShadowDepth[1] != NULL) fx->SetTexture("shadowTex2",screen.renderTargets.sunShadowDepth[1].d3dtex);
 				if(screen.views.sunShadowDepth[2] != NULL) fx->SetTexture("shadowTex3",screen.renderTargets.sunShadowDepth[2].d3dtex);
 				if(screen.views.sunShadowDepth[3] != NULL) fx->SetTexture("shadowTex4",screen.renderTargets.sunShadowDepth[3].d3dtex);
+				//fx->SetFloat("shadowBias", screen.settings.lights.sunShadowBias);
+				//fx->SetInt("shadowmapSize", (screen.settings.lights.sunShadowResolution) );
 			}
 						
 			screen.views.sun.material.skill4 = floatv(screen.views.sunShadowDepth[0].clip_far);

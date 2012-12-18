@@ -65,9 +65,8 @@ sampler2D lensDirt2Sampler = sampler_state
 half4 mainPS(float2 inTex : TEXCOORD0):COLOR0
 {
 	inTex *= vecSkill1.x;
-	return tex2D(lensSampler, inTex)*tex2D(lensDirt2Sampler,inTex) //lensflare * low contrast lens dirt
-			 //+ tex2D(lensSampler, inTex*vecSkill1.x)*tex2D(lensDirt2Sampler,inTex*vecSkill1.x) //lensflare * high contrast lens dirt
-			 + tex2D(bloomSampler, inTex);
+	return tex2D(lensSampler, inTex)*tex2D(lensDirt2Sampler,inTex) + tex2D(bloomSampler, inTex);
+	//return tex2D(lensSampler, inTex);
 }
 
 technique t1

@@ -91,7 +91,7 @@ PixelToFrame mainPS(vsOut In)
 	//normals
 	PSOut.normalsAndDepth.xy = PackNormals( normalize(In.Normal.rgb) ); //normals
 	//depth
-	PSOut.normalsAndDepth.zw = PackDepth(In.Pos2D/clipFar);
+	PSOut.normalsAndDepth.zw = 1;//PackDepth(In.Pos2D/clipFar);
 	
 	//color
 	PSOut.albedoAndEmissiveMask.xyz = skin1.xyz;
@@ -100,7 +100,7 @@ PixelToFrame mainPS(vsOut In)
 
 	//material data
 	PSOut.materialData.x = 0; //material ID (255)
-	PSOut.materialData.y = 0; //vecSkill17.z; //material Specular Power
+	PSOut.materialData.y = 0; //material Specular Power
 	PSOut.materialData.z = 0;
 	PSOut.materialData.w = 0; //environment map ID - not used yet
 	
@@ -118,10 +118,7 @@ PixelToFrame blackPS(vsOut In)
 	PSOut.materialData = 0;
 	
 	//depth
-	PSOut.normalsAndDepth.zw = PackDepth(In.Pos2D/clipFar);
-	
-	//emissive
-	PSOut.albedoAndEmissiveMask.a = 0;
+	PSOut.normalsAndDepth.zw = 1;//PackDepth(In.Pos2D/clipFar);
 	
 	//material data
 	PSOut.materialData.x = 0; //material ID (255)
@@ -147,14 +144,38 @@ technique t1
 		
 		alphablendenable = true;
 		//ColorWriteEnable = RED | GREEN | BLUE;
-
+		
+		/*
+		//write stencil buffer value
+		StencilEnable = true;
+		StencilPass = REPLACE;
+		StencilRef = 100;
+		*/
+		
+		//ZWRITEENABLE = TRUE;
+		
+		
+		
 	}
-	
+	/*
 	pass p1
 	{
-		//ColorWriteEnable = ALPHA;
+		VertexShader = compile vs_2_0 mainVS();
+		PixelShader = compile ps_2_0 setAlpha();
+
+		
+			
+		
+		//write current pixel, if stencil buffer value from first pass is resident at the current pixel
+		StencilEnable = true;
+		StencilPass = KEEP;
+		StencilFunc = EQUAL;
+		StencilRef = 100;
+		
+		
+		//other stuff
 		AlphaBlendEnable = true ;
-		SEPARATEALPHABLENDENABLE = true ;
+		SEPARATEALPHABLENDENABLE = true;
 		SrcBlend = zero ;
 		DestBlend = one ;
 		SrcBlendAlpha = one ;
@@ -163,6 +184,30 @@ technique t1
 		
 		alphablendenable = true;
 		fogEnable = False;
+		
+		ZENABLE = TRUE;
+		ZFUNC = EQUAL;
+		
+	}
+	*/
+	
+	
+	pass p1
+	{
+		//ColorWriteEnable = ALPHA;
+		AlphaBlendEnable = true ;
+		SEPARATEALPHABLENDENABLE = true;
+		SrcBlend = zero ;
+		DestBlend = one ;
+		SrcBlendAlpha = one ;
+		DestBlendAlpha = zero ;
+		
+		
+		alphablendenable = true;
+		fogEnable = False;
+		
+	
+		
 		
 		VertexShader = compile vs_2_0 mainVS();
 		PixelShader = compile ps_2_0 blackPS();

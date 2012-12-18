@@ -132,6 +132,7 @@ void sc_hdr_init(SC_SCREEN* screen)
 		screen.materials.hdrDownsample.skill1 = floatv(4); //downsample factor
 		screen.materials.hdrDownsample.skill2 = floatv(screen.settings.hdr.brightpass); //brightpass threshold
 		screen.materials.hdrDownsample.skill3 = floatv(screen.settings.hdr.intensity); //brightpass rescale/strength
+		screen.materials.hdrDownsample.skill4 = floatv(screen.settings.hdr.emissiveIntensity); //emissive rescale/strength
 		
 		
 
@@ -347,6 +348,7 @@ void sc_hdr_frm(SC_SCREEN* screen)
 		screen.materials.hdrBlurX.skill1 = floatv(screen.settings.hdr.blurX); //blur strength
 		screen.materials.hdrDownsample.skill2 = floatv(screen.settings.hdr.brightpass); //brightpass threshold
 		screen.materials.hdrDownsample.skill3 = floatv(screen.settings.hdr.intensity*0.2); //brightpass rescale/strength
+		screen.materials.hdrDownsample.skill4 = floatv(screen.settings.hdr.emissiveIntensity); //emissive rescale/strength
 		
 		if(screen.views.hdrLensflare != NULL)
 		{

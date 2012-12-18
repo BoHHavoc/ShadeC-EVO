@@ -87,10 +87,13 @@ float4 mainPS(psIn In):COLOR
 	half4 ssao = tex2D(ssaoSampler, In.Tex);
 	diffuseAndSpecular.xyz *= ssao.w;
 	diffuseAndSpecular.xyz += ssao.xyz;
+	//diffuseAndSpecular.xyz = clamp(diffuseAndSpecular.xyz,0,1) * ssao.w;
 	
 	//albedoAndEmissiveMask.xyz = 1; //debug only
 	
+	/*
 	//sky
+	//...this is now handled in the sun shader :)
 	if(materialData.x == 0)
 	{
 		diffuseAndSpecular.xyz = 1;
@@ -98,6 +101,7 @@ float4 mainPS(psIn In):COLOR
 		//ssao.w = 1;
 		//ssao.xyz = 0;
 	}
+	*/
 	
 	//gamme correction
 	//albedoAndEmissiveMask.xyz = pow(albedoAndEmissiveMask.xyz, 1.f/2.2f);

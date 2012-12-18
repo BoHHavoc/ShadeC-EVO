@@ -31,7 +31,7 @@ psOut Custom_PS_Extend(vsOut InPs, psOut OutPs)
 	//apply clipping
 	clip(clipValue);
 	
-	//output clipvalue to emissive buffer for some nice glow one edges where clipping will occur in the near future
+	//output clipvalue to emissive buffer for some nice glow on edges where clipping will occur in the near future
 	OutPs.AlbedoAndEmissiveMask.w = (1-saturate(clipValue))*0.05;
 	//set emissive color
 	OutPs.AlbedoAndEmissiveMask.xyz = lerp(OutPs.AlbedoAndEmissiveMask.xyz, vecSkill1.yzw, pow(1-saturate(clipValue),2));

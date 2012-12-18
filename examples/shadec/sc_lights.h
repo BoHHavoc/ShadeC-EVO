@@ -70,6 +70,8 @@ MATERIAL* sc_lights_mtlSpotShadow = { effect = "sc_lights_spotShadow.fx"; flags 
 //prototypes
 var sc_lights_mtlShadowmapLocalRenderEvent();
 
+BMAP* sc_lights_mapShadowScatter64 = "sc_random.png";
+
 
 
 
