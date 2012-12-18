@@ -86,8 +86,6 @@ float4 NeighborhoodBlendingPS(float2 texcoord : TEXCOORD0,
     #endif
 
 
-
-
 	//return tex2D(weightSampler, texcoord);
 
     // Normalize the resulting color and we are finished!
@@ -107,12 +105,12 @@ technique t1
       SRGBWriteEnable = true;
       AlphaBlendEnable = false;
 
-
+		/*
       // Here we want to process only marked pixels.
       StencilEnable = true;
       StencilPass = KEEP;
       StencilFunc = EQUAL;
-      StencilRef = 1;
-      
+      StencilRef = 101;
+      */
 	}
 }

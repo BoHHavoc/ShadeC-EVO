@@ -175,12 +175,13 @@ technique t1
 		ZEnable = false;
       SRGBWriteEnable = false;
       AlphaBlendEnable = false;
-
+		
+		/*
       // Here we want to process only marked pixels.
       StencilEnable = true;
       StencilPass = KEEP;
       StencilFunc = EQUAL;
-      StencilRef = 1;
-     
+      StencilRef = 101;
+     */
 	}
 }

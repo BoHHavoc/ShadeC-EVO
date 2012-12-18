@@ -101,10 +101,12 @@ technique t1
       SRGBWriteEnable = false;
       AlphaBlendEnable = false;
 
+		/*
       // We will be creating the stencil buffer for later usage.
       StencilEnable = true;
       StencilPass = REPLACE;
-      StencilRef = 1;
+      StencilRef = 101;
+      */
       
 	}
 }
