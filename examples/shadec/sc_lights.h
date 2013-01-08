@@ -85,6 +85,9 @@ void sc_lights_frmSun(SC_SCREEN* screen);
 
 STRING* sc_lights_sMaterialSun = "sc_lights_sun.fx";
 STRING* sc_lights_sMaterialSunShadow = "sc_lights_sunShadow.fx";
+STRING* sc_lights_sMaterialSunShadowCreate = "sc_lights_sunShadowCreate.fx";
+STRING* sc_lights_sMaterialSunShadowEdge = "sc_lights_sunShadowEdge.fx";
+STRING* sc_lights_sMaterialSunShadowExpand = "sc_lights_sunShadowExpand.fx";
 //STRING* sc_lights_sMaterialShadowmap = "sc_lights_shadowmap.fx";
 STRING* sc_lights_sMaterialShadowmapSplit1 = "sc_lights_shadowmap.fx";
 STRING* sc_lights_sMaterialShadowmapSplit2 = "sc_lights_shadowmap.fx";

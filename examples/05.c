@@ -122,7 +122,8 @@ void main()
 	//set suncolor to zero (setting sun_color in WED to zero does NOTHING! This is a bug in gamestudio)
 	//if suncolor == 0, sun will not be rendered. Set this for pure indoor scenes to boost performance!
 	vec_set(sun_color, vector(0,0,0)); 
-	//vec_set(sun_color, vector(255,240,230)); 
+	//sun_angle.pan = 45;
+	//vec_set(sun_color, vector(255,240,230));
 	//set ambient color to zero as we want a dark level with nice shadows ;)
 	vec_set(ambient_color, vector(0,0,0));
 	//vec_set(ambient_color, vector(96,96,96));
@@ -157,9 +158,6 @@ void main()
 	sc_screen_default.settings.hdr.intensity = 2;
 	sc_screen_default.settings.hdr.lensflare.brightpass = 0.0;
 	sc_screen_default.settings.hdr.lensflare.intensity = 0.25;
-	
-	
-	
 	
 	//Add objects and apply custom materials
 	//Texture Movement

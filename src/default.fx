@@ -877,13 +877,15 @@ float2 DoTexture(float2 Tex)
 #ifndef include_scGetShadowPCF
 #define include_scGetShadowPCF
 
+
 // Calculates the shadow term using PCF with edge tap smoothing
 float scGetShadowPCF(half3 vTexCoord, sampler inDepthSampler, int inShadowMapSize, int iSqrtSamples)
 {
     float fShadowTerm = 0.0f;  
     
-        
-    float fRadius = (iSqrtSamples - 1.0f) / 2;        
+    iSqrtSamples -= 1;
+    //float fRadius = (iSqrtSamples - 1.0f) / 2;        
+    float fRadius = (iSqrtSamples) / 2;
     for (float y = -fRadius; y <= fRadius; y++)
     {
         for (float x = -fRadius; x <= fRadius; x++)
@@ -891,8 +893,9 @@ float scGetShadowPCF(half3 vTexCoord, sampler inDepthSampler, int inShadowMapSiz
             float2 vOffset = 0;
             vOffset = float2(x, y);                
             vOffset /= inShadowMapSize;
-            float2 vSamplePoint = vTexCoord + vOffset;            
-            float fDepth = tex2D(inDepthSampler, vSamplePoint).x;
+            float4 vSamplePoint = 0;//
+            vSamplePoint.xy = vTexCoord + vOffset;
+            float fDepth = tex2Dlod(inDepthSampler, vSamplePoint).x;
             float fSample = (vTexCoord.z <= fDepth);
             
             // Edge tap smoothing
@@ -912,7 +915,7 @@ float scGetShadowPCF(half3 vTexCoord, sampler inDepthSampler, int inShadowMapSiz
             fShadowTerm += fSample * xWeight * yWeight;
         }                                            
     }        
-    
+    //iSqrtSamples -= 1;
     fShadowTerm /= (iSqrtSamples * iSqrtSamples );
     //fShadowTerm /= ((iSqrtSamples - 1) * (iSqrtSamples - 1));
     
@@ -930,80 +933,12 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
     // Determine the lerp amounts           
     float2 vLerps = frac(vShadowMapCoord);
 
-    
-    
-    //apply bias
-    //vTexCoord.z -= bias;
-    /*	
-    
-    //get slope bias
-    //half2 slopeBias = scGetSlopeBias(vTexCoord);    
-    
-    //Packing derivatives of u,v, and distance to light source w.r.t. screen space x, and y
-		float3 duvdist_dx = ddx(vTexCoord);
-		float3 duvdist_dy = ddy(vTexCoord);
-		//Invert texture Jacobian and use chain rule to compute ddist/du and ddist/dv
-		//  |ddist/du| = |du/dx du/dy|-T  * |ddist/dx|
-		//  |ddist/dv|   |dv/dx dv/dy|      |ddist/dy|
-		//Multiply ddist/dx and ddist/dy by inverse transpose of Jacobian
-		float invDet = 1 / ((duvdist_dx.x * duvdist_dy.y) - (duvdist_dx.y * duvdist_dy.x) );
-		//Top row of 2x2
-		float2 ddist_duv;
-		ddist_duv.x = duvdist_dy.y * duvdist_dx.z ; // invJtrans[0][0] * ddist_dx
-		ddist_duv.x -= duvdist_dx.y * duvdist_dy.z ; // invJtrans[0][1] * ddist_dy
-		//Bottom row of 2x2
-		ddist_duv.y = duvdist_dx.x * duvdist_dy.z ;   // invJtrans[1][1] * ddist_dy
-		ddist_duv.y -= duvdist_dy.x * duvdist_dx.z ;  // invJtrans[1][0] * ddist_dx
-		ddist_duv *= invDet;
-		float2 slopeBias;
-		slopeBias.x = fRightTexelDepthDelta;
-		slopeBias.y = fUpTexelDepthDelta;
-		
-		
-	//Other method...still sucks
-	float2 vRightTexel = float2( 256, 0.0f ); 
-	float2 vUpTexel = float2( 0.0f, 256 ); 
-	float2 vRightTexelDepthRatio = mul( vRightTexel, vTexCoord.xy ); 
-	float2 vUpTexelDepthRatio = mul( vUpTexel, vTexCoord.xy );
-	
-	float DDXDepth = ddx(vTexCoord.z);
-	float DDYDepth = ddy(vTexCoord.z);
-	float fUpTexelDepthDelta = vUpTexelDepthRatio.x * DDXDepth + vUpTexelDepthRatio.y * DDYDepth; 
-	float fRightTexelDepthDelta = vRightTexelDepthRatio.x * DDXDepth + vRightTexelDepthRatio.y * DDYDepth;
-	float2 slopeBias = ddist_duv;
-	
-	*/
-	
-	
-    
-    //simple slope bias
-//  float ddistdx = ddx(fLightDepth);
-//	 float ddistdy = ddy(fLightDepth);
-//	 fLightDepth += -10 * abs(ddistdx);
-//	 fLightDepth += -10 * abs(ddistdy);
-    
-    
-    
-    /*
-    // read in bilerp stamp, doing the shadow checks
-    float fSamples[4];
-    fSamples[0] = (tex2D(inDepthSampler, vTexCoord.xy).x  < vTexCoord.z) ? 0.0f: 1.0f;  
-    fSamples[1] = (tex2D(inDepthSampler, vTexCoord.xy + float2(1.0f/inShadowMapSize, 0)).x < vTexCoord.z  ) ? 0.0f: 1.0f;  
-    fSamples[2] = (tex2D(inDepthSampler, vTexCoord.xy + float2(0, 1.0f/inShadowMapSize)).x  < vTexCoord.z) ? 0.0f: 1.0f;  
-    fSamples[3] = (tex2D(inDepthSampler, vTexCoord.xy + float2(1.0f/inShadowMapSize, 1.0/inShadowMapSize)).x  < vTexCoord.z) ? 0.0f: 1.0f;  
-    
-    // lerp between the shadow values to calculate our light amount
-    fShadowTerm = lerp( lerp( fSamples[0], fSamples[1], vLerps.x ),
-                        lerp( fSamples[2], fSamples[3], vLerps.x ),
-                        vLerps.y );  
-    */
-    
     //optimized
     float4 fSamples;
-    fSamples.x = tex2D(inDepthSampler, vTexCoord.xy).x; 
-    fSamples.y = tex2D(inDepthSampler, vTexCoord.xy + float2(1.0f/inShadowMapSize, 0)).x;
-    fSamples.z = tex2D(inDepthSampler, vTexCoord.xy + float2(0, 1.0f/inShadowMapSize)).x;
-    fSamples.w = tex2D(inDepthSampler, vTexCoord.xy + float2(1.0f/inShadowMapSize, 1.0/inShadowMapSize)).x;
+    fSamples.x = tex2Dlod(inDepthSampler, half4(vTexCoord.xy,0,0) ).x; 
+    fSamples.y = tex2Dlod(inDepthSampler, half4(vTexCoord.xy + float2(1.0f/inShadowMapSize, 0),0,0) ).x;
+    fSamples.z = tex2Dlod(inDepthSampler, half4(vTexCoord.xy + float2(0, 1.0f/inShadowMapSize),0,0) ).x;
+    fSamples.w = tex2Dlod(inDepthSampler, half4(vTexCoord.xy + float2(1.0f/inShadowMapSize, 1.0/inShadowMapSize),0,0) ).x;
     
     fSamples -= vTexCoord.z;
     //fSamples = fSamples*990000;
@@ -1071,25 +1006,96 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 	 	shadows = saturate( exp( (exp(2*shadows)-exp(2*realDepth))*shadow_softness * maxDepth) );
 	 	*/
 	 	
+	 	/*
 	 	//PCF SHADOWS
 	 	//Variable Kernel
-	 	//shadows.x = scGetShadowPCF(shadowTexcoord[0].xyz, sDepth1, inMapSize, 3);
-	 	//shadows.y = scGetShadowPCF(shadowTexcoord[1].xyz, sDepth2, inMapSize, 3);
-	 	//shadows.z = scGetShadowPCF(shadowTexcoord[2].xyz, sDepth3, inMapSize, 3);
+	 	shadows.x = scGetShadowPCF(shadowTexcoord[0].xyz, sDepth1, inMapSize, 5);
+	 	shadows.y = scGetShadowPCF(shadowTexcoord[1].xyz, sDepth2, inMapSize, 3);
+	 	shadows.z = scGetShadowPCF(shadowTexcoord[2].xyz, sDepth3, inMapSize, 2);
 	 	//shadows.w = scGetShadowPCF(shadowTexcoord[3].xyz, sDepth4, inMapSize, 3);
+	 	
 	 	//Bilinear
-	 	shadows.x = scGetShadowPCFBilinear(shadowTexcoord[0].xyz, sDepth1, inMapSize);
-	 	shadows.y = scGetShadowPCFBilinear(shadowTexcoord[1].xyz, sDepth2, inMapSize);
-	 	shadows.z = scGetShadowPCFBilinear(shadowTexcoord[2].xyz, sDepth3, inMapSize);
+	 
+	 	//shadows.x = scGetShadowPCFBilinear(shadowTexcoord[0].xyz, sDepth1, inMapSize);
+	 	//shadows.y = scGetShadowPCFBilinear(shadowTexcoord[1].xyz, sDepth2, inMapSize);
+	 	//shadows.z = scGetShadowPCFBilinear(shadowTexcoord[2].xyz, sDepth3, inMapSize);
 	 	shadows.w = scGetShadowPCFBilinear(shadowTexcoord[3].xyz, sDepth4, inMapSize);
+	 	*/
+	 	
+	 	/*
+	 	[BRANCH]
+	 	if(fDistance < pssm_splitdist_var[1] || numberOfSplits < 2)
+	 		shadows.x = scGetShadowPCF(shadowTexcoord[0].xyz, sDepth1, inMapSize, 5);
+	  	else if(fDistance < pssm_splitdist_var[2] || numberOfSplits < 3)
+	 		shadows.y = scGetShadowPCF(shadowTexcoord[1].xyz, sDepth2, inMapSize, 3);
+	  	else if(fDistance < pssm_splitdist_var[3] || numberOfSplits < 4)
+	 		shadows.z = scGetShadowPCFBilinear(shadowTexcoord[2].xyz, sDepth3, inMapSize);
+		else
+	 		shadows.w = scGetShadowPCFBilinear(shadowTexcoord[3].xyz, sDepth4, inMapSize);
 	 	
 	 	//Put Splits together
 	 	half fShadow;
-	 	fShadow = lerp( shadows.x, shadows.y, pow(saturate(fDistance/pssm_splitdist_var[1]),10) );
-	 	fShadow = lerp( fShadow, shadows.z, pow(saturate(fDistance/pssm_splitdist_var[2]),10) );
-	 	fShadow = lerp( fShadow, shadows.w, pow(saturate(fDistance/pssm_splitdist_var[3]),10) );
+	 	fShadow = lerp( shadows.x, shadows.y, pow(saturate(fDistance/pssm_splitdist_var[1]),50) );
+	 	fShadow = lerp( fShadow, shadows.z, pow(saturate(fDistance/pssm_splitdist_var[2]),50) );
+	 	fShadow = lerp( fShadow, shadows.w, pow(saturate(fDistance/pssm_splitdist_var[3]),50) );
+	 	*/
 	 	
+	 	half fShadow = 1;
+	 	[BRANCH]
+	 	if(fDistance < pssm_splitdist_var[1] || numberOfSplits < 2)
+	 		fShadow = scGetShadowPCF(shadowTexcoord[0].xyz, sDepth1, inMapSize, 5);
+	  	else if(fDistance < pssm_splitdist_var[2] || numberOfSplits < 3)
+	 		fShadow = scGetShadowPCF(shadowTexcoord[1].xyz, sDepth2, inMapSize, 3);
+	  	else if(fDistance < pssm_splitdist_var[3] || numberOfSplits < 4)
+	 		fShadow = scGetShadowPCFBilinear(shadowTexcoord[2].xyz, sDepth3, inMapSize);
+		else
+	 		fShadow = scGetShadowPCFBilinear(shadowTexcoord[3].xyz, sDepth4, inMapSize); //fShadow = saturate( exp( (exp(2*tex2Dlod(sDepth4, half4(shadowTexcoord[3].xy,0,0) ).r)-exp(2*shadowTexcoord[3].z)) * maxDepth * 0.004) );
+	 	
+	 	
+	 	
+	 	return fShadow;
+	}
+	
+	half GetPssmHard(half4 shadowTexcoord[4], half fDistance, half maxDepth, half numberOfSplits, sampler sDepth1, sampler sDepth2, sampler sDepth3, sampler sDepth4, int inMapSize)
+	{
+		half4 shadows = 0;
+		/*
+	 	//ESM SHADOWS
+	 	half4 realDepth;
+	 	realDepth.x = shadowTexcoord[0].z;
+	 	realDepth.y = shadowTexcoord[1].z;
+	 	realDepth.z = shadowTexcoord[2].z;
+	 	realDepth.w = shadowTexcoord[3].z;
+	 	
+	 	
+	 	shadows.x = tex2Dlod(sDepth1, half4(shadowTexcoord[0].xy,0,0) ).r;
+	 	shadows.y = tex2Dlod(sDepth2, half4(shadowTexcoord[1].xy,0,0) ).r;
+	 	shadows.z = tex2Dlod(sDepth3, half4(shadowTexcoord[2].xy,0,0) ).r;
+	 	shadows.w = tex2Dlod(sDepth4, half4(shadowTexcoord[3].xy,0,0) ).r;
+	 	
+	 	shadows = clamp((shadows-realDepth)*100000,0,1);
+	 	
+	 	 	
+	 	//Put Splits together
+	 	half fShadow;
+	 	shadows.x = lerp( shadows.x, shadows.y, pow(saturate(fDistance/pssm_splitdist_var[1]),10) );
+	 	shadows.x = lerp( shadows.x, shadows.z, pow(saturate(fDistance/pssm_splitdist_var[2]),10) );
+	 	shadows.x = lerp( shadows.x, shadows.w, pow(saturate(fDistance/pssm_splitdist_var[3]),10) );
+	 	*/
 	 	//fShadow = 1;
+	 	
+	 	
+	 	
+	 	half fShadow;
+	 	[BRANCH]
+	 	if(fDistance < pssm_splitdist_var[1] || numberOfSplits < 2)
+	 		fShadow = (tex2Dlod(sDepth1, half4(shadowTexcoord[0].xy,0,0) ).r < shadowTexcoord[0].z) ? 0.0 : 1.0;
+	  	else if(fDistance < pssm_splitdist_var[2] || numberOfSplits < 3)
+	 		fShadow = (tex2Dlod(sDepth2, half4(shadowTexcoord[1].xy,0,0) ).r < shadowTexcoord[1].z) ? 0.0 : 1.0;
+	  	else if(fDistance < pssm_splitdist_var[3] || numberOfSplits < 4)
+	 		fShadow = (tex2Dlod(sDepth3, half4(shadowTexcoord[2].xy,0,0) ).r < shadowTexcoord[2].z) ? 0.0 : 1.0;
+		else
+	 		fShadow = (tex2Dlod(sDepth4, half4(shadowTexcoord[3].xy,0,0) ).r < shadowTexcoord[3].z) ? 0.0 : 1.0;
 	 	
 	 	return fShadow;
 	}
@@ -1138,18 +1144,16 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 		#include <scCalculatePosVSQuad>
 	#endif
 	#ifdef SHADOW //((SUN) && (SHADOW))
+		
 		#ifdef SUN
 			#ifndef MATVIEWINV
 			#define MATVIEWINV
 				float4x4 matViewInv; //needed for PSSM, TEMP ONLY, remove this from shader!
 			#endif
 			float4x4 matTex[4]; // set up from the pssm script
-			#ifndef MATPROJ
-			#define MATPROJ
-				//float4x4 matProj; //might be needed...
-			#endif
 			#include <scGetPssm>
 		#endif
+		
 		#ifdef SPOT
 			#include <scGetShadow>
 		#endif
@@ -1193,6 +1197,7 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 	texture texBRDFLut; //brdf equations stored in volumetric texture
 	texture texMaterialLUT; //material data texture -> x = lighting equation Lookup Texture index // y = diffuse roughness // z = diffuse wraparound
 	
+	
 	#ifdef PROJECTION
 		sampler projSampler = sampler_state 
 		{ 
@@ -1233,6 +1238,7 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 	
 	#ifdef SHADOW //((SUN) && (SHADOW))
 		#ifdef SUN
+			
 			texture shadowTex1;
 			texture shadowTex2;
 			texture shadowTex3;
@@ -1281,6 +1287,28 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 				AddressV = Border;
 				BorderColor = 0xFFFFFFFF;
 				//BorderColor = 0x00000000;
+			};
+			
+			texture texShadowMask;
+			sampler2D shadowMaskSampler = sampler_state
+			{
+				Texture = <texShadowMask>; 
+			   MinFilter = POINT;
+				MagFilter = POINT;
+				MipFilter = NONE;
+				AddressU = MIRROR;
+				AddressV = MIRROR;
+			};
+			
+			texture texShadowSun;
+			sampler2D shadowSunSampler = sampler_state
+			{
+				Texture = <texShadowSun>; 
+			   MinFilter = LINEAR;
+				MagFilter = LINEAR;
+				MipFilter = NONE;
+				AddressU = MIRROR;
+				AddressV = MIRROR;
 			};
 		#endif
 		
@@ -1378,9 +1406,12 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 	//float4 mainPS(in float2 inTex:TEXCOORD0):COLOR0
 	float4 mainPS(vsOut In):COLOR
 	{
-		//je nach tiefe clippen...
-		//discard;
-		
+		//upsample from edge and expand phase
+		#ifdef SUN
+			#ifdef SHADOW
+				//In.Tex.xy /= 8;
+			#endif
+		#endif
 		half4 color = 1;
 		
 		//projective texcoords
@@ -1492,6 +1523,9 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 	   #ifdef SPOT
 	   	clip(dot(color.rgb,1)-0.003);
 	   #endif
+	   //#ifdef SUN
+	   //	clip(dot(color.rgb,1)-0.001);
+	   //#endif
 	   
 	   #ifdef SPECULAR
 		   //fps hungry....
@@ -1537,6 +1571,10 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 		
 		#ifdef SHADOW //((SUN) && (SHADOW))
 			#ifdef SUN
+			half shadowMask = tex2D(shadowMaskSampler, In.Tex.xy).r;
+			[BRANCH]
+			if(shadowMask == 0)
+			{
 				//PSSM---------------------
 				//half4 posWorld = mul(float4(posVS,1), matViewInv);
 				
@@ -1544,44 +1582,6 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 				//gBuffer.xyz = normalize(pow(gBuffer.xyz, 4));
 				//gBuffer.z = -gBuffer.z;
 				//gBuffer.xyz = normalize(gBuffer.xyz);
-			
-				
-				/*
-				half3 posNormals = NormalsFromPosition( posVS ).xyz;
-				half3 depthNormals = NormalsFromDepth(gBuffer.w);		
-				depthNormals.z = -depthNormals.z;
-				
-				//gBuffer.w = mul(float4(posVS,1), matProj).z;
-				//posVS = CalculatePosVSQuad(In.Tex.xy, gBuffer.w*vecSkill5.w);
-				//float3 n = normalize(float3(ddx(gBuffer.w) * 100000, ddy(gBuffer.w) * 100000, 1.0));// * 0.5 + 0.5;
-				
-				
-				gBuffer.xyz = posNormals;//mul(float4(depthNormals,1), matView).xyz;
-				//gBuffer.xyz = normalize(float3(800,600,50000));
-				
-				
-				//gBuffer.xyz = lerp(gBuffer.xyz, posNormals, pow(normalsDiff,10));
-				
-				
-				//Position with Normal Offset to prevent shadow Acne
-				//half normalOffsetScale = saturate(dot(color.rgb,1)) * 50;
-				//half4 posWorld = mul(float4(posVS + gBuffer.xyz*saturate(dot(color.rgb,1))*5 ,1), matViewInv);
-				//posWorld.xyz += normalize(mul(float4(gBuffer.xyz,1), matViewInv).xyz) * normalOffsetScale;
-				//half4 posWorld = mul(float4(posVS + gBuffer.xyz*saturate(dot(color.rgb,1))*20 ,1), matViewInv);
-				
-				
-				//gBuffer.xyz = NormalsFromPosition( posVS.xyz );
-				//gBuffer.xyz = mul( float4(gBuffer.xyz, 1), matViewInv).xyz; //World Space Normals
-				//half4 Pw = mul(float4(posVS,1), matViewInv);
-				//gBuffer.xyz = normalize(gBuffer.xyz);
-				float ShadowNormalOffset =	500;
-				float shadowMapTexelSize = 2.0f / shadowmapSize;
-				
-								
-				//gBuffer.xyz = mul(gBuffer, (float3x3)matViewInv).xyz;
-				float NormalOffsetScale = 1;//saturate(dot(color.rgb,1));//bNormalOffsetSlopeScale ? saturate(1 - cosLightAngle) : 1.0;
-   				float4 ShadowOffset = float4(gBuffer.xyz*ShadowNormalOffset*NormalOffsetScale*shadowMapTexelSize, 0);
-				*/
 				
 				half4 posWorld = mul(float4(posVS,1), matViewInv);
 				//posWorld += ShadowOffset;
@@ -1594,65 +1594,86 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 				shadowTexcoord[0] = shadowTexcoord[1] = shadowTexcoord[2] = shadowTexcoord[3] = half4(0,0,0,0);
 				for(int i=0;i<vecSkill13.x;i++)
 					shadowTexcoord[i] = mul(posWorld,matTex[i]);
-				/*
-				posWorld = mul(float4(posVS + ShadowOffset ,1), matViewInv);
-				for(int i=0;i<vecSkill13.x;i++)
-					shadowTexcoord[i].z = mul(posWorld,matTex[i]).z;
-				*/
 				
-				/*
+//				posWorld = mul(float4(posVS + ShadowOffset ,1), matViewInv);
+//				for(int i=0;i<vecSkill13.x;i++)
+//					shadowTexcoord[i].z = mul(posWorld,matTex[i]).z;
+				
+				
+				
 				//gBuffer.xyz += NormalsFromPosition( posVS.xyz );
 				//gBuffer.xyz = normalize(gBuffer.xyz);
-				half cosLightAngle = saturate(1- dot(Ln, gBuffer.xyz ));
-				float sinLightAngle = sqrt( 1.0 - cosLightAngle*cosLightAngle);
-		   		half slope = sinLightAngle / max(cosLightAngle,0.00001);
-		   		*/
+//				half cosLightAngle = saturate(1- dot(Ln, gBuffer.xyz ));
+//				float sinLightAngle = sqrt( 1.0 - cosLightAngle*cosLightAngle);
+//		   		half slope = sinLightAngle / max(cosLightAngle,0.00001);
+		   		
 		 		
 		 		
 		 		//half bias =  0.0006f;// + (slope*0.0001f);
 		 		
 				shadowTexcoord[0].z -= shadowBias;
 				shadowTexcoord[1].z -= shadowBias*2;
-				shadowTexcoord[2].z -= shadowBias*4;
-				shadowTexcoord[3].z -= shadowBias*8;
+				shadowTexcoord[2].z -= shadowBias*3;
+				shadowTexcoord[3].z -= shadowBias*4;
 				
 				//shadowTexcoord[1] = Plp;
-				/*
-				half2 shadowScatter = tex2D(sc_lights_scatterTex, In.Tex.xy * (vecViewPort.xy/256) ).xy*2-1;
-				shadowScatter += tex2D(sc_lights_scatterTex, In.Tex.xy * (vecViewPort.xy/128) ).xy*2-1;
-				shadowScatter += tex2D(sc_lights_scatterTex, In.Tex.xy * (vecViewPort.xy/64) ).xy*2-1;
-				shadowScatter += tex2D(sc_lights_scatterTex, In.Tex.xy * (vecViewPort.xy/32) ).xy*2-1;
-				shadowScatter = normalize(shadowScatter);
 				
-				shadowTexcoord[0].xy += shadowScatter*0.00025;
-				shadowTexcoord[1].xy += shadowScatter*0.000125;
-				shadowTexcoord[2].xy += shadowScatter*0.0000625;
-				shadowTexcoord[3].xy += shadowScatter*0.0000625;
-				*/
-					
-				color.rgb *= GetPssm(shadowTexcoord, posVS.z, vecSkill1.w, vecSkill13.x,  shadowDepth1Sampler, shadowDepth2Sampler, shadowDepth3Sampler, shadowDepth4Sampler, shadowmapSize);
+//				half2 shadowScatter = tex2D(sc_lights_scatterTex, In.Tex.xy * (vecViewPort.xy/256) ).xy*2-1;
+//				shadowScatter += tex2D(sc_lights_scatterTex, In.Tex.xy * (vecViewPort.xy/128) ).xy*2-1;
+//				shadowScatter += tex2D(sc_lights_scatterTex, In.Tex.xy * (vecViewPort.xy/64) ).xy*2-1;
+//				shadowScatter += tex2D(sc_lights_scatterTex, In.Tex.xy * (vecViewPort.xy/32) ).xy*2-1;
+//				shadowScatter = normalize(shadowScatter);
+//				
+//				shadowTexcoord[0].xy += shadowScatter*0.00025;
+//				shadowTexcoord[1].xy += shadowScatter*0.000125;
+//				shadowTexcoord[2].xy += shadowScatter*0.0000625;
+//				shadowTexcoord[3].xy += shadowScatter*0.0000625;
+				
+				
+				//tex2D(shadowMaskSampler, In.Tex.xy).rgb;
+				//half shadowMask = tex2D(shadowMaskSampler, In.Tex.xy).r;
+				//if(shadowMask > 0 && shadowMask < 1)
+				//	shadowMask = 0.5;
+				
+				
+				//USE STENCIL MASKING INSTEAD! DYNAMIC BRANCHING DOESN'T WORK ON ALL MACHINES!
+				//[BRANCH]
+				//if(shadowMask == 1)
+				//	color.rgb *= GetPssm(shadowTexcoord, posVS.z, vecSkill1.w, vecSkill13.x,  shadowDepth1Sampler, shadowDepth2Sampler, shadowDepth3Sampler, shadowDepth4Sampler, shadowmapSize);
+				//[BRANCH]
+				//if(shadowMask == 0)
+					color.rgb *= GetPssmHard(shadowTexcoord, posVS.z, vecSkill1.w, vecSkill13.x,  shadowDepth1Sampler, shadowDepth2Sampler, shadowDepth3Sampler, shadowDepth4Sampler, shadowmapSize);
+				//else
+				//	color.rgb *= 1;
+				
+				
 				
 				//-------------------------
+			}
+			else if(shadowMask == 1)
+				color.rgb *= tex2Dlod(shadowSunSampler, half4(In.Tex.xy,0,0) ).rgb;
 			#endif
 		#endif
 		
+		
 		#ifdef SUN
 			color.rgb *= sun_light_var*0.01; //brightness based on sun_light
-			//color.rgb = float3(0,1,0);
 		#endif
 		
-
+		//color.rgb = pow(color.xyz, 2.2);
 		color = PackLighting(color.rgb, color.a);
 		
 	
 	   return color;
 	}
 	
+	#ifdef SUN
 	half4 sunBackdrop():COLOR
 	{
 		return PackLighting(half3(1,1,1), 0);
 	}
-	
+	#endif
+		
 	technique t1
 	{
 		
@@ -1662,6 +1683,10 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 			PixelShader = compile ps_2_0 sunBackdrop();
 			AlphablendEnable = False;
 			ZWriteEnable = FALSE;
+			
+//			StencilEnable = true;
+//      	StencilPass = REPLACE;
+//      	StencilRef = 201;
 		}
 		#endif
 		
@@ -1678,6 +1703,9 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 			#ifdef SUN
 				AlphablendEnable = False;
 				ZEnable = FALSE;
+				//StencilEnable = true;
+      		//StencilPass = REPLACE;
+      		//StencilRef = 202;
 			#else
 				ColorWriteEnable = 0xFFFFFF;
 				ZWriteEnable = FALSE;
@@ -1695,6 +1723,8 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 		    		ZEnable = false;
 		    	#endif
 			#endif
+			
+			//SRGBWriteEnable = true;
 			
 			
 		
@@ -1774,7 +1804,9 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 	
 	#include <scPackNormals>
 	#include <scPackDepth>
-	
+	#ifdef BONES
+		#include <bones>
+	#endif
 	
 	#ifndef MATWORLDVIEWPROJ
 	#define MATWORLDVIEWPROJ
@@ -1873,6 +1905,9 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 		MipFilter = Linear;
 		AddressU = WRAP;
 		AddressV = WRAP;
+		
+		//SRGBTexture = true;
+		
 	};
 	
 	sampler2D sc_skin2Sampler = sampler_state
@@ -1917,6 +1952,10 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 		half3 Normal : NORMAL;
 		#ifdef NORMALMAPPING
 			half4 Tangent: TEXCOORD2;
+		#endif
+		#ifdef BONES
+			int4 BoneIndices: BLENDINDICES;
+			float4 BoneWeights: BLENDWEIGHT;
 		#endif
 	};
 	
@@ -1968,7 +2007,12 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 		*/
 		
 		#ifndef CUSTOM_VS_POSITION
-			Out.Pos = mul(In.Pos,matWorldViewProj);
+			#ifdef BONES
+				Out.Pos = DoBones(In.Pos,In.BoneIndices,In.BoneWeights);
+				Out.Pos = mul( Out.Pos , matWorldViewProj);
+			#else
+				Out.Pos = mul(In.Pos,matWorldViewProj);
+			#endif
 		#else
 			Out.Pos = Custom_VS_Position(In);
 		#endif
@@ -2197,7 +2241,7 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 		//depth
 		PSOut.NormalsAndDepth.zw = PackDepth(PSOut.NormalsAndDepth.w);
 		
-		
+		//PSOut.AlbedoAndEmissiveMask.xyz = pow(PSOut.AlbedoAndEmissiveMask.xyz, 2.2);
 		return PSOut;
 	}
 	
@@ -2246,6 +2290,9 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 	#endif
 	
 	#include <scPackDepth>
+	#ifdef BONES
+		#include <bones>
+	#endif
 	
 	#ifndef MATWORLDVIEWPROJ
 		#define MATWORLDVIEWPROJ
@@ -2287,6 +2334,10 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 	{
 		float4 Pos : POSITION;
 		float2 Tex : TEXCOORD0;
+		#ifdef BONES
+			int4 BoneIndices: BLENDINDICES;
+			float4 BoneWeights: BLENDWEIGHT;
+		#endif
 	};
 	
 	struct vsOut
@@ -2319,7 +2370,12 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 		*/
 		
 		#ifndef CUSTOM_VS_POSITION
-			Out.Pos = mul(In.Pos,matWorldViewProj);
+			#ifdef BONES
+				Out.Pos = DoBones(In.Pos, In.BoneIndices, In.BoneWeights);
+				Out.Pos = mul( Out.Pos , matWorldViewProj);
+			#else
+				Out.Pos = mul(In.Pos,matWorldViewProj);
+			#endif
 		#else
 			Out.Pos = Custom_VS_Position(In);
 		#endif

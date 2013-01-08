@@ -17,6 +17,7 @@
 D3DXVECTOR4 sc_vec4Null;
 //BMAP* sc_bmapNull = "#1#1#8";
 BMAP* sc_map_random2x2 = "sc_random2x2.tga";
+BMAP* sc_map_random4x4 = "sc_random4x4.tga";
 BMAP* sc_map_random = "sc_random.png";
 
 //SC_OBJECT
@@ -175,6 +176,9 @@ typedef struct SC_VERTEX_SCREENQUAD {
 typedef struct{
 	VIEW* gBuffer;
 	VIEW* sunShadowDepth[4];
+	VIEW* sunEdge;
+	VIEW* sunExpand;
+	VIEW* sunShadow;
 	VIEW* sun;
 	VIEW* deferredLighting;
 	//VIEW* shadowsDepth;

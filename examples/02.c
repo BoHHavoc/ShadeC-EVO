@@ -97,7 +97,7 @@ void main()
 	sc_screen_default.settings.lights.sunShadowResolution = 512; //reduce shadow resolution as we are manually setting the shadow range to 5000 and can therefor get away with a small shadowmap
 	sc_screen_default.settings.lights.sunPssmSplitWeight = 0.7; //high res near splits, low res far splits
 	sc_screen_default.settings.lights.sunShadowRange = 5000; //manually set the shadow range...we don't need realtime shadows in the far distant! If set to 0 (default) shadow range will be set to camera.clip_far
-	sc_screen_default.settings.lights.sunShadowBias = 0.001; //manually set the shadow bias
+	sc_screen_default.settings.lights.sunShadowBias = 0.001; //set the shadow bias
 	sc_screen_default.settings.antialiasing.enabled = 1; //enable antialiasing
 		
 	//initialize shade-c, use default screen object
@@ -142,6 +142,7 @@ void main()
    	spotlight.pan += time_step*5;
    	//update the spotlight
    	sc_light_update(spotlight);
+   	
    	
 	   wait(1);
   }

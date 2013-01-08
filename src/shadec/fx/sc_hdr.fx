@@ -12,17 +12,21 @@ sampler2D bloomSampler = sampler_state
 	MipFilter = Linear;
 	AddressU = WRAP;
 	AddressV = WRAP;
+	
+	//SRGBTexture = true;
 };
 
 sampler2D currentSceneSampler = sampler_state
 {
 	Texture = <mtlSkin1>;
 
-	MinFilter = NONE;
-	MagFilter = NONE;
-	MipFilter = NONE;
+	MinFilter = POINT;
+	MagFilter = POINT;
+	MipFilter = POINT;
 	AddressU = WRAP;
 	AddressV = WRAP;
+	
+	//SRGBTexture = true;
 };
 
 
@@ -64,6 +68,8 @@ technique t1
 	pass p0
 	{
 		PixelShader = compile ps_2_0 mainPS();
+		//SRGBWriteEnable = true;
+
 	}
 	
 	

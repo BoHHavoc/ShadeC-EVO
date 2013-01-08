@@ -65,6 +65,7 @@ var sc_materials_event()
 {
 	SC_SCREEN* screen = sc_screen_default;
 	if(screen == NULL) return(1);
+	//if(screen.renderTargets.gBuffer[SC_GBUFFER_NORMALS_AND_DEPTH] == NULL) return(1);
 	
 	
 	switch(render_view)

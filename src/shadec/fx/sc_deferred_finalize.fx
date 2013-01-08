@@ -19,20 +19,22 @@ sampler2D albedoAndEmissiveMaskSampler = sampler_state
 {
 	Texture = <mtlSkin1>;
 
-	MinFilter = NONE;
-	MagFilter = NONE;
-	MipFilter = NONE;
+	MinFilter = POINT;
+	MagFilter = POINT;
+	MipFilter = POINT;
 	AddressU = WRAP;
 	AddressV = WRAP;
+	
+	SRGBTexture = true;
 };
 
 sampler2D diffuseAndSpecularSampler = sampler_state
 {
 	Texture = <mtlSkin2>;
 
-	MinFilter = LINEAR;
-	MagFilter = LINEAR;
-	MipFilter = LINEAR;
+	MinFilter = POINT;
+	MagFilter = POINT;
+	MipFilter = POINT;
 	AddressU = WRAP;
 	AddressV = WRAP;
 };
@@ -41,9 +43,9 @@ sampler2D materialDataSampler = sampler_state
 {
 	Texture = <mtlSkin3>;
 
-	MinFilter = NONE;
-	MagFilter = NONE;
-	MipFilter = NONE;
+	MinFilter = POINT;
+	MagFilter = POINT;
+	MipFilter = POINT;
 	AddressU = WRAP;
 	AddressV = WRAP;
 };
@@ -104,8 +106,7 @@ float4 mainPS(psIn In):COLOR
 	*/
 	
 	//gamme correction
-	//albedoAndEmissiveMask.xyz = pow(albedoAndEmissiveMask.xyz, 1.f/2.2f);
-	albedoAndEmissiveMask.xyz = pow(albedoAndEmissiveMask.xyz, 2.2);
+	//albedoAndEmissiveMask.xyz = pow(albedoAndEmissiveMask.xyz, 2.2);
 	
 	//diffuseAndSpecular.xyz = (diffuseAndSpecular.xyz*(6.2*diffuseAndSpecular.xyz+0.5))/(diffuseAndSpecular.xyz*(6.2*diffuseAndSpecular.xyz+1.7)+0.06);
 	half4 output;// = 1;
@@ -116,7 +117,8 @@ float4 mainPS(psIn In):COLOR
 					 + diffuseAndSpecular.w*diffuseAndSpecular.xyz*materialData.z;
 					 //* (((diffuseAndSpecular.xyz+vecSkill1.xyz)*ssao.w)+ssao.xyz)  + diffuseAndSpecular.w*diffuseAndSpecular.xyz*materialData.z*ssao.w;
 	
-	output.xyz = pow(output.xyz, 1.0/2.2);
+	//gamma correction...we used sRGB when we created the gBuffer
+	//output.xyz = pow(output.xyz, 1.0/2.2);
 	
 	/*				 
 	//gamma correction
@@ -174,6 +176,9 @@ float4 mainPS(psIn In):COLOR
 	//output.xyz = NdotV;
 	*/
 	
+	//gamma correction
+	//output = float4( sqrt(output.xyz), output.w);
+	
 	return output;
 }
 
@@ -187,5 +192,7 @@ technique t1
 		//VertexShader = compile vs_2_0 mainVS();
 		PixelShader = compile ps_2_0 mainPS();
 		//FogEnable = False;
+		
+		SRGBWriteEnable = true;
 	}
 }

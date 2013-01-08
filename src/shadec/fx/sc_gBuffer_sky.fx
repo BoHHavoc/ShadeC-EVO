@@ -74,6 +74,7 @@ struct PixelToFrame
     half4 albedoAndEmissiveMask : COLOR1;
     float4 materialData : COLOR2;
     //float4 lightmapAnd : COLOR3;
+    float depth : DEPTH;
 };
 
 
@@ -104,6 +105,8 @@ PixelToFrame mainPS(vsOut In)
 	PSOut.materialData.z = 0;
 	PSOut.materialData.w = 0; //environment map ID - not used yet
 	
+	PSOut.depth = 1;
+	
 	return PSOut;
 }
 
@@ -125,6 +128,8 @@ PixelToFrame blackPS(vsOut In)
 	PSOut.materialData.y = 0; //vecSkill17.z; //material Specular Power
 	PSOut.materialData.z = 0;
 	PSOut.materialData.w = 0; //environment map ID - not used yet
+	
+	PSOut.depth = 1;
 	
 	return PSOut;
 }

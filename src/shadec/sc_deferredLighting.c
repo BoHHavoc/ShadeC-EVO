@@ -20,7 +20,7 @@ void sc_deferredLighting_init(SC_SCREEN* screen, int rtScale)
 		set(screen.views.deferredLighting, NOPARTICLE);
 		set(screen.views.deferredLighting, NOSHADOW);
 		set(screen.views.deferredLighting, UNTOUCHABLE);
-		set(screen.views.deferredLighting, PROCESS_SCREEN);
+		//set(screen.views.deferredLighting, PROCESS_SCREEN);
 		set(screen.views.deferredLighting, NOSKY);
 		set(screen.views.deferredLighting, CHILD);
 		#ifdef SC_USE_NOFLAG1
