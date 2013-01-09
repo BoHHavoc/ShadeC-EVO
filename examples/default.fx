@@ -1957,6 +1957,9 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 			int4 BoneIndices: BLENDINDICES;
 			float4 BoneWeights: BLENDWEIGHT;
 		#endif
+		#ifdef CUSTOM_VS_INPUT_EXTEND
+			CUSTOM_VS_INPUT_EXTEND
+		#endif
 	};
 	
 	struct vsOut
@@ -1969,6 +1972,9 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 			float3 Tangent : TEXCOORD3;
 			float3 Binormal : TEXCOORD4;
 		#endif
+		#ifdef CUSTOM_VS_OUTPUT_EXTEND
+			CUSTOM_VS_OUTPUT_EXTEND
+		#endif
 	};
 	
 	struct psOut
@@ -1977,6 +1983,10 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 	    half4 AlbedoAndEmissiveMask : COLOR1;
 	    float4 MaterialData : COLOR2;
 	    //float4 lightmapAnd : COLOR3;
+	    
+	    #ifdef CUSTOM_PS_OUTPUT_EXTEND
+			CUSTOM_PS_OUTPUT_EXTEND
+		 #endif
 	};
 #endif
 
@@ -2159,7 +2169,11 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 		//albedo
 		#ifndef CUSTOM_PS_DIFFUSE
 			#ifdef USE_VEC_DIFFUSE
-				PSOut.AlbedoAndEmissiveMask.xyz = SKIN_ALBEDO * vecDiffuse;
+				#ifndef OBJECTCOLOR_A7
+					PSOut.AlbedoAndEmissiveMask.xyz = SKIN_ALBEDO * vecDiffuse;
+				#else
+					PSOut.AlbedoAndEmissiveMask.xyz = SKIN_ALBEDO;
+				#endif
 			#else
 				PSOut.AlbedoAndEmissiveMask.xyz = SKIN_ALBEDO;
 			#endif
@@ -2258,6 +2272,13 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 		}
 		#endif
 		
+		#ifndef TARGET_PS
+			#define TARGET_PS ps_2_a
+		#endif
+		#ifndef TARGET_VS
+			#define TARGET_VS vs_2_0
+		#endif
+		
 		pass p0
 		{
 			cullmode = ccw;
@@ -2265,8 +2286,8 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 				zwriteenable = true;
 			#endif
 			alphablendenable = false;
-			VertexShader = compile vs_2_0 mainVS();
-			PixelShader = compile ps_2_a mainPS();
+			VertexShader = compile TARGET_VS mainVS();
+			PixelShader = compile TARGET_PS mainPS();
 			FogEnable = False;
 			
 			#ifdef ZPREPASS
