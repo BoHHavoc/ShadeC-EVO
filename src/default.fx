@@ -2089,6 +2089,10 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 	{
 		psOut PSOut = (psOut)0;
 		
+		#ifdef CUSTOM_PS_TEX
+			In.Tex = Custom_PS_Tex(In);
+		#endif
+		
 		//get skins
 		#ifndef CUSTOM_PS_SKIN1
 			#ifndef NO_SKIN1
