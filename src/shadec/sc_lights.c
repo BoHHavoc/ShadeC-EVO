@@ -1068,10 +1068,11 @@ void sc_lights_destroySun(SC_SCREEN* screen)
 	return 1;
 }
 
+#ifndef SC_A7
 // Calculate a practical split scheme
 // weight parameter scales between logarithmic and uniform distances
 // if maxRange >= 0, the there will be no shadows after maxRange in the scene
-function sc_lights_pssm_split(VIEW* view,var num,var weight, var maxRange)
+void sc_lights_pssm_split(VIEW* view,var num,var weight, var maxRange)
 {
 	var _maxRange = maxRange;
 	//check if _maxRange is bigger than view.clip_near
@@ -1106,6 +1107,7 @@ function sc_lights_pssm_split(VIEW* view,var num,var weight, var maxRange)
 	//pssm_splitdist[num] = view->clip_far;
 	pssm_splitdist[num] = _maxRange;
 }
+#endif
 
 void sc_lights_frmSun(SC_SCREEN* screen)
 {

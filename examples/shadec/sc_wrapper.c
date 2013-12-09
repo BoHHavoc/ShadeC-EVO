@@ -55,9 +55,9 @@ void sc_setup(SC_SCREEN* screen)
 	
 	//setup effects
 	sc_materials_init();
-	sc_gBuffer_init(screen, SC_GBUFFER_DEFERRED, 32);
+	sc_gBuffer_init(screen, SC_GBUFFER_DEFERRED, screen.settings.bitdepth); //change 32 (8bit) to 12222 (16bit) or 14444 (32bit) to get a floating point g-buffer.
 	sc_lights_initSun(screen);
-	sc_deferredLighting_init(screen, 1);
+	sc_deferredLighting_init(screen, 1, screen.settings.bitdepth); //change 32 (8bit) to 12222 (16bit) or 14444 (32bit) to get a floating point light buffer
 	if(screen.settings.ssao.enabled == 1) sc_ssao_init(screen); //optional
 	sc_deferred_init(screen);
 	if(screen.settings.antialiasing.enabled == 1) sc_antialiasing_init(screen);

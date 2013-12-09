@@ -280,7 +280,25 @@ float2 DoTexture(float2 Tex)
 //section: scPackNormals - packs normalized view space normals to 2x8bit //
 #ifndef include_scPackNormals
 #define include_scPackNormals
-
+	
+	/*
+	texture sc_map_BFNormals_bmap;
+	sampler2D BFNSampler = sampler_state
+	{
+		Texture = <sc_map_BFNormals_bmap>;
+		MinFilter = NONE;
+		MagFilter = NONE;
+		MipFilter = NONE;
+		AddressU = WRAP;
+		AddressV = WRAP;
+		AddressW = WRAP;
+	};
+	
+	#ifndef BFN_BIAS
+	#define BFN_BIAS float3(127.5 / 255.0, 127.5 / 255.0, 8.0 / 255.0)
+	#endif
+	*/
+	
 	half2 PackNormals(half3 n)
 	{
 		
@@ -290,29 +308,105 @@ float2 DoTexture(float2 Tex)
 	   //return enc;
 		
 		//argb8
-		//return normalize(n.xyz).xy*0.5+0.5;
-		//return normalize(n.xyz).xy*0.5+0.5;
+		//return n.xy*0.5+0.5;
 		
 		//Lambert Azimuthal
 		//half f = sqrt(8*n.z + 8);
 		//return n.xy / f + 0.5;
 		
 		
+		/*
+		//spheremap
+		float f = -n.z*2+1;
+		float g = dot(n,n);
+		float p = sqrt(g+f);
+		float2 enc = n/p * 0.5 + 0.5;
+		return enc;
+		*/
 		
-//		//spheremap
-//		float f = -n.z*2+1;
-//		float g = dot(n,n);
-//		float p = sqrt(g+f);
-//		float2 enc = n/p * 0.5 + 0.5;
-//		return enc;
 		
-		//spheremap (optimized)
+		
+		//spheremap (optimized) <--
 		half3 fgp;
 		fgp.x = -n.z*2+1;
 		fgp.y = dot(n,n);
 		fgp.z = sqrt(dot(fgp.xy,1));
 		fgp.xy = n/fgp.z * 0.5 + 0.5;
 		return fgp.xy;
+		
+		
+		
+		
+		
+		/*
+		//BFN Best Fit Normals (cube lookup texture)
+		float3 an = abs(n);
+		float bestfit = tex3D(BFNSampler, n).a;
+		float maxabs = max(max(an.x, an.y), an.z);
+		
+		const float3 c3 = 1.0 - BFN_BIAS;
+		const float3 c4 = BFN_BIAS;
+		
+		return n * (bestfit / maxabs) * c3 + c4;
+		*/
+
+		
+		
+		
+		
+		/*
+		//BFN Best Fit Normals (2d lookup)
+		half3 vNormalUns = abs(n);
+		//get axis for cubemap lookup
+		half maxNAbs = max(max(vNormalUns.x, vNormalUns.y), vNormalUns.z);	
+		//get coords of collapsed cubemap
+		float2 vTexCoord = vNormalUns.z<maxNAbs?(vNormalUns.y<maxNAbs?vNormalUns.yz:vNormalUns.xz):vNormalUns.xy;
+		vTexCoord = vTexCoord.x < vTexCoord.y ? vTexCoord.yx : vTexCoord.xy;
+		vTexCoord.y /= vTexCoord.x;
+		//fit normal into edge of unit cube
+		n /= maxNAbs;
+		//look-up fitting length
+		float fFittingScale = tex2D(BFNSampler, vTexCoord).a;
+		//scale the normal to get the best fit
+		n *= fFittingScale;
+		//squeeze back to unsigned
+		n = n*0.5+0.5; //normalizing here guves "some" result, although not quite right
+		//return n;
+		return n.xy; //return only xy as we only have 2 gBuffer slots available
+		*/
+		
+		
+		
+		
+		
+		/*
+		// Renormalize (needed if any blending or interpolation happened before)
+   	//n.rgb = normalize(n.rgb);
+   	// Get unsigned normal for cubemap lookup (note the full float presision is required)
+   	half3 vNormalUns = abs(n.rgb);
+   	// Get the main axis for cubemap lookup
+   	half maxNAbs = max(vNormalUns.z, max(vNormalUns.x, vNormalUns.y));
+   	// Get texture coordinates in a collapsed cubemap
+   	float2 vTexCoord = vNormalUns.z < maxNAbs ? (vNormalUns.y < maxNAbs ? vNormalUns.yz : vNormalUns.xz) : vNormalUns.xy;
+   	vTexCoord = vTexCoord.x < vTexCoord.y ? vTexCoord.yx : vTexCoord.xy;
+   	vTexCoord.y /= vTexCoord.x;
+   	// Fit normal into the edge of unit cube
+   	n.rgb /= maxNAbs;
+   	// Look-up fitting length and scale the normal to get the best fit
+   	float fFittingScale = tex2D(BFNSampler, vTexCoord).a;
+   	// Scale the normal to get the best fit
+   	n.rgb *= fFittingScale;
+		// Squeeze to unsigned.
+		n.rgb = n.rgb * .5h + .5h;
+		//return n;
+    	return n.xy;
+    	*/
+    	
+    	
+		
+		
+		
+
 		
 		
 		/*
@@ -345,7 +439,13 @@ float2 DoTexture(float2 Tex)
 //section: scUnpackNormals - unpacks normals //
 #ifndef include_scUnpackNormals
 #define include_scUnpackNormals
-
+	
+	/*
+	#ifndef BFN_BIAS
+	#define BFN_BIAS float3(127.5 / 255.0, 127.5 / 255.0, 8.0 / 255.0)
+	#endif
+	*/
+	
 	half3 UnpackNormals(half2 enc)
 	{
 		
@@ -356,14 +456,17 @@ float2 DoTexture(float2 Tex)
 	   nn.z = l;
 	   nn.xy *= sqrt(l);
 	   return nn.xyz * 2 + half3(0,0,-1);
-	   */ 
+	   */
+	    
 	   
-	   
+	   /*
 	   //argb8
-	   //half3 n;
-		//n.xy=enc.xy*2-1;
-		//n.z=-sqrt(1-dot(n.xy,n.xy));
-		//return n;
+	 	half3 n;
+		n.xy=enc.xy*2-1;
+		n.z=-sqrt(1-dot(n.xy,n.xy));
+		return (n);
+		*/
+		
 		
 		/*
 		//spheremap
@@ -376,8 +479,10 @@ float2 DoTexture(float2 Tex)
 		n.z = 1 - 8*f;
 		return n;
 		*/
-
-		//spheremap (optimized)
+		
+		
+		
+		//spheremap (optimized) <--
 		half3 n;
 		n.xy = -enc*enc+enc;
 		n.z = -1;
@@ -387,6 +492,38 @@ float2 DoTexture(float2 Tex)
 		n.xy = (enc*8-4) * fm.y;
 		n.z = 1 - 8*fm.x;
 		return n;
+		
+
+		/*
+		//Best Fit Normals (3d lookup)
+		const float3 c1 = 1.0 / (1.0 - BFN_BIAS);
+		const float3 c2 = 1.0 - c1;
+		//return normalize( n * c1 + c2 );
+		half3 n;
+		n.xy = normalize(enc * c1.xy + c2.xy);
+		//n.xy=enc.xy*2-1;
+		n.z=-sqrt(1-dot(n.xy,n.xy));
+		return n;
+		*/
+		
+		
+		/*
+		//Best Fit Normals (2d lookup)
+		//enc.xyz = normalize(enc.xyz*2-1); //this is it if you are using 3 components...doesnt work with 2 though >.<
+		
+		half3 n = normalize(half3(enc.xy*2-1,-1));
+		n.z=sqrt(1-dot(n.xy,n.xy));
+		return (n);
+		
+//		half3 n;
+//		n.xy= enc.xy*2-1;//normalize( half3(enc,-1) * c1.xyz + c2.xyz ).xy;
+//		n.z=-sqrt(1-dot(n.xy,n.xy));
+//		return normalize(n);
+		*/
+		
+		
+		
+
 		
 
 		
@@ -1355,6 +1492,17 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 		//MAGFILTER = NONE; // dont fade between brdfs
 	};
 	
+	texture sc_map_brdf_bmap;
+	sampler2D brdfSampler = sampler_state 
+	{ 
+	   Texture = <sc_map_brdf_bmap>; 
+	   AddressU = CLAMP; 
+	   AddressV = CLAMP;
+		MinFilter = LINEAR;
+		MagFilter = LINEAR;
+		MipFilter = LINEAR;
+	};
+	
 	/*
 	#ifdef SUN
 	float4 vecViewPort;
@@ -1489,6 +1637,7 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 	   half3 Vn = normalize(vecViewDir.xyz - posVS); //same as above but less arithmetic instructions
 	   half3 Hn = normalize(Vn + Ln);
 	   
+	   
 	   //half4 brdfData = (tex2D(materialDataSampler, inTex)); //get brdf gBuffer
 	   //half2 light = lit(dot(Ln,gBuffer.xyz), dot(Hn, gBuffer.xyz),brdfData.g*255).yz;
 		//color.rgb = light.x * vecSkill5.xyz * att;//vecSkill5.xyz;
@@ -1536,7 +1685,7 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 		   //lightingUV.x = dot(Ln,Hn);
 		   //lightingUV.y = dot(gBuffer.xyz, Hn);
 		   //lightingUV.x = saturate( dot(Hn,gBuffer.xyz) );//pow(saturate( dot(Hn,gBuffer.xyz) ),materialData.g*255);
-		   lightingUV.x = pow( ( dot(Hn,gBuffer.xyz) ),materialData.g*255);
+		   lightingUV.x = max(pow( ( dot(gBuffer.xyz,Hn) ),materialData.g*128)-0.02, 0);
 		   //lightingUV.x = pow( dot(Hn,gBuffer.xyz)*2-1 ,materialData.g*32)*0.5+0.5;
 		   lightingUV.y = dot(Ln,Hn);//dot(Ln, gBuffer.xyz);
 		   //lightingUV = ( dot(Ln,Hn) , dot(gBuffer.xyz,Hn)); //isotropic WHY IS THIS NOT WRONG?
@@ -1548,6 +1697,8 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 		   	//specularUV.y = 1-(0.5+dot(gBuffer.xyz,Hn)/2.0);
 		   //color.a = tex3D( brdfLUTSampler, half3(lightingUV, brdfData1.r) ).a;
 		   color.a = tex3D( brdfLUTSampler, half3(lightingUV, brdfData1.r) ).a;
+		   color.a *= color.a;
+		   //color.a = min(pow(color.a, 4),1);
 		   //color.a = pow(color.a+0.001, materialData.g*255);
 		   //...
 		   //conventional specular
@@ -1660,7 +1811,20 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 			color.rgb *= sun_light_var*0.01; //brightness based on sun_light
 		#endif
 		
+		
+		/*
+		//BRDF test
+		//lightingUV = half2( (dot(Vn, gBuffer.xyz)+OffsetUV.x) , ((dot(Ln, gBuffer.xyz) + 1) * 0.5)+OffsetUV.y );
+		half2 lightingUV;
+		lightingUV.x = saturate(dot(Vn, gBuffer.xyz));
+		lightingUV.y = saturate(dot(Ln, gBuffer.xyz) * 0.5 + 0.5);
+		color.rgb = tex2D(brdfSampler, lightingUV).rgb;
+		//color.rgb = lightingUV.x;
 		//color.rgb = pow(color.xyz, 2.2);
+		*/
+		
+		
+		
 		color = PackLighting(color.rgb, color.a);
 		
 	
@@ -1787,6 +1951,10 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 	#ifndef GLOSSSTRENGTH
 		#define GLOSSSTRENGTH 0
 	#endif
+	
+	#ifdef TRANSPARENT
+		#define PROJCOORDS
+	#endif
 		
 	
 	#ifndef SKIN1
@@ -1861,19 +2029,46 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 	#define CLIPFAR
 		float clipFar;
 	#endif
-	#ifndef ALPHACLIP
-	#define ALPHACLIP
-		float alphaClip;
+	
+	#ifndef FALPHA
+	#define FALPHA
+		float fAlpha;
 	#endif
+	
 	#ifndef MATERIALID
 	#define MATERIALID
 		float materialID;
 	#endif
 	
+	#ifdef PROJCOORDS
+		#ifndef VECVIEWPORT
+		#define VECVIEWPORT
+			float4 vecViewPort;
+		#endif
+	#endif
+	
+
+	
 	texture SKIN1;
 	texture SKIN2;
 	texture SKIN3;
 	texture SKIN4;
+	
+	#ifdef TRANSPARENT
+		#ifndef ALPHACLIP
+			#define ALPHACLIP 0.001
+		#endif
+		texture sc_map_stipplingMask_bmap;
+		sampler2D stipplingMaskSampler = sampler_state
+		{
+			Texture = <sc_map_stipplingMask_bmap>;
+			MinFilter = POINT;
+			MagFilter = POINT;
+			MipFilter = NONE;
+			AddressU = WRAP;
+			AddressV = WRAP;
+		};
+	#endif
 	
 	/*
 	#ifdef MTL_SKIN1
@@ -1900,9 +2095,9 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 		#endif
 		*/
 	
-		MinFilter = Linear;
-		MagFilter = Linear;
-		MipFilter = Linear;
+		MinFilter = LINEAR;
+		MagFilter = LINEAR;
+		MipFilter = LINEAR;
 		AddressU = WRAP;
 		AddressV = WRAP;
 		
@@ -1965,7 +2160,11 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 	struct vsOut
 	{
 		float4 Pos : POSITION;
-		float Pos2D : TEXCOORD0;
+		#ifdef PROJCOORDS
+			float4 Pos2D: TEXCOORD0;
+		#else
+			float Pos2D : TEXCOORD0;
+		#endif
 		float4 Tex : TEXCOORD1;
 		float3 Normal : TEXCOORD2;
 		#ifdef NORMALMAPPING
@@ -2026,7 +2225,13 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 		#else
 			Out.Pos = Custom_VS_Position(In);
 		#endif
-		Out.Pos2D = mul(In.Pos,matWorldView).z; //HAVOC: CHANGE BACK IF YOU GET DEPTHMAP ERRORS OR POSITION ERRORS!
+		//Z Depth and optional Projective Texcoords
+		#ifdef PROJCOORDS
+			Out.Pos2D.x = mul(In.Pos,matWorldView).z; //HAVOC: CHANGE BACK IF YOU GET DEPTHMAP ERRORS OR POSITION ERRORS!
+			Out.Pos2D.yzw = Out.Pos.xyw;	
+		#else
+			Out.Pos2D = mul(In.Pos,matWorldView).z; //HAVOC: CHANGE BACK IF YOU GET DEPTHMAP ERRORS OR POSITION ERRORS!
+		#endif
 		
 		#ifndef CUSTOM_VS_TEX
 			Out.Tex.xy = In.Tex;
@@ -2083,6 +2288,18 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 	*/
 	
 	
+	/*
+	texture sc_map_litSphere_bmap;
+	sampler2D litSphereSampler = sampler_state 
+	{ 
+	   Texture = <sc_map_litSphere_bmap>; 
+	   AddressU = CLAMP; 
+	   AddressV = CLAMP;
+		MinFilter = LINEAR;
+		MagFilter = LINEAR;
+		MipFilter = LINEAR;
+	};
+	*/
 	
 	
 	psOut mainPS(vsOut In)
@@ -2091,6 +2308,12 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 		
 		#ifdef CUSTOM_PS_TEX
 			In.Tex = Custom_PS_Tex(In);
+		#endif
+		
+		#ifdef PROJCOORDS
+			half2 projCoord;
+			projCoord.x = In.Pos2D.y/In.Pos2D.w/2.0f +0.5f + (0.5/vecViewPort.x);
+   		projCoord.y = -In.Pos2D.z/In.Pos2D.w/2.0f +0.5f + (0.5/vecViewPort.y);
 		#endif
 		
 		//get skins
@@ -2135,15 +2358,44 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 			half4 skin4 = Custom_PS_Skin4(In);
 		#endif
 		
-		
+		/*
 		//alphatest
 		#ifndef CUSTOM_PS_ALPHA
 			#ifdef ALPHA
-				clip(SKIN_ALPHA-alphaClip);
+				clip(SKIN_ALPHA-fAlpha);
 			#endif
 		#else
 			//CUSTOM CODE
 			clip( Custom_PS_Alpha(In, SKIN_ALPHA) );
+		#endif
+		
+		//alpha stippling
+		#ifndef CUSTOM_PS_TRANSPARENT
+			#ifdef TRANSPARENT
+				clip(SKIN_ALPHA-fAlpha);
+			#endif
+		#else
+			//CUSTOM CODE
+			clip( Custom_PS_Transparent(In, SKIN_ALPHA) );
+		#endif
+		*/
+		
+		#ifdef ALPHA
+			#ifdef TRANSPARENT
+				
+				SKIN_ALPHA *= tex2D(stipplingMaskSampler, projCoord*vecViewPort.xy*0.5).g * fAlpha;
+				#ifdef TRANSPARENTALPHACLIP
+					clip(SKIN_ALPHA - fAlpha);
+				#else
+					clip(SKIN_ALPHA - ALPHACLIP);
+				#endif
+			#else
+				#ifdef CUSTOM_PS_ALPHA
+					clip(Custom_PS_Alpha(In, SKIN_ALPHA));
+				#else
+					clip(SKIN_ALPHA-(1-fAlpha));
+				#endif
+			#endif
 		#endif
 		
 		//initial w values
@@ -2164,7 +2416,7 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 			
 		//depth
 		#ifndef CUSTOM_PS_DEPTH
-			PSOut.NormalsAndDepth.w = (In.Pos2D/clipFar);
+			PSOut.NormalsAndDepth.w = (In.Pos2D.x/clipFar);
 		#else
 			//CUSTOM CODE
 			PSOut.NormalsAndDepth.w = Custom_PS_Depth(In);
@@ -2245,13 +2497,25 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 			//CUSTOM CODE
 			PSOut.MaterialData.z = Custom_PS_Gloss(In, SKIN_GLOSS);
 		#endif
-		PSOut.MaterialData.w = 0; //environment map ID - not used yet
+		
+		#ifdef ALPHA
+			#ifdef TRANSPARENT
+				PSOut.MaterialData.w = SKIN_ALPHA; //alpha value //environment map ID - not used yet
+			#endif
+		#endif
 		
 		//Extend Pixelshader
 		#ifdef CUSTOM_PS_EXTEND
 			PSOut = Custom_PS_Extend(In, PSOut);
 		#endif
 		
+		
+		/*
+		//litpshere test
+		PSOut.NormalsAndDepth.xyz = normalize(PSOut.NormalsAndDepth.xyz)*0.5+0.5;
+		PSOut.NormalsAndDepth.y = 1-PSOut.NormalsAndDepth.y;
+		PSOut.AlbedoAndEmissiveMask.xyz = tex2D(litSphereSampler, PSOut.NormalsAndDepth.xy).rgb;
+		*/
 		
 		//Packing---------------------
 		//PSOut.normalsAndDepth.xy = PackNormals( mul((In.Normal.rgb) ,matView) ); //normals
@@ -2276,19 +2540,17 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 		}
 		#endif
 		
-		#ifndef TARGET_PS
-			#define TARGET_PS ps_2_a
-		#endif
 		#ifndef TARGET_VS
 			#define TARGET_VS vs_2_0
 		#endif
+		#ifndef TARGET_PS
+			#define TARGET_PS ps_2_a
+		#endif
+		
 		
 		pass p0
 		{
 			cullmode = ccw;
-			#ifndef ZPREPASS
-				zwriteenable = true;
-			#endif
 			alphablendenable = false;
 			VertexShader = compile TARGET_VS mainVS();
 			PixelShader = compile TARGET_PS mainPS();
@@ -2299,7 +2561,20 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 				zenable = true;
 				zwriteenable = false;
 		    	ZFunc = LESSEQUAL;
+		   #else
+		   	zwriteenable = true;
 			#endif
+			
+			/*
+			#ifdef TRANSPARENT
+				alphablendenable = true;
+				BlendOp = Add;
+				//SrcBlend = InvDestColor;
+				//DestBlend = One;
+				//SrcBlendAlpha = InvDestAlpha;//InvDestAlpha;
+				//DestBlendAlpha = One;
+			#endif
+			*/
 		}
 	}
 #endif
@@ -2336,9 +2611,9 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 	#define CLIPFAR
 		float clipFar;
 	#endif
-	#ifndef ALPHACLIP
-	#define ALPHACLIP
-		float alphaClip;
+	#ifndef FALPHA
+	#define FALPHA
+		float fAlpha;
 	#endif
 	
 	#ifdef ALPHA
@@ -2433,7 +2708,7 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 		#ifndef CUSTOM_PS_ALPHA
 			#ifdef ALPHA
 				//clip(tex2D(skin1Sampler,In.Tex).a-vecSkill1.y);
-				clip(tex2D(sc_skin1Sampler,In.Tex).a-alphaClip);
+				clip(tex2D(sc_skin1Sampler,In.Tex).a-(1-fAlpha));
 			#endif
 		#else
 			#ifdef ALPHA
@@ -2443,7 +2718,7 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 			#endif
 		#endif
 		
-		Out.Color = CalculateShadowDepth(In.Pos2D);
+		Out.Color = CalculateShadowDepth(In.Pos2D.x);
 		
 		#ifdef CUSTOM_PS_EXTEND
 			Out = Custom_PS_Extend(In, Out);
@@ -2456,7 +2731,7 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 	{
 		psOut Out = (psOut)0;
 		
-		Out.Color = CalculateShadowDepth(In.Pos2D);
+		Out.Color = CalculateShadowDepth(In.Pos2D.x);
 		
 		#ifdef CUSTOM_PS_EXTEND
 			Out = Custom_PS_Extend(In, Out);

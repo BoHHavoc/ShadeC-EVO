@@ -1,4 +1,4 @@
-void sc_deferredLighting_init(SC_SCREEN* screen, int rtScale) 
+void sc_deferredLighting_init(SC_SCREEN* screen, int rtScale, int bitdepth) 
 {
 	if(!screen) return 0;
 	
@@ -7,7 +7,7 @@ void sc_deferredLighting_init(SC_SCREEN* screen, int rtScale)
 	ptr_remove(screen.renderTargets.deferredLighting);
 	
 	//create rendertarget textures
-	screen.renderTargets.deferredLighting = bmap_createblack(screen.views.main.size_x/rtScale, screen.views.main.size_y/rtScale, 32);
+	screen.renderTargets.deferredLighting = bmap_createblack(screen.views.main.size_x/rtScale, screen.views.main.size_y/rtScale, bitdepth);
 	
 	//create brdf LUT
 	if(!sc_deferredLighting_texBRDFLUT) sc_deferredLighting_texBRDFLUT = sc_volumeTexture_create(sc_deferredLighting_sBRDFLUT);

@@ -69,7 +69,7 @@ void sc_ssao_generateNoiseTexture(SC_SCREEN* screen)
 	int i,j = 0;
 	for (i = 0; i < noise_size; ++i) {
 		for(j = 0; j < noise_size; ++j) {
-		VECTOR* noise = vector(random(2)-1, random(2)-1, 0); //create random noise
+		VECTOR* noise = vector(random(2)-1, random(2)-1, random(2)-1); //create random noise
 		vec_normalize(noise, 1); //normalize
 		vec_scale(noise, 255); //put to rgb range
 		
@@ -148,7 +148,7 @@ void sc_ssao_init(SC_SCREEN* screen)
 			break;
 		}
 		screen.materials.ssao.skin1 = screen.renderTargets.gBuffer[SC_GBUFFER_NORMALS_AND_DEPTH];
-		screen.materials.ssao.skin2 = screen.renderTargets.gBuffer[SC_GBUFFER_ALBEDO_AND_EMISSIVE_MASK];
+		screen.materials.ssao.skin2 = screen.renderTargets.gBuffer[SC_GBUFFER_ALBEDO_AND_EMISSIVE_MASK]; //needed for SSDO
 		screen.materials.ssao.skin3 = screen.renderTargets.deferredLighting;
 		screen.materials.ssao.skin4 = screen.ssaoNoise;//sc_ssao_texNoise;
 		screen.materials.ssao.event = sc_ssao_MaterialEvent;

@@ -44,6 +44,7 @@ void v_camera()
 
 void main()
 {
+	d3d_triplebuffer = 1; //don't let the gpu wait for data
 	level_load(NULL);
 	wait(3);
 	
@@ -76,6 +77,7 @@ void main()
 	sc_screen_default.settings.hdr.lensflare.enabled = 1; //enable for a nice lensflare effect in combination with HDR/Bloom
 	sc_screen_default.settings.dof.enabled = 0; //enable Depth of Field Effect
 	sc_screen_default.settings.ssao.enabled = 0; //enable to activate SSAO
+	sc_screen_default.settings.bitdepth = 32; //8 bit g-buffer & lighting (default). change to 12222 or 14444 for 16bit/32bit g-buffer and lighting buffer which results in nicer lighting at the cost of performance
 	
 	//initialize shade-c, use default screen object
 	sc_setup(sc_screen_default);

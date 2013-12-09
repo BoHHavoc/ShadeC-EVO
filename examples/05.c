@@ -1,6 +1,6 @@
 /***************************************************************************
 
-Basic Example on how to use write and use custom materials/shaders
+Basic Example on how to write and use custom materials/shaders
 
 ***************************************************************************/
 
@@ -115,7 +115,7 @@ void v_camera()
 }
 
 void main()
-{
+{	
 	shadow_stencil = -1; //turn off all engine intern shadow calculations. THIS IS IMPORTANT!
 	level_load("05.wmb");
 	wait(3); //wait for level load
@@ -132,6 +132,7 @@ void main()
 	you = ent_create(NULL, vector(-800,0, 200), v_camera);
 	you.tilt = -10;
 	camera.clip_far = 5000; //set this as low as possible to increase performance AND visuals!
+	camera.arc = 75;
 	
 	//set resolution before calling sc_setup
 	//if you want to change resolution again, simple call sc_setup() again after you changed the resolution
@@ -148,6 +149,7 @@ void main()
 	//If you want to change these during runtime, simply call sc_setup() again after you enabled/disabled an effect
 	// -> more info in sc_core.h, in struct SC_SETTINGS
 	sc_screen_default.settings.hdr.enabled = 1; //enable Bloom/HDR
+	sc_screen_default.settings.hdr.lensflare.enabled = 1; //enable for a nice lensflare effect in combination with HDR/Bloom
 		
 	//initialize shade-c, use default screen object
 	sc_setup(sc_screen_default);
@@ -158,6 +160,7 @@ void main()
 	sc_screen_default.settings.hdr.intensity = 2;
 	sc_screen_default.settings.hdr.lensflare.brightpass = 0.0;
 	sc_screen_default.settings.hdr.lensflare.intensity = 0.25;
+	sc_screen_default.settings.bitdepth = 32; //8 bit g-buffer & lighting (default). change to 12222 or 14444 for 16bit/32bit g-buffer and lighting buffer which results in nicer lighting at the cost of performance
 	
 	//Add objects and apply custom materials
 	//Texture Movement

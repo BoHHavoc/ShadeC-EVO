@@ -1,5 +1,5 @@
 float4x4 matProj;
-float4x4 matProjInv; //needed for viewspace position reconstruction
+//float4x4 matProjInv; //needed for viewspace position reconstruction
 #include <scUnpackNormals>
 #include <scUnpackDepth>
 #include <scCalculatePosVSQuad>

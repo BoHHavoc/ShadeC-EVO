@@ -1,5 +1,6 @@
 void sc_materials_init()
 {
+	//bmap_to_cubemap(sc_map_BFNormals);
 	//if(sc_materials_initialized != 0) return; //return if materials are already initialized
 	
 	sc_materials_mapData = bmap_createblack(256, 1, 32); //256 different datasets
@@ -14,16 +15,21 @@ void sc_materials_init()
 	var format = bmap_lock(sc_materials_mapData,0);
 	
 	matData = sc_material_loadDataFromXML("001");
-	materialdata = pixel_for_vec(vector( matData.diffuseWrap, matData.diffuseSmoothness, matData.lightFunction), 100, format); //blinn phong
-	pixel_to_bmap(sc_materials_mapData, matData.materialID, 0, materialdata);
+	materialdata = pixel_for_vec(vector( matData.diffuseWrap, matData.diffuseSmoothness, matData.lightFunction), 100, format); //blinn phong (default)
+	pixel_to_bmap(sc_materials_mapData, matData.materialID, 0, materialdata); //on material id 0 (default)
+	
 	materialdata = pixel_for_vec(vector(128,128,2),100,format); //Cook Torrance
-	pixel_to_bmap(sc_materials_mapData,2,0,materialdata);
+	pixel_to_bmap(sc_materials_mapData,1,0,materialdata); //on material id 1
+	
 	materialdata = pixel_for_vec(vector(128,128,4),100,format); //Oren Nayar
-	pixel_to_bmap(sc_materials_mapData,3,0,materialdata);
+	pixel_to_bmap(sc_materials_mapData,2,0,materialdata); //on material id 2
+	
+	materialdata = pixel_for_vec(vector(128,128,4),100,format); //Car Paint
+	pixel_to_bmap(sc_materials_mapData,3,0,materialdata); //on material id 3
 	
 	
 	materialdata = pixel_for_vec(vector(192,255,2),100,format); //Oren Nayar with high diffuse wrap and diffuse smoothness
-	pixel_to_bmap(sc_materials_mapData,51,0,materialdata);	//
+	pixel_to_bmap(sc_materials_mapData,51,0,materialdata);	//on material id 51
 
 	
 	
@@ -54,8 +60,8 @@ SC_MATERIAL_DATA* sc_material_loadDataFromXML(STRING* inFilename)
 	matData = sys_malloc(sizeof(SC_MATERIAL_DATA));
 	//memset(matData,0,sizeof(SC_MATERIAL_DATA));
 	
-	matData.materialID = 1;
-	matData.lightFunction = 0;
+	matData.materialID = 0;
+	matData.lightFunction = 2; //3d lut has 128 slices, so always multiply this value by 2 (eg. first slice is 2, second slice is 4, third slice is 6, etc.)
 	matData.diffuseWrap = 128;
 	matData.diffuseSmoothness = 128;
 	return matData;
@@ -65,6 +71,7 @@ var sc_materials_event()
 {
 	SC_SCREEN* screen = sc_screen_default;
 	if(screen == NULL) return(1);
+	if(screen.draw == 0) return(1);
 	//if(screen.renderTargets.gBuffer[SC_GBUFFER_NORMALS_AND_DEPTH] == NULL) return(1);
 	
 	
@@ -94,7 +101,7 @@ var sc_materials_event()
 					if(pEffect != NULL)
 					{
 						pEffect->SetFloat("clipFar", screen.views.main.clip_far);
-						pEffect->SetFloat("alphaClip", 1-(my.alpha/100));
+						//pEffect->SetFloat("alphaClip", 1-(my.alpha/100));
 						pEffect->SetFloat("materialID", ObjData.material.id); 
 						pEffect->SetVector("vecEmissive_SHADEC", ObjData.emissive);
 						pEffect->SetVector("vecColor_SHADEC", ObjData.color);
@@ -106,8 +113,8 @@ var sc_materials_event()
 					if(pEffect != NULL)
 					{
 						pEffect->SetFloat("clipFar", screen.views.main.clip_far);
-						pEffect->SetFloat("alphaClip", 1-(my.alpha/100));
-						pEffect->SetFloat("materialID", 0.003921); 
+						//pEffect->SetFloat("alphaClip", 1-(my.alpha/100));
+						pEffect->SetFloat("materialID", 0); 
 						pEffect->SetVector("vecEmissive_SHADEC", sc_vec4Null);
 						pEffect->SetVector("vecColor_SHADEC", sc_vec4Null);
 					}
@@ -119,8 +126,8 @@ var sc_materials_event()
 			if(pEffect != NULL)
 			{
 				pEffect->SetFloat("clipFar", screen.views.main.clip_far);
-				pEffect->SetFloat("alphaClip", 0.5);
-				pEffect->SetFloat("materialID", 0.003921);
+				//pEffect->SetFloat("alphaClip", 0.5);
+				pEffect->SetFloat("materialID", 0);
 				pEffect->SetVector("vecEmissive_SHADEC", sc_vec4Null);
 				pEffect->SetVector("vecColor_SHADEC", sc_vec4Null);
 			}
@@ -260,7 +267,7 @@ var sc_materials_event()
 						pEffect->SetVector("data3", ObjData.data.data3 );
 						
 						pEffect->SetFloat("clipFar", screen.views.main.clip_far);
-						pEffect->SetFloat("alphaClip", 1-(my.alpha/100));
+						//pEffect->SetFloat("alphaClip", 1-(my.alpha/100));
 						pEffect->SetFloat("materialID", ObjData.material.id); 
 						pEffect->SetVector("vecEmissive_SHADEC", ObjData.emissive);
 						pEffect->SetVector("vecColor_SHADEC", ObjData.color);
@@ -317,7 +324,7 @@ var sc_materials_event()
 						pEffect->SetVector("data3", ObjData.data.data3 );
 						
 						pEffect->SetFloat("clipFar", screen.views.main.clip_far);
-						pEffect->SetFloat("alphaClip", 1-(my.alpha/100));
+						//pEffect->SetFloat("alphaClip", 1-(my.alpha/100));
 						pEffect->SetFloat("materialID", ObjData.material.id); 
 						pEffect->SetVector("vecEmissive_SHADEC", ObjData.emissive);
 						pEffect->SetVector("vecColor_SHADEC", ObjData.color);

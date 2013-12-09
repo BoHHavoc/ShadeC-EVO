@@ -153,6 +153,9 @@ void sc_settings_setDefaults(SC_SETTINGS* settings)
 	
 	//Antialiasing
 	settings.antialiasing.enabled = 0;
+	
+	//bitdepth
+	settings.bitdepth = 32;
 }
 
 SC_SCREEN* sc_screen_create(VIEW* inView)
@@ -518,14 +521,14 @@ void sc_skill_(ENTITY* ent, int objMode, var objVar)
 	
 	//LIGHT
 	if(objMode == SC_OBJECT_LIGHT_DIR){
-		objVec = objVar;
+		objVec = (VECTOR*)objVar;
 		myData->light.dir.x = objVec.x;
 		myData->light.dir.y = objVec.y;
 		myData->light.dir.z = objVec.z;
 	}
 	
 	if(objMode == SC_OBJECT_LIGHT_COLOR){
-		objVec = objVar;
+		objVec = (VECTOR*)objVar;
 		myData->light.color.x = objVec.x/128;
 		myData->light.color.y = objVec.y/128;
 		myData->light.color.z = objVec.z/128;
@@ -544,17 +547,17 @@ void sc_skill_(ENTITY* ent, int objMode, var objVar)
 	}
 	
 	if(objMode == SC_OBJECT_LIGHT_PROJMAP){
-		objMap = objVar;
+		objMap = (BMAP*)objVar;
 		myData->light.projMap = objMap;
 	}
 	
 	if(objMode == SC_OBJECT_LIGHT_SHADOWMAP){
-		objMap = objVar;
+		objMap = (BMAP*)objVar;
 		myData->light.shadowMap = objMap;
 	}
 	
 	if(objMode == SC_OBJECT_LIGHT_VIEW){
-		objView = objVar;
+		objView = (VIEW*)objVar;
 		myData->light.view = objView;
 	}
 	

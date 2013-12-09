@@ -19,6 +19,9 @@ D3DXVECTOR4 sc_vec4Null;
 BMAP* sc_map_random2x2 = "sc_random2x2.tga";
 BMAP* sc_map_random4x4 = "sc_random4x4.tga";
 BMAP* sc_map_random = "sc_random.png";
+BMAP* sc_map_stipplingMask = "sc_stipplingMask.tga";
+BMAP* sc_map_BFNormals = "sc_BFNormals.dds";
+//BMAP* sc_map_BFNormals = "sc_BFNNormals+6.tga";
 
 //SC_OBJECT
 #define SC_OBJECT_LIGHT_POS 1
@@ -331,6 +334,7 @@ typedef struct{
 	SC_SETTINGS_SSAO ssao;
 	SC_SETTINGS_LIGHTS lights;
 	SC_SETTINGS_ANTIALIASING antialiasing;
+	int bitdepth;
 }SC_SETTINGS;
 //
 

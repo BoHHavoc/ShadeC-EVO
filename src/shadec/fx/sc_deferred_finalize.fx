@@ -77,21 +77,63 @@ float4 OffsetMapping (float NdotL, float NdotV, sampler2D tex)
    return texBrdf;
 }
 
+float4 vecViewPort;
+half4 DoTransparency(half2 inAlphaMask, half alpha, sampler2D inSampler, half2 inTex)
+{
+	half4 opague;
+	half4 translucent;
+	
+	half4 buffer[2];
+	buffer[0] = tex2D(inSampler, inTex);
+	buffer[1] = tex2D(inSampler, inTex+half2(vecViewPort.z, 0));
+	
+	opague = lerp(buffer[0], buffer[1], inAlphaMask.r);
+	translucent = lerp(buffer[0], buffer[1], inAlphaMask.g); //  1-inAlphaMask.r is also valid of course...
+	
+	return lerp(opague, translucent, alpha);
+}
+
 float4 mainPS(psIn In):COLOR
 {
-	half4 albedoAndEmissiveMask = tex2D(albedoAndEmissiveMaskSampler, In.Tex);
-	half4 diffuseAndSpecular = UnpackLighting(tex2D(diffuseAndSpecularSampler, In.Tex));
+	half4 albedoAndEmissiveMask;// = tex2D(albedoAndEmissiveMaskSampler, In.Tex);
+	half4 diffuseAndSpecular;// = UnpackLighting(tex2D(diffuseAndSpecularSampler, In.Tex));
 	half4 materialData = tex2D(materialDataSampler, In.Tex);
+	
+	
+	
+	//return half4(materialData.xyz, 1);
+	//Do Transparency
+	half2 alphaMask;
+	alphaMask.x = materialData.w;
+	alphaMask.y = tex2D(materialDataSampler, In.Tex+half2(vecViewPort.z,0)).w;
+	//alphaMask.z = tex2D(materialDataSampler, In.Tex+half2(0,vecViewPort.w)).w;
+	//alphaMask.w = tex2D(materialDataSampler, In.Tex+vecViewPort.zw).w;
+	half alpha = dot(alphaMask,1);//max(max(alphaMask.r, alphaMask.g),max(alphaMask.b, alphaMask.a));
+	alphaMask = clamp(alphaMask*256,0,1);
+	albedoAndEmissiveMask = DoTransparency(alphaMask, alpha, albedoAndEmissiveMaskSampler, In.Tex);
+	diffuseAndSpecular = UnpackLighting(DoTransparency(alphaMask, alpha, diffuseAndSpecularSampler, In.Tex));
+	materialData = DoTransparency(alphaMask, alpha, materialDataSampler, In.Tex);
+	//return diffuseAndSpecular.a;
 	//diffuseAndSpecular.w = diffuseAndSpecular.a/length(diffuseAndSpecular.xyz) * 2; //unpack specular
 	//diffuseAndSpecular.xyz *= 2; //rescale
 	//diffuseAndSpecular.w *= 2;
 	//get ssao
 	half4 ssao = tex2D(ssaoSampler, In.Tex);
-	diffuseAndSpecular.xyz *= ssao.w;
-	diffuseAndSpecular.xyz += ssao.xyz;
-	//diffuseAndSpecular.xyz = clamp(diffuseAndSpecular.xyz,0,1) * ssao.w;
+	//return half4(ssao.xyz,1);
+	//transparency has no ssao
+	ssao.w = clamp(ssao.w+alphaMask.r+alphaMask.g, 0,1);
+	//only needed for ssdo...
+	//ssao.xyz *= 1-(alphaMask.r+alphaMask.g);
 	
+	//return half4(ssao.xyz*pow(ssao.w,2),1);
+	//
+	diffuseAndSpecular.xyz *= ssao.w;
+	//only needed for ssdo...
+	//diffuseAndSpecular.xyz += ssao.xyz;
+	//return half4(diffuseAndSpecular.xyz, 1);
 	//albedoAndEmissiveMask.xyz = 1; //debug only
+
+	
 	
 	/*
 	//sky
@@ -107,7 +149,7 @@ float4 mainPS(psIn In):COLOR
 	
 	//gamme correction
 	//albedoAndEmissiveMask.xyz = pow(albedoAndEmissiveMask.xyz, 2.2);
-	
+	//return half4(diffuseAndSpecular.xyz*diffuseAndSpecular.w, 1);
 	//diffuseAndSpecular.xyz = (diffuseAndSpecular.xyz*(6.2*diffuseAndSpecular.xyz+0.5))/(diffuseAndSpecular.xyz*(6.2*diffuseAndSpecular.xyz+1.7)+0.06);
 	half4 output;// = 1;
 	//output.xyz = albedoAndEmissiveMask.xyz * diffuseAndSpecular.xyz + diffuseAndSpecular.w*diffuseAndSpecular.xyz*specularMask;
@@ -175,6 +217,10 @@ float4 mainPS(psIn In):COLOR
 	//output.xyz = gBuffer.w;
 	//output.xyz = NdotV;
 	*/
+	
+	//output.xyz = ssao.w;
+	//output.xyz = diffuseAndSpecular.xyz * albedoAndEmissiveMask.xyz;
+	
 	
 	//gamma correction
 	//output = float4( sqrt(output.xyz), output.w);

@@ -47,6 +47,7 @@ void v_camera()
 
 void main()
 {
+	d3d_triplebuffer = 1; //don't let the gpu wait for data
 	shadow_stencil = -1; //turn off all engine intern shadow calculations. THIS IS IMPORTANT!
 	level_load("02.wmb");
 	wait(5); //wait for level load

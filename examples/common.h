@@ -22,6 +22,7 @@ MATERIAL* mtl_car =
 	
 	power = 200;
 }
+
 MATERIAL* mtl_metal2 = //mtl_metal2 because mtl_metal is already taken by gamestudio!
 {
 	effect = "metal2.fx";
@@ -73,3 +74,18 @@ MATERIAL* mtl_terrain01 =
 	
 	event = sc_materials_event;
 }
+
+
+//DONT USE! Will be kicked out in a future release and be replaced with a PBR model for much better lighting!
+//this will set the lightfunction for an entity.
+//currently these lightfunctions are supported
+// 0 = blinn-phong with default smoothness and wrap (default)
+// 1 = Cook-torrance with default smoothness and wrap
+// 2 = Oren Nayar with default smoothness and wrap
+// 3 = Car Paint
+// 51 = Oren Nayar with high smoothness and high wrap
+//custom lightfunctions can also be added, which is needed for setting diffuse smoothness and diffuse wrap to non default values
+//action setLightfunction()
+//{
+//	sc_skill(me, SC_OBJECT_MATERIAL_ID , my.skill1);
+//}
