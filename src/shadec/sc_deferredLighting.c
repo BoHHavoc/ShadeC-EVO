@@ -3,14 +3,14 @@ void sc_deferredLighting_init(SC_SCREEN* screen, int rtScale, int bitdepth)
 	if(!screen) return 0;
 	
 	//remove rendertarget textures if there are any
-	if(screen.renderTargets.deferredLighting) bmap_purge(screen.renderTargets.deferredLighting);
-	ptr_remove(screen.renderTargets.deferredLighting);
+//	if(screen.renderTargets.deferredLighting) bmap_purge(screen.renderTargets.deferredLighting);
+//	ptr_remove(screen.renderTargets.deferredLighting);
 	
 	//create rendertarget textures
 	screen.renderTargets.deferredLighting = bmap_createblack(screen.views.main.size_x/rtScale, screen.views.main.size_y/rtScale, bitdepth);
 	
 	//create brdf LUT
-	if(!sc_deferredLighting_texBRDFLUT) sc_deferredLighting_texBRDFLUT = sc_volumeTexture_create(sc_deferredLighting_sBRDFLUT);
+	if(!sc_deferredLighting_texBRDFLUT) { sc_deferredLighting_texBRDFLUT = sc_volumeTexture_create(sc_deferredLighting_sBRDFLUT); }
 			
 	//setup views
 		screen.views.deferredLighting = view_create(-998);
@@ -23,9 +23,9 @@ void sc_deferredLighting_init(SC_SCREEN* screen, int rtScale, int bitdepth)
 		//set(screen.views.deferredLighting, PROCESS_SCREEN);
 		set(screen.views.deferredLighting, NOSKY);
 		set(screen.views.deferredLighting, CHILD);
-		#ifdef SC_USE_NOFLAG1
+//		#ifdef SC_USE_NOFLAG1
 			set(screen.views.deferredLighting, NOFLAG1);
-		#endif
+//		#endif
 		//screen.views.deferredLighting.material = screen.materials.deferredLighting;
 		screen.views.deferredLighting.bmap = screen.renderTargets.deferredLighting;
 		
@@ -56,8 +56,8 @@ void sc_deferredLighting_destroy(SC_SCREEN* screen)
 			
 			reset(screen.views.deferredLighting,NOSHADOW);
 			//purge render targets
-			bmap_purge(screen.views.deferredLighting.bmap);
-			screen.views.deferredLighting.bmap = NULL;
+//			bmap_purge(screen.views.deferredLighting.bmap);
+//			screen.views.deferredLighting.bmap = NULL;
 					
 			//remove deferredLighting from view chain
 			VIEW* view_last;
