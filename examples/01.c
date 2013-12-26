@@ -58,34 +58,28 @@ void main()
 	//if you want to change resolution again, simple call sc_setup() again after you changed the resolution
 	video_set(1280, 720, 0, 2);
 	
+	//set fog
+	fog_color=1;
+	d3d_fogcolor1.red=5;
+	d3d_fogcolor1.green=5;
+	d3d_fogcolor1.blue=10;
+	camera.fog_start=100;
+	camera.fog_end=1000;
+	
+	//set resolution before calling sc_setup
+	//if you want to change resolution again, simple call sc_setup() again after you changed the resolution
+	//video_set(1280, 720, 0, 2);
+	video_set(800, 600, 0, 2);
+	
 	//setup skies
 	sc_sky(skycube);
 	
-	//set camera sizes (this is only needed if you use "camera" as main view due to a bug in Acknex)
-	camera.size_x = screen_size.x;
-	camera.size_y = screen_size.y;
-	//set camera as main view of sc_screen_default
-	sc_screen_default = sc_screen_create(camera);
-	
-	
-	//enable/disable Shade-C effects. You have to set these before calling sc_setup()
-	//If you want to change these during runtime, simply call sc_setup() again after you enabled/disabled an effect
-	// -> more info in sc_core.h, in struct SC_SETTINGS
-	sc_screen_default.settings.forward.enabled = 1; //enable if you need particles or custom materials which can't be rendered in the deferred pipeline
-	sc_screen_default.settings.refract.enabled = 1; //enable for refractive effects such as heat haze and glass
-	sc_screen_default.settings.hdr.enabled = 1; //enable Bloom/HDR
-	sc_screen_default.settings.hdr.lensflare.enabled = 1; //enable for a nice lensflare effect in combination with HDR/Bloom
-	sc_screen_default.settings.dof.enabled = 0; //enable Depth of Field Effect
-	sc_screen_default.settings.ssao.enabled = 0; //enable to activate SSAO
-	sc_screen_default.settings.bitdepth = 32; //8 bit g-buffer & lighting (default). change to 12222 or 14444 for 16bit/32bit g-buffer and lighting buffer which results in nicer lighting at the cost of performance
-	
-	//initialize shade-c, use default screen object
-	sc_setup(sc_screen_default);
-	
-	//tweak effect parameters anytime you want
-	// -> more info in sc_core.h, in struct SC_SETTINGS
-	sc_screen_default.settings.hdr.lensflare.brightpass = 0.4;
-	sc_screen_default.settings.hdr.lensflare.intensity = 0.8;
+	//create shade-c stuff - open sc_wrapper.c to edit settings in function "sc_get_settings"
+	//SHADEC_LOW
+	//SHADEC_MEDIUM
+	//SHADEC_HIGH
+	//SHADEC_ULTRA
+	sc_create(SHADEC_ULTRA);
 	
 	while(1) {
 		sc_screen_default.settings.hdr.intensity += time_step*0.01;

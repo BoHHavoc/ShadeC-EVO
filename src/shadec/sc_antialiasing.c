@@ -134,9 +134,9 @@ void sc_antialiasing_destroy(SC_SCREEN* screen)
 			if(screen.views.antialiasing.stage) view_last.stage = screen.views.antialiasing.stage;
 			else view_last.stage = NULL;
 			
-			if(screen.views.antialiasingBlendWeights.material != NULL) ptr_remove(screen.views.antialiasingBlendWeights.material);
-			if(screen.views.antialiasingEdgeDetect.material != NULL) ptr_remove(screen.views.antialiasingEdgeDetect.material);
-			if(screen.views.antialiasing.material != NULL) ptr_remove(screen.views.antialiasing.material);
+//			if(screen.views.antialiasingBlendWeights.material != NULL) ptr_remove(screen.views.antialiasingBlendWeights.material);
+//			if(screen.views.antialiasingEdgeDetect.material != NULL) ptr_remove(screen.views.antialiasingEdgeDetect.material);
+//			if(screen.views.antialiasing.material != NULL) ptr_remove(screen.views.antialiasing.material);
 			
 			
 			//if(screen.sc_dof_view.bmap) view_last.bmap = screen.sc_dof_mapOrgScene;

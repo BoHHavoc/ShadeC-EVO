@@ -14,12 +14,7 @@
 #ifndef SHADEC
 	#define SHADEC
 	
-	#define PRAGMA_PATH "shadec\\fx"
-	#define PRAGMA_PATH "shadec\\fx\\obj"
-	#define PRAGMA_PATH "shadec\\fx\\pp"
-	#define PRAGMA_PATH "shadec\\tex"
-	#define PRAGMA_PATH "shadec\\mdl"
-	#define PRAGMA_PATH "shadec\\plugins\\LiteXML"
+	#define PRAGMA_PATH "%EXE_DIR%\\shadeC_files"; 
 	
 	//include plugins
 	//#include "LiteXML.h";
@@ -39,6 +34,7 @@
 	#include "sc_refract.h"
 	#include "sc_hdr.h"
 	#include "sc_dof.h"
+//	#include "sc_fog.h"
 	#include "sc_gammaCorrection.h"
 	#include "sc_entity.h"
 	#include "sc_effects.h"
@@ -60,6 +56,7 @@
 	#include "sc_refract.c"
 	#include "sc_hdr.c"
 	#include "sc_dof.c"
+//	#include "sc_fog.c"
 	#include "sc_gammaCorrection.c"
 	#include "sc_entity.c"
 	#include "sc_effects.c"
