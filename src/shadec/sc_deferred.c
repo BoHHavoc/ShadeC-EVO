@@ -9,6 +9,8 @@ void sc_deferred_init(SC_SCREEN* screen)
 	screen.materials.deferred.skin4 = screen.renderTargets.ssao;
 	//screen.materials.deferred.skin4 = screen.renderTargets.gBuffer[SC_GBUFFER_NORMALS_AND_DEPTH];
 	
+	sc_materials_fogMap=screen.renderTargets.fogMap;
+	
 	//setup views
 	screen.views.deferred = view_create(-997);
 	set(screen.views.deferred, PROCESS_TARGET);
@@ -18,6 +20,7 @@ void sc_deferred_init(SC_SCREEN* screen)
 	set(screen.views.deferred, NOPARTICLE);
 	set(screen.views.deferred, CHILD);
 	set(screen.views.deferred, NOSKY);
+	set(screen.views.deferred, NOFLAG1);
 	screen.views.deferred.size_x = screen.views.main.size_x;
 	screen.views.deferred.size_y = screen.views.main.size_y;
 	screen.views.deferred.material = screen.materials.deferred;
@@ -43,8 +46,8 @@ void sc_deferred_destroy(SC_SCREEN* screen)
 			
 			reset(screen.views.deferred,NOSHADOW);
 			//purge render targets
-			if(screen.views.deferred.bmap) bmap_purge(screen.views.deferred.bmap);
-			screen.views.deferred.bmap = NULL;
+//			if(screen.views.deferred.bmap) bmap_purge(screen.views.deferred.bmap);
+//			screen.views.deferred.bmap = NULL;
 		
 			//remove dof from view chain
 			VIEW* view_last;

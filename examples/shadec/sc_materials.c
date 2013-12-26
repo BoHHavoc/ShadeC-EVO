@@ -32,7 +32,7 @@ void sc_materials_init()
 	pixel_to_bmap(sc_materials_mapData,51,0,materialdata);	//on material id 51
 
 	
-	
+	sys_free(matData);
 	
 	
 	bmap_unlock(sc_materials_mapData);

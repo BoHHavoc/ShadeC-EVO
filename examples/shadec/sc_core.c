@@ -63,7 +63,7 @@ VIEW* sc_ppAdd(MATERIAL* Material,VIEW* View,BMAP* bmap)
 	sc_view_last.stage = view_create(0);
 	set(sc_view_last.stage,PROCESS_TARGET);
 	set(sc_view_last.stage,CHILD);
-		
+	
 	//assign "Material" to the just created view
 	sc_view_last = sc_view_last.stage;
 	sc_view_last.material = Material;
@@ -168,10 +168,10 @@ SC_SCREEN* sc_screen_create(VIEW* inView)
 	//memset(screen.views, 0, sizeof(SC_SCREEN_VIEWS));
 	
 	
-	if(inView.size_x == 0 || inView.size_y == 0){
-		inView.size_x = screen_size.x;
-		inView.size_y = screen_size.y;
-	}
+	//	if(inView.size_x == 0 || inView.size_y == 0){
+		//		inView.size_x = screen_size.x;
+		//		inView.size_y = screen_size.y;
+	//	}
 	
 	screen.views.main = inView;
 	
@@ -189,15 +189,15 @@ SC_SCREEN* sc_screen_create(VIEW* inView)
 void sc_setupScreenquad(SC_SCREEN* screen)
 {
 	screen.vertexScreenquad[0].x = screen.views.main.size_x - 0.5; screen.vertexScreenquad[0].y = 0.0 - 0.5;// screen.vertexScreenquad[0].color = 0xFFFFFFFF;
-   screen.vertexScreenquad[0].u = 1; screen.vertexScreenquad[0].v = 0;
-   screen.vertexScreenquad[1].x = 0.0 - 0.5; screen.vertexScreenquad[1].y = 0.0 - 0.5;// screen.vertexScreenquad[1].color = 0xFFFFFFFF;
-   screen.vertexScreenquad[1].u = 0.0; screen.vertexScreenquad[1].v = 0;
-   screen.vertexScreenquad[2].x = screen.views.main.size_x - 0.5; screen.vertexScreenquad[2].y = screen.views.main.size_y - 0.5;// screen.vertexScreenquad[2].color = 0xFFFFFFFF;
-   screen.vertexScreenquad[2].u = 1.0; screen.vertexScreenquad[2].v = 1.0;
-   screen.vertexScreenquad[3].x = 0.0 - 0.5; screen.vertexScreenquad[3].y = screen.views.main.size_y - 0.5;// screen.vertexScreenquad[3].color = 0xFFFFFFFF;
-   screen.vertexScreenquad[3].u = 0; screen.vertexScreenquad[3].v = 1.0;
-   screen.vertexScreenquad[0].z = screen.vertexScreenquad[1].z = screen.vertexScreenquad[2].z = screen.vertexScreenquad[3].z = 0.0; // z buffer - paint over everything
-   screen.vertexScreenquad[0].rhw = screen.vertexScreenquad[1].rhw = screen.vertexScreenquad[2].rhw = screen.vertexScreenquad[3].rhw = 1.0; // no perspective
+	screen.vertexScreenquad[0].u = 1; screen.vertexScreenquad[0].v = 0;
+	screen.vertexScreenquad[1].x = 0.0 - 0.5; screen.vertexScreenquad[1].y = 0.0 - 0.5;// screen.vertexScreenquad[1].color = 0xFFFFFFFF;
+	screen.vertexScreenquad[1].u = 0.0; screen.vertexScreenquad[1].v = 0;
+	screen.vertexScreenquad[2].x = screen.views.main.size_x - 0.5; screen.vertexScreenquad[2].y = screen.views.main.size_y - 0.5;// screen.vertexScreenquad[2].color = 0xFFFFFFFF;
+	screen.vertexScreenquad[2].u = 1.0; screen.vertexScreenquad[2].v = 1.0;
+	screen.vertexScreenquad[3].x = 0.0 - 0.5; screen.vertexScreenquad[3].y = screen.views.main.size_y - 0.5;// screen.vertexScreenquad[3].color = 0xFFFFFFFF;
+	screen.vertexScreenquad[3].u = 0; screen.vertexScreenquad[3].v = 1.0;
+	screen.vertexScreenquad[0].z = screen.vertexScreenquad[1].z = screen.vertexScreenquad[2].z = screen.vertexScreenquad[3].z = 0.0; // z buffer - paint over everything
+	screen.vertexScreenquad[0].rhw = screen.vertexScreenquad[1].rhw = screen.vertexScreenquad[2].rhw = screen.vertexScreenquad[3].rhw = 1.0; // no perspective
 }
 
 
@@ -215,7 +215,7 @@ void sc_getFrustumPoints(SC_SCREEN* screen)
 	D3DXVECTOR3 farTopRight = farCenter + (mUp * Hfar/2) + (mRight * Wfar/2);
 	D3DXVECTOR3 farDownLeft = farCenter – (mUp * Hfar/2) – (mRight * Wfar/2);
 	D3DXVECTOR3 farDownRight = farCenter – (mUp * Hfar/2) + (mRight * Wfar/2);
-*/
+	*/
 	
 	
 	/*
@@ -343,11 +343,11 @@ void sc_getFrustumPoints(SC_SCREEN* screen)
 	ftr.x = tr_.x;
 	ftr.y = tr_.y;
 	ftr.z = tr_.z;
-		
+	
 	ftl.x = tl_.x;
 	ftl.y = tl_.y;
 	ftl.z = tl_.z;
-		
+	
 	fbl.x = bl_.x;
 	fbl.y = bl_.y;
 	fbl.z = bl_.z;
@@ -408,20 +408,20 @@ void sc_getFrustumPoints(SC_SCREEN* screen)
 	D3DXVec3Transform(tr_, tr_, _matView);
 	D3DXVec3Transform(tl_, tl_, _matView);
 	D3DXVec3Transform(bl_, bl_, _matView);
-			
-			
-			
+	
+	
+	
 	//tr.x = -screen.main.clip_far;
 	//tr.y = 0;
 	//tr.z = 0;
 	tr.x = tr_.x;
 	tr.y = tr_.y;
 	tr.z = tr_.z;
-		
+	
 	tl.x = tl_.x;
 	tl.y = tl_.y;
 	tl.z = tl_.z;
-		
+	
 	bl.x = bl_.x;
 	bl.y = bl_.y;
 	bl.z = bl_.z;
@@ -471,12 +471,12 @@ void sc_skill_(ENTITY* ent, int objMode, var objVar)
 			myData->light.dir.x = 0;
 			myData->light.dir.y = 0;
 			myData->light.dir.z = 0;
-   		myData->light.color.x = 2;
-   		myData->light.color.y = 2;
-   		myData->light.color.z = 2;
-   		myData->light.range = 0;
-   		myData->light.clipRange = sc_lights_defaultClipRange;
-   		myData->light.arc = 0;
+			myData->light.color.x = 2;
+			myData->light.color.y = 2;
+			myData->light.color.z = 2;
+			myData->light.range = 0;
+			myData->light.clipRange = sc_lights_defaultClipRange;
+			myData->light.arc = 0;
 			myData->light.projMap = NULL;
 			myData->light.shadowMap = NULL;
 			myData->light.view = NULL;
@@ -484,11 +484,11 @@ void sc_skill_(ENTITY* ent, int objMode, var objVar)
 			myData->light.matrix = NULL;
 			myData->light.stencilRef = 0;
 			//myData->light.lightModelMap = (var)sc_volumeTexture_create("sc_deferredLighting_equations.dds");
-				
+			
 			//material
 			myData->material.id = (float)1/(float)255;
 			myData->material.shadowmap = NULL;
-				
+			
 			//data
 			myData->data->data1.x = 1;
 			myData->data->data1.y = 1;
@@ -629,7 +629,7 @@ void sc_skill_(ENTITY* ent, int objMode, var objVar)
 	
 	//GENERAL
 	//if(objMode == SC_OBJECT_SHADOWBIAS){
-	//	myData->shadowBias = objVar*0.0001;
+		//	myData->shadowBias = objVar*0.0001;
 	//}
 	
 	if(objMode == SC_OBJECT_DEPTH){
@@ -703,12 +703,12 @@ void sc_material(ENTITY* ent,int objMode, MATERIAL* mat)
 			myData->light.dir.x = 0;
 			myData->light.dir.y = 0;
 			myData->light.dir.z = 0;
-   		myData->light.color.x = 2;
-   		myData->light.color.y = 2;
-   		myData->light.color.z = 2;
-   		myData->light.range = 0;
-   		myData->light.clipRange = sc_lights_defaultClipRange;
-   		myData->light.arc = 0;
+			myData->light.color.x = 2;
+			myData->light.color.y = 2;
+			myData->light.color.z = 2;
+			myData->light.range = 0;
+			myData->light.clipRange = sc_lights_defaultClipRange;
+			myData->light.arc = 0;
 			myData->light.projMap = NULL;
 			myData->light.shadowMap = NULL;
 			myData->light.view = NULL;
@@ -716,11 +716,11 @@ void sc_material(ENTITY* ent,int objMode, MATERIAL* mat)
 			myData->light.matrix = NULL;
 			myData->light.stencilRef = 0;
 			//myData->light.lightModelMap = (var)sc_volumeTexture_create("sc_deferredLighting_equations.dds");
-				
+			
 			//material
 			myData->material.id = (float)1/(float)255;
 			myData->material.shadowmap = NULL;
-				
+			
 			//data
 			myData->data->data1.x = 1;
 			myData->data->data1.y = 1;
@@ -752,53 +752,104 @@ void sc_material(ENTITY* ent,int objMode, MATERIAL* mat)
 	}
 	
 	
-//	if(objMode == SC_MATREFRACT)
-//	{
-//		ent.material = sc_refract_mtl;
-//		myData->myMatRefract = mat;
-//	}
-//	if(objMode == SC_MATSHADOW)
-//	{
-//		myData->myMatShadow = mat;
-//	}
-//	
-//	if(objMode == SC_MATERIAL_GBUFFER)
-//	{
-//		myData->materials.gBuffer = mat;
-//	}
-//	if(objMode == SC_MATERIAL_LIGHT)
-//	{
-//		//ent.material = sc_lights_material;
-//		//myData->light.material = mat;
-//		
-//		ent->material = mat;
-//		//ent->material->flags = ENABLE_RENDER;
-//		//ent->material->event = sc_materials_event;
-//	}
-//	
-//	
-//	if(objMode == SC_MATERIAL_LIGHT_SHADOWMAP)
-//	{
-//		myData->light.mtlShadowmap = mat;
-//	}
-//	
-//	
-//	if(objMode == SC_MATPARTICLE)
-//	{
-//		myData->myMatParticle = mat;
-//	}
+	//	if(objMode == SC_MATREFRACT)
+	//	{
+		//		ent.material = sc_refract_mtl;
+		//		myData->myMatRefract = mat;
+	//	}
+	//	if(objMode == SC_MATSHADOW)
+	//	{
+		//		myData->myMatShadow = mat;
+	//	}
+	//	
+	//	if(objMode == SC_MATERIAL_GBUFFER)
+	//	{
+		//		myData->materials.gBuffer = mat;
+	//	}
+	//	if(objMode == SC_MATERIAL_LIGHT)
+	//	{
+		//		//ent.material = sc_lights_material;
+		//		//myData->light.material = mat;
+		//		
+		//		ent->material = mat;
+		//		//ent->material->flags = ENABLE_RENDER;
+		//		//ent->material->event = sc_materials_event;
+	//	}
+	//	
+	//	
+	//	if(objMode == SC_MATERIAL_LIGHT_SHADOWMAP)
+	//	{
+		//		myData->light.mtlShadowmap = mat;
+	//	}
+	//	
+	//	
+	//	if(objMode == SC_MATPARTICLE)
+	//	{
+		//		myData->myMatParticle = mat;
+	//	}
 	
 	
 	ent->SC_SKILL = myData;
 }
 */
 
-
-void sc_sky(ENTITY* ent)
+void sc_sky_set(SC_SCREEN* screen)
 {
+	if(screen.views.atmosphericScatteringSky==NULL){return;}
+	vec_set(screen.views.atmosphericScatteringSky.x,screen.views.main.x);
+	vec_set(screen.views.atmosphericScatteringSky.pan,screen.views.main.pan);	
+}
+
+void sc_sky_remove(SC_SCREEN* screen)
+{
+	if(screen==NULL){ return; }
+	
+	if(screen.views.atmosphericScatteringSky!=NULL)
+	{
+		if(screen.views.atmosphericScatteringSky.bmap!=NULL)
+		{
+			bmap_purge(screen.views.atmosphericScatteringSky.bmap);
+			ptr_remove(screen.views.atmosphericScatteringSky.bmap);
+			screen.views.atmosphericScatteringSky.bmap=NULL;	
+		}
+		ptr_remove(screen.views.atmosphericScatteringSky);
+		screen.views.atmosphericScatteringSky=NULL;
+		sc_material_sky2.skin1=NULL;
+	}	
+}
+
+void sc_sky(ENTITY* sky_)
+{
+	sky_.material=sc_material_sky;
+}
+
+void sc_sky(SC_SCREEN* screen,ENTITY* sky_,ENTITY* sky_sphere_)
+{
+	if(screen==NULL){ return; }
+	
 	//sc_skill(ent,SC_MYREFRACT,3);
 	//sc_skill(ent,SC_MYDEPTH,1);
 	//sc_skill(ent, SC_OBJECT_PASS, SC_PASS_FORWARD);
 	//sc_skill(ent, SC_OBJECT_DEPTH, 1);
-	ent.material = sc_material_sky;
+	
+	sc_sky_remove(screen);
+	
+	if(sky_sphere_!=NULL) //if atmopheric scattering sky is used
+	{
+		screen.views.atmosphericScatteringSky=view_create(-999999);
+		screen.views.atmosphericScatteringSky.size_x=screen.views.main.size_x;
+		screen.views.atmosphericScatteringSky.size_y=screen.views.main.size_y;
+		set(screen.views.atmosphericScatteringSky,NOENT|SHOW|UNTOUCHABLE|NOPARTICLE|NOWORLD|NOFOG|NOSKY);
+		screen.views.atmosphericScatteringSky.genius=sky_sphere_;
+		screen.views.atmosphericScatteringSky.bmap=bmap_createblack(screen.views.main.size_x,screen.views.main.size_y,24);
+		
+		sky_.material = sc_material_sky2;
+		sc_material_sky2.skin1=screen.views.atmosphericScatteringSky.bmap;
+		
+		set(screen.views.main,NOFLAG1);
+	}
+	else //if 3DGS sky cube is used
+	{
+		sky_.material = sc_material_sky;
+	}
 }

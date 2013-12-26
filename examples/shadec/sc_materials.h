@@ -4,6 +4,8 @@ var sc_material_loadDataFromXML(STRING* inFilename);
 
 int sc_materials_initialized = 0; //will be set to 1 once all materials are ready
 BMAP* sc_materials_mapData;// = "#2x1x32";  //contains material data (brdf lookup index, diffuse roughness & wrap, etc)
+BMAP* sc_materials_zbuffer=NULL;
+BMAP* sc_materials_fogMap=NULL;
 
 //struct that holds material data when reading from/writing to XML 
 typedef struct SC_MATERIAL_DATA{
@@ -13,9 +15,18 @@ typedef struct SC_MATERIAL_DATA{
 	int diffuseSmoothness; //diffuse lighting smoothness
 } SC_MATERIAL_DATA;
 
+//sky cube
 MATERIAL* sc_material_sky =
 {
 	effect = "sc_gBuffer_sky.fx";
+	flags = ENABLE_RENDER;
+	event = sc_materials_event;
+}
+
+//atmospheric scattering sky
+MATERIAL* sc_material_sky2 =
+{
+	effect = "sc_gBuffer_sky2.fx";
 	flags = ENABLE_RENDER;
 	event = sc_materials_event;
 }

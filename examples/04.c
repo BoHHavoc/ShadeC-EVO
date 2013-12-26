@@ -64,7 +64,20 @@ void main()
 	you.pan = 123;
 	you.tilt = -18;
 	camera.arc = 75;
-	camera.clip_far = 5000; //set this as low as possible to increase performance AND visuals!
+	camera.clip_far = 50000; //set this as low as possible to increase performance AND visuals!
+	
+	//set resolution before calling sc_setup
+	//if you want to change resolution again, simple call sc_setup() again after you changed the resolution
+	//video_set(1280, 720, 0, 2);
+	video_set(800, 600, 0, 2);
+	
+	//set fog
+	fog_color=1;
+	d3d_fogcolor1.red=160;
+	d3d_fogcolor1.green=200;
+	d3d_fogcolor1.blue=220;
+	camera.fog_start=500;
+	camera.fog_end=1500;
 	
 	//set resolution before calling sc_setup
 	//if you want to change resolution again, simple call sc_setup() again after you changed the resolution
@@ -74,15 +87,10 @@ void main()
 	//setup skies
 	sc_sky(skycube);
 	
-	//set camera as main view of sc_screen_default
-	sc_screen_default = sc_screen_create(camera);
-	
-	//enable/disable Shade-C effects. You have to set these before calling sc_setup()
-	//If you want to change these during runtime, simply call sc_setup() again after you enabled/disabled an effect
-	// -> more info in sc_core.h, in struct SC_SETTINGS
-	sc_screen_default.settings.antialiasing.enabled = 1; //enable antialiasing
-	
-	
-	//initialize shade-c, use default screen object
-	sc_setup(sc_screen_default);
+	//create shade-c stuff - open sc_wrapper.c to edit settings in function "sc_get_settings"
+	//SHADEC_LOW
+	//SHADEC_MEDIUM
+	//SHADEC_HIGH
+	//SHADEC_ULTRA
+	sc_create(SHADEC_ULTRA);
 }
