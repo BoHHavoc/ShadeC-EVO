@@ -20,11 +20,11 @@ void sc_light_updateSpotMtx(ENTITY* inLight)
 	
 	
 	float fTexAdj[16] =
-	{ 0.5, 0.0, 0.0, 0.0,
-		0.0,-0.5,	0.0, 0.0,
-		0.0, 0.0, 1.0, 0.0,
-	0.0, 0.0, 0.0, 1.0 };
-	
+		{ 0.5, 0.0, 0.0, 0.0,
+		  0.0,-0.5,	0.0, 0.0,
+		  0.0, 0.0, 1.0, 0.0,
+		  0.0, 0.0, 0.0, 1.0 };
+		  
 	fTexAdj[12] = 0.5 + ((float)0.5/(float)256);
 	fTexAdj[13] = 0.5 + ((float)0.5/(float)256);
 	
@@ -85,7 +85,7 @@ void sc_light_updateSpotMtx(ENTITY* inLight)
 	//create lightProjectionMatrix
 	D3DXMATRIX mtxLightProj;
 	D3DXMatrixPerspectiveFovLH(&mtxLightProj, 	(((float)ObjData.light.arc/(float)180))*SC_PI, (float)1, (float)1, (float)ObjData.light.range );
-	
+		
 	
 	//pass projection matrix to light	
 	D3DXMATRIX mtxLightWorldViewProj;
@@ -184,80 +184,80 @@ void sc_light_checkSpotFrustum()
 	{
 		
 		#ifdef SC_USEPVS
-			//check if light has been clipped by engine or main view is far away from light
-			if( (inLight.eflags&CLIPPED) || abs(vec_dist(playerView.x, inLight.x)) > ObjData.light.clipRange + ObjData.light.range )
+		//check if light has been clipped by engine or main view is far away from light
+		if( (inLight.eflags&CLIPPED) || abs(vec_dist(playerView.x, inLight.x)) > ObjData.light.clipRange + ObjData.light.range )
+		{
+			reset(ObjData.light.view, SHOW);
+			//ObjData.myLightMtl = sc_lpp_mtlS;
+		}
+		else
+		{
+			set(ObjData.light.view,SHOW);
+			/*
+			//lightview intersects with camera? OBB-OBB check
+			if( sc_physics_intersectViewView(playerView, ObjData.light.view) )
 			{
-				reset(ObjData.light.view, SHOW);
-				//ObjData.myLightMtl = sc_lpp_mtlS;
+				set(ObjData.light.view, SHOW);
+				
+				
+//				//lightview intersects with camera? cone-sphere check
+//				if( sc_physics_intersectViewSphere(screen.views.main, inLight.x, ObjData.light.range) )
+//				{
+//					//sc_light_setColor(inLight, vector(255, 0,0) );
+//					reset(ObjData.light.view, SHOW);
+//				}
+//				else
+//				{
+//					//sc_light_setColor(inLight, vector(0, 255,0) );
+//					set(ObjData.light.view, SHOW);
+//				}
+				
+				
+				
 			}
 			else
 			{
-				set(ObjData.light.view,SHOW);
+				//sc_light_setColor(inLight, vector(255, 0,0) );
+				reset(ObjData.light.view, SHOW);
+			}
+			*/
+		}
+		
+		#else
+		
+		//check if light has been clipped by engine or playerView is far away from light
+		if( (inLight.eflags&CLIPPED) || abs(vec_dist(playerView.x, inLight.x)) > ObjData.light.clipRange + ObjData.light.range )
+		{
+			reset(ObjData.light.view, SHOW);
+		}
+		else
+		{
+			//lightview intersects with camera? OBB-OBB check | or main view is far away from light
+			if( sc_physics_intersectViewView(playerView, ObjData.light.view) && vec_dist(playerView.x, inLight.x) < ObjData.light.clipRange + ObjData.light.range )
+			{
+				set(ObjData.light.view, SHOW);
+				
 				/*
-				//lightview intersects with camera? OBB-OBB check
-				if( sc_physics_intersectViewView(playerView, ObjData.light.view) )
-				{
-					set(ObjData.light.view, SHOW);
-					
-					
-					//				//lightview intersects with camera? cone-sphere check
-					//				if( sc_physics_intersectViewSphere(screen.views.main, inLight.x, ObjData.light.range) )
-					//				{
-						//					//sc_light_setColor(inLight, vector(255, 0,0) );
-						//					reset(ObjData.light.view, SHOW);
-					//				}
-					//				else
-					//				{
-						//					//sc_light_setColor(inLight, vector(0, 255,0) );
-						//					set(ObjData.light.view, SHOW);
-					//				}
-					
-					
-					
-				}
-				else
+				//lightview intersects with camera? cone-sphere check
+				if( sc_physics_intersectViewSphere(screen.views.main, inLight.x, ObjData.light.range) )
 				{
 					//sc_light_setColor(inLight, vector(255, 0,0) );
 					reset(ObjData.light.view, SHOW);
+				}
+				else
+				{
+					//sc_light_setColor(inLight, vector(0, 255,0) );
+					set(ObjData.light.view, SHOW);
 				}
 				*/
-			}
-			
-			#else
-			
-			//check if light has been clipped by engine or playerView is far away from light
-			if( (inLight.eflags&CLIPPED) || abs(vec_dist(playerView.x, inLight.x)) > ObjData.light.clipRange + ObjData.light.range )
-			{
-				reset(ObjData.light.view, SHOW);
+				
 			}
 			else
 			{
-				//lightview intersects with camera? OBB-OBB check | or main view is far away from light
-				if( sc_physics_intersectViewView(playerView, ObjData.light.view) && vec_dist(playerView.x, inLight.x) < ObjData.light.clipRange + ObjData.light.range )
-				{
-					set(ObjData.light.view, SHOW);
-					
-					/*
-					//lightview intersects with camera? cone-sphere check
-					if( sc_physics_intersectViewSphere(screen.views.main, inLight.x, ObjData.light.range) )
-					{
-						//sc_light_setColor(inLight, vector(255, 0,0) );
-						reset(ObjData.light.view, SHOW);
-					}
-					else
-					{
-						//sc_light_setColor(inLight, vector(0, 255,0) );
-						set(ObjData.light.view, SHOW);
-					}
-					*/
-					
-				}
-				else
-				{
-					//sc_light_setColor(inLight, vector(255, 0,0) );
-					reset(ObjData.light.view, SHOW);
-				}
+				//sc_light_setColor(inLight, vector(255, 0,0) );
+				reset(ObjData.light.view, SHOW);
 			}
+		}
 		#endif
 		
 		wait(10);
@@ -272,7 +272,7 @@ ENTITY* sc_light_createFunc(int inType, var inRange, VECTOR* inColor, VECTOR* in
 	//vec_set(inDir, vector(inDir.y, inDir.x, inDir.z));
 	//correct inSpot
 	//if(inSpot.y > inSpot.x) inSpot.y = inSpot.x - 1;
-	
+		
 	//create light model
 	//pointlight
 	//if(inType == SC_LIGHT_P || inType == SC_LIGHT_PS || inType == SC_LIGHT_PSC || inType == SC_LIGHT_PSCA || inType == SC_LIGHT_PC || inType == SC_LIGHT_PCA)
@@ -281,10 +281,10 @@ ENTITY* sc_light_createFunc(int inType, var inRange, VECTOR* inColor, VECTOR* in
 	//if(inType == SC_LIGHT_S || inType == SC_LIGHT_SS)
 	
 	if(inType == SC_LIGHT_S_SPEC_SHADOW
-	|| inType == SC_LIGHT_S_SHADOW)
-	ent = ent_createlocal(sc_lights_mdlPointLight, inPos, sc_light_checkSpotFrustum);
+			|| inType == SC_LIGHT_S_SHADOW)
+		ent = ent_createlocal(sc_lights_mdlPointLight, inPos, sc_light_checkSpotFrustum);
 	else
-	ent = ent_createlocal(sc_lights_mdlPointLight, inPos, NULL); //local light
+		ent = ent_createlocal(sc_lights_mdlPointLight, inPos, NULL); //local light
 	
 	set(ent, PASSABLE);
 	ent.flags2 |= UNTOUCHABLE;
@@ -329,8 +329,8 @@ ENTITY* sc_light_createFunc(int inType, var inRange, VECTOR* inColor, VECTOR* in
 	
 	//update pointlight projection matrix
 	if(
-	inType == SC_LIGHT_P_SPEC_PROJ ||
-	inType == SC_LIGHT_P_PROJ
+		inType == SC_LIGHT_P_SPEC_PROJ ||
+		inType == SC_LIGHT_P_PROJ
 	)
 	{
 		sc_light_updatePointMtx(ent);
@@ -339,11 +339,11 @@ ENTITY* sc_light_createFunc(int inType, var inRange, VECTOR* inColor, VECTOR* in
 	
 	//set spotlight dir and cone values
 	if(
-	inType == SC_LIGHT_S ||
-	inType == SC_LIGHT_S_SPEC ||
-	inType == SC_LIGHT_S_SPEC_SHADOW ||
-	inType == SC_LIGHT_S_SHADOW
-	)
+		inType == SC_LIGHT_S ||
+		inType == SC_LIGHT_S_SPEC ||
+		inType == SC_LIGHT_S_SPEC_SHADOW ||
+		inType == SC_LIGHT_S_SHADOW
+		)
 	{
 		//set dir
 		//sc_light_updateSpotDir(ent);		
@@ -358,8 +358,8 @@ ENTITY* sc_light_createFunc(int inType, var inRange, VECTOR* inColor, VECTOR* in
 		
 		//shadowcasting spotlight?
 		if(
-		inType == SC_LIGHT_S_SPEC_SHADOW
-		|| inType == SC_LIGHT_S_SHADOW)
+			inType == SC_LIGHT_S_SPEC_SHADOW
+			|| inType == SC_LIGHT_S_SHADOW)
 		{
 			
 			//create shadowmap view
@@ -591,8 +591,8 @@ var sc_lights_mtlShadowmapLocalRenderEvent()
 	if(my)
 	{
 		#ifndef SC_A7
-			LPD3DXEFFECT pEffect = (LPD3DXEFFECT)mtl->d3deffect;
-			#else
+				LPD3DXEFFECT pEffect = (LPD3DXEFFECT)mtl->d3deffect;
+		#else
 			LPD3DXEFFECT pEffect = (LPD3DXEFFECT)render_d3dxeffect;
 		#endif
 		//mtl.skill2 = floatv(1-(my.alpha/100));
@@ -603,7 +603,7 @@ var sc_lights_mtlShadowmapLocalRenderEvent()
 		{
 			SC_OBJECT* ObjData = (SC_OBJECT*)(my.SC_SKILL);
 			//if(ObjData == NULL) return(1);
-			
+		
 			//mtl.skill3 = floatv(ObjData.shadowBias);
 			
 			//check if object casts local shadows
@@ -690,43 +690,43 @@ void sc_lights_MaterialEventSun()
 	switch(render_view)
 	{
 		case screen.views.sunEdge:
-		screen.views.sunEdge.bmap = screen.renderTargets.quarter0;
-		break;
-		
+			screen.views.sunEdge.bmap = screen.renderTargets.quarter0;
+			break;
+			
 		case screen.views.sunExpand:
-		screen.views.sunExpand.bmap = screen.renderTargets.eighth0;
-		break;
+			screen.views.sunExpand.bmap = screen.renderTargets.eighth0;
+			break;
 		
 		case screen.views.sunShadow:
-		screen.views.sunShadow.bmap = screen.renderTargets.full1;
-		break;
-		
+			screen.views.sunShadow.bmap = screen.renderTargets.full1;
+			break;
+			
 		case screen.views.sun:
-		screen.views.sun.bmap = screen.renderTargets.full0;
+			screen.views.sun.bmap = screen.renderTargets.full0;
 		
-		//LPD3DXEFFECT pEffect = (LPD3DXEFFECT)mtl->d3deffect;
-		#ifndef SC_A7
-			LPD3DXEFFECT pEffect = (LPD3DXEFFECT)mtl->d3deffect;
+			//LPD3DXEFFECT pEffect = (LPD3DXEFFECT)mtl->d3deffect;
+			#ifndef SC_A7
+				LPD3DXEFFECT pEffect = (LPD3DXEFFECT)mtl->d3deffect;
 			#else
-			LPD3DXEFFECT pEffect = (LPD3DXEFFECT)render_d3dxeffect;
-		#endif
-		
-		//LPD3DXEFFECT pEffect = (LPD3DXEFFECT)(mtl->d3deffect);
-		if(pEffect != NULL)
-		{
-			pEffect->SetVector("frustumPoints", screen.frustumPoints);
-			//pEffect->SetFloat("clipFar", screen.views.main.clip_far);
-			pEffect->SetTexture("texBRDFLut", sc_deferredLighting_texBRDFLUT); //assign volumetric brdf lut
-			pEffect->SetTexture("texMaterialLUT", sc_materials_mapData.d3dtex);
-			pEffect->SetTexture("texShadowMask", screen.renderTargets.eighth0.d3dtex);
-			pEffect->SetTexture("texShadowSun", screen.renderTargets.full1.d3dtex);
-			pEffect->SetInt("shadowmapSize", (screen.settings.lights.sunShadowResolution) );
-			pEffect->SetFloat("shadowBias", (screen.settings.lights.sunShadowBias) );
-		}
-		break;
+				LPD3DXEFFECT pEffect = (LPD3DXEFFECT)render_d3dxeffect;
+			#endif
+			
+			//LPD3DXEFFECT pEffect = (LPD3DXEFFECT)(mtl->d3deffect);
+			if(pEffect != NULL)
+			{
+				pEffect->SetVector("frustumPoints", screen.frustumPoints);
+				//pEffect->SetFloat("clipFar", screen.views.main.clip_far);
+				pEffect->SetTexture("texBRDFLut", sc_deferredLighting_texBRDFLUT); //assign volumetric brdf lut
+				pEffect->SetTexture("texMaterialLUT", sc_materials_mapData.d3dtex);
+				pEffect->SetTexture("texShadowMask", screen.renderTargets.eighth0.d3dtex);
+				pEffect->SetTexture("texShadowSun", screen.renderTargets.full1.d3dtex);
+				pEffect->SetInt("shadowmapSize", (screen.settings.lights.sunShadowResolution) );
+				pEffect->SetFloat("shadowBias", (screen.settings.lights.sunShadowBias) );
+			}
+			break;
 		
 		default:
-		break;
+			break;
 	}
 	/*
 	if(render_view == screen.views.sun)
@@ -736,7 +736,7 @@ void sc_lights_MaterialEventSun()
 		//LPD3DXEFFECT pEffect = (LPD3DXEFFECT)mtl->d3deffect;
 		#ifndef SC_A7
 			LPD3DXEFFECT pEffect = (LPD3DXEFFECT)mtl->d3deffect;
-			#else
+		#else
 			LPD3DXEFFECT pEffect = (LPD3DXEFFECT)render_d3dxeffect;
 		#endif
 		
@@ -770,7 +770,7 @@ void sc_lights_initSun(SC_SCREEN* screen)
 	screen.materials.sun.SC_SKILL = screen;
 	set(screen.materials.sun, ENABLE_VIEW);
 	screen.materials.sun.event = sc_lights_MaterialEventSun;
-	
+		
 	//setup views
 	screen.views.sun = view_create(-997);
 	set(screen.views.sun, PROCESS_TARGET);
@@ -780,7 +780,6 @@ void sc_lights_initSun(SC_SCREEN* screen)
 	set(screen.views.sun, NOPARTICLE);
 	set(screen.views.sun, NOSKY);
 	set(screen.views.sun, CHILD);
-	set(screen.views.sun, NOFLAG1);
 	screen.views.sun.size_x = screen.views.main.size_x;
 	screen.views.sun.size_y = screen.views.main.size_y;
 	screen.views.sun.material = screen.materials.sun;
@@ -788,190 +787,188 @@ void sc_lights_initSun(SC_SCREEN* screen)
 	
 	
 	#ifndef SC_A7
-		//PSSM SHADOWS
-		if(screen.settings.lights.sunShadows == 1)
-		{
-			sun_angle.roll = 1.1*maxv(vec_length(level_ent->max_x),vec_length(level_ent->min_x));
-			//screen.renderTargets.sunShadowDepth = bmap_createblack(screen.settings.lights.sunShadowResolution, screen.settings.lights.sunShadowResolution, 12222);
-			//screen.materials.sun.skin3 = screen.renderTargets.sunShadowDepth;
+	//PSSM SHADOWS
+	if(screen.settings.lights.sunShadows == 1)
+	{
+		sun_angle.roll = 1.1*maxv(vec_length(level_ent->max_x),vec_length(level_ent->min_x));
+		//screen.renderTargets.sunShadowDepth = bmap_createblack(screen.settings.lights.sunShadowResolution, screen.settings.lights.sunShadowResolution, 12222);
+		//screen.materials.sun.skin3 = screen.renderTargets.sunShadowDepth;
+				
+		int i = 0;
+		for(i=0; i<screen.settings.lights.sunPssmSplits; i++)
+		{	
 			
-			int i = 0;
-			for(i=0; i<screen.settings.lights.sunPssmSplits; i++)
-			{	
+			screen.views.sunShadowDepth[i] = view_create(-800);
+			
+			#ifndef SC_A7
+				screen.views.sunShadowDepth[i].bg = pixel_for_vec(COLOR_WHITE,0,8888);
+			#endif
+			screen.views.sunShadowDepth[i].lod = shadow_lod;
 				
-				screen.views.sunShadowDepth[i] = view_create(-800);
-				
-				#ifndef SC_A7
-					screen.views.sunShadowDepth[i].bg = pixel_for_vec(COLOR_WHITE,0,8888);
-				#endif
-				screen.views.sunShadowDepth[i].lod = shadow_lod;
-				
-				/*
-				//set shadowview flags
-				set(screen.views.sunShadowDepth[i], SHOW);
-				reset(screen.views.sunShadowDepth[i], AUDIBLE);
-				set(screen.views.sunShadowDepth[i], UNTOUCHABLE);
-				set(screen.views.sunShadowDepth[i], NOSHADOW);
-				set(screen.views.sunShadowDepth[i], SHADOW);
-				set(screen.views.sunShadowDepth[i], NOPARTICLE);
-				set(screen.views.sunShadowDepth[i], ISOMETRIC);
-				//set(screen.views.sunShadowDepth[i], CULL_CW);
-				#ifdef SC_USE_NOFLAG1
-					set(screen.views.sunShadowDepth[i], NOFLAG1);
-				#endif
-				*/
-				screen.views.sunShadowDepth[i]->flags |= SHOW|UNTOUCHABLE|NOSHADOW|NOPARTICLE|NOLOD|NOSKY|ISOMETRIC|SHADOW|NOFLAG1;
-				
-				
-				//create rendertarget
-				screen.renderTargets.sunShadowDepth[i] = bmap_createblack(screen.settings.lights.sunShadowResolution, screen.settings.lights.sunShadowResolution, 14);
-				
-				/*
-				//BLUR SHADOWMAP (ESM SHADOWS ONLY)
-				if(i < screen.settings.lights.sunPssmBlurSplits)
-				{
-					//assign rendertarget
-					//screen.views.sunShadowDepth[i].bmap = screen.renderTargets.sunShadowDepth[i];
-					screen.views.sunShadowDepth[i].bmap = bmap_createblack(screen.settings.lights.sunShadowResolution, screen.settings.lights.sunShadowResolution, 14);
-					
-					//blur light depthmap
-					VIEW* blurView = view_create(-799);
-					blurView.size_x = screen.settings.lights.sunShadowResolution;
-					blurView.size_y = screen.settings.lights.sunShadowResolution;
-					set(blurView, CHILD);
-					set(blurView, PROCESS_TARGET);
-					screen.views.sunShadowDepth[i].stage = blurView;
-					blurView.bmap = screen.renderTargets.sunShadowDepth[i];
-					blurView.material = mtl_create();
-					effect_load(blurView.material, sc_lights_sMaterialShadowmapBlur);
-					//blurView.material.skill1 = floatv((float)(2.25-i)/(float)screen.settings.lights.sunShadowResolution);
-					if(i==0) blurView.material.skill1 = floatv((float)(1.5)/(float)screen.settings.lights.sunShadowResolution);
-					if(i==1) blurView.material.skill1 = floatv((float)(0.75)/(float)screen.settings.lights.sunShadowResolution);
-					if(i==2) blurView.material.skill1 = floatv((float)(0.25)/(float)screen.settings.lights.sunShadowResolution);
-					if(i==3) blurView.material.skill1 = floatv((float)(0.125)/(float)screen.settings.lights.sunShadowResolution);
-					//
-				}
-				else
-				{
-					screen.views.sunShadowDepth[i].bmap = screen.renderTargets.sunShadowDepth[i];
-				}
-				*/
+			/*
+			//set shadowview flags
+			set(screen.views.sunShadowDepth[i], SHOW);
+			reset(screen.views.sunShadowDepth[i], AUDIBLE);
+			set(screen.views.sunShadowDepth[i], UNTOUCHABLE);
+			set(screen.views.sunShadowDepth[i], NOSHADOW);
+			set(screen.views.sunShadowDepth[i], SHADOW);
+			set(screen.views.sunShadowDepth[i], NOPARTICLE);
+			set(screen.views.sunShadowDepth[i], ISOMETRIC);
+			//set(screen.views.sunShadowDepth[i], CULL_CW);
+			#ifdef SC_USE_NOFLAG1
+				set(screen.views.sunShadowDepth[i], NOFLAG1);
+			#endif
+			*/
+			screen.views.sunShadowDepth[i]->flags |= SHOW|UNTOUCHABLE|NOSHADOW|NOPARTICLE|NOLOD|NOSKY|ISOMETRIC|SHADOW;
+			
+		
+			//create rendertarget
+			screen.renderTargets.sunShadowDepth[i] = bmap_createblack(screen.settings.lights.sunShadowResolution, screen.settings.lights.sunShadowResolution, 14);
+			
+			/*
+			//BLUR SHADOWMAP (ESM SHADOWS ONLY)
+			if(i < screen.settings.lights.sunPssmBlurSplits)
+			{
+			//assign rendertarget
+			//screen.views.sunShadowDepth[i].bmap = screen.renderTargets.sunShadowDepth[i];
+			screen.views.sunShadowDepth[i].bmap = bmap_createblack(screen.settings.lights.sunShadowResolution, screen.settings.lights.sunShadowResolution, 14);
+			
+			//blur light depthmap
+			VIEW* blurView = view_create(-799);
+			blurView.size_x = screen.settings.lights.sunShadowResolution;
+			blurView.size_y = screen.settings.lights.sunShadowResolution;
+			set(blurView, CHILD);
+			set(blurView, PROCESS_TARGET);
+			screen.views.sunShadowDepth[i].stage = blurView;
+			blurView.bmap = screen.renderTargets.sunShadowDepth[i];
+			blurView.material = mtl_create();
+			effect_load(blurView.material, sc_lights_sMaterialShadowmapBlur);
+			//blurView.material.skill1 = floatv((float)(2.25-i)/(float)screen.settings.lights.sunShadowResolution);
+			if(i==0) blurView.material.skill1 = floatv((float)(1.5)/(float)screen.settings.lights.sunShadowResolution);
+			if(i==1) blurView.material.skill1 = floatv((float)(0.75)/(float)screen.settings.lights.sunShadowResolution);
+			if(i==2) blurView.material.skill1 = floatv((float)(0.25)/(float)screen.settings.lights.sunShadowResolution);
+			if(i==3) blurView.material.skill1 = floatv((float)(0.125)/(float)screen.settings.lights.sunShadowResolution);
+			//
+			}
+			else
+			{
 				screen.views.sunShadowDepth[i].bmap = screen.renderTargets.sunShadowDepth[i];
-				
-				//create material
-				screen.views.sunShadowDepth[i].material = mtl_create();
-				
-				switch(i){
-					case 0:
+			}
+			*/
+			screen.views.sunShadowDepth[i].bmap = screen.renderTargets.sunShadowDepth[i];
+			
+			//create material
+			screen.views.sunShadowDepth[i].material = mtl_create();
+			
+			switch(i){
+				case 0:
 					effect_load(screen.views.sunShadowDepth[i].material,sc_lights_sMaterialShadowmapSplit1);
-					break;
-					case 1:
+				break;
+				case 1:
 					effect_load(screen.views.sunShadowDepth[i].material,sc_lights_sMaterialShadowmapSplit2);
-					break;
-					case 2:
+				break;
+				case 2:
 					effect_load(screen.views.sunShadowDepth[i].material,sc_lights_sMaterialShadowmapSplit3);
-					break;
-					case 3:
+				break;
+				case 3:
 					effect_load(screen.views.sunShadowDepth[i].material,sc_lights_sMaterialShadowmapSplit4);
-					break;
-					default:
-					break;
-				}
-				
-				//pass number of splits to sun shader
-				screen.materials.sun.skill13 = floatv(screen.settings.lights.sunPssmSplits);
-				
+				break;
+				default:
+				break;
 			}
 			
-			if(sc_materials_zbuffer!=NULL){ bmap_purge(sc_materials_zbuffer); ptr_remove(sc_materials_zbuffer); sc_materials_zbuffer=NULL; }
-			sc_materials_zbuffer=bmap_createblack(maxv(screen_size.x,screen.settings.lights.sunShadowResolution),maxv(screen_size.y,screen.settings.lights.sunShadowResolution),32);
-			bmap_zbuffer(sc_materials_zbuffer);
-			
-			
-			
-			
-			
-			
-			//add shadow edge masking + expanding to accelerate pcf shadows
-			//setup views
-			screen.views.sunEdge = view_create(-997);
-			set(screen.views.sunEdge, PROCESS_TARGET);
-			set(screen.views.sunEdge, UNTOUCHABLE);
-			set(screen.views.sunEdge, NOSHADOW);
-			reset(screen.views.sunEdge, AUDIBLE);
-			set(screen.views.sunEdge, NOPARTICLE);
-			set(screen.views.sunEdge, NOSKY);
-			set(screen.views.sunEdge, CHILD|NOFLAG1);
-			screen.views.sunEdge.size_x = screen.views.main.size_x/4;
-			screen.views.sunEdge.size_y = screen.views.main.size_y/4;
-			screen.views.sunEdge.bmap = screen.renderTargets.quarter0;//bmap_createblack(screen.views.main.size_x/4, screen.views.main.size_y/4, 32);//screen.renderTargets.quarter0;
-			screen.views.sunEdge.material = mtl_create();
-			effect_load(screen.views.sunEdge.material, sc_lights_sMaterialSunShadowEdge);
-			screen.views.sunEdge.material.skin1 = screen.renderTargets.gBuffer[SC_GBUFFER_NORMALS_AND_DEPTH];
-			
-			screen.views.sunEdge.material.skill8 = floatv(screen.views.main.clip_far);
-			screen.views.sunEdge.material.skill13 = floatv(screen.settings.lights.sunPssmSplits);
-			LPD3DXEFFECT fx = screen.views.sunEdge->material->d3deffect;
-			if(fx) {
-				fx->SetInt("shadowmapSize", (screen.settings.lights.sunShadowResolution) );
-				fx->SetFloat("shadowBias", (screen.settings.lights.sunShadowBias) );
-			}
-			set(screen.views.sunEdge.material, ENABLE_VIEW);
-			screen.views.sunEdge.material.event = sc_lights_MaterialEventSun;
-			
-			
-			//expander
-			screen.views.sunExpand = view_create(-997);
-			set(screen.views.sunExpand, PROCESS_TARGET);
-			set(screen.views.sunExpand, UNTOUCHABLE);
-			set(screen.views.sunExpand, NOSHADOW);
-			reset(screen.views.sunExpand, AUDIBLE);
-			set(screen.views.sunExpand, NOPARTICLE);
-			set(screen.views.sunExpand, NOSKY);
-			set(screen.views.sunExpand, CHILD|NOFLAG1);
-			screen.views.sunExpand.size_x = screen.views.main.size_x/8;
-			screen.views.sunExpand.size_y = screen.views.main.size_y/8;
-			screen.views.sunExpand.bmap = screen.renderTargets.eighth0;//bmap_createblack(screen.views.main.size_x/8, screen.views.main.size_y/8, 32);//screen.renderTargets.quarter0;
-			screen.views.sunExpand.material = mtl_create();
-			effect_load(screen.views.sunExpand.material, sc_lights_sMaterialSunShadowExpand);
-			screen.views.sunExpand.material.skin1 = screen.renderTargets.quarter0;
-			set(screen.views.sunExpand.material, ENABLE_VIEW);
-			screen.views.sunExpand.material.event = sc_lights_MaterialEventSun;
-			
-			//shadow
-			screen.views.sunShadow = view_create(-997);
-			set(screen.views.sunShadow, PROCESS_TARGET);
-			set(screen.views.sunShadow, UNTOUCHABLE);
-			set(screen.views.sunShadow, NOSHADOW);
-			reset(screen.views.sunShadow, AUDIBLE);
-			set(screen.views.sunShadow, NOPARTICLE);
-			set(screen.views.sunShadow, NOSKY);
-			set(screen.views.sunShadow, CHILD|NOFLAG1);
-			screen.views.sunShadow.size_x = screen.views.main.size_x;
-			screen.views.sunShadow.size_y = screen.views.main.size_y;
-			screen.views.sunShadow.bmap = screen.renderTargets.full1;//bmap_createblack(screen.views.main.size_x/4, screen.views.main.size_y/4, 32);//screen.renderTargets.quarter0;
-			screen.views.sunShadow.material = mtl_create();
-			effect_load(screen.views.sunShadow.material, sc_lights_sMaterialSunShadowCreate);
-			screen.views.sunShadow.material.skin1 = screen.renderTargets.gBuffer[SC_GBUFFER_NORMALS_AND_DEPTH];
-			screen.views.sunShadow.material.skin2 = screen.renderTargets.eighth0;
-			
-			screen.views.sunShadow.material.skill4 = floatv(screen.views.sunShadowDepth[0].clip_far);
-			screen.views.sunShadow.material.skill8 = floatv(screen.views.main.clip_far);
-			screen.views.sunShadow.material.skill13 = floatv(screen.settings.lights.sunPssmSplits);
-			LPD3DXEFFECT fx = screen.views.sunShadow->material->d3deffect;
-			if(fx) {
-				fx->SetInt("shadowmapSize", (screen.settings.lights.sunShadowResolution) );
-				fx->SetFloat("shadowBias", (screen.settings.lights.sunShadowBias) );
-			}
-			set(screen.views.sunShadow.material, ENABLE_VIEW);
-			screen.views.sunShadow.material.event = sc_lights_MaterialEventSun;
-			
-			//set stages
-			screen.views.sunEdge.stage = screen.views.sunExpand;
-			screen.views.sunExpand.stage = screen.views.sunShadow;	
-			screen.views.sunShadow.stage = screen.views.sun;
+			//pass number of splits to sun shader
+			screen.materials.sun.skill13 = floatv(screen.settings.lights.sunPssmSplits);
 			
 		}
+		
+		bmap_zbuffer(bmap_createblack(maxv(screen_size.x,screen.settings.lights.sunShadowResolution),maxv(screen_size.y,screen.settings.lights.sunShadowResolution),32));
+		
+		
+		
+		
+		
+		
+		//add shadow edge masking + expanding to accelerate pcf shadows
+		//setup views
+		screen.views.sunEdge = view_create(-997);
+		set(screen.views.sunEdge, PROCESS_TARGET);
+		set(screen.views.sunEdge, UNTOUCHABLE);
+		set(screen.views.sunEdge, NOSHADOW);
+		reset(screen.views.sunEdge, AUDIBLE);
+		set(screen.views.sunEdge, NOPARTICLE);
+		set(screen.views.sunEdge, NOSKY);
+		set(screen.views.sunEdge, CHILD);
+		screen.views.sunEdge.size_x = screen.views.main.size_x/4;
+		screen.views.sunEdge.size_y = screen.views.main.size_y/4;
+		screen.views.sunEdge.bmap = screen.renderTargets.quarter0;//bmap_createblack(screen.views.main.size_x/4, screen.views.main.size_y/4, 32);//screen.renderTargets.quarter0;
+		screen.views.sunEdge.material = mtl_create();
+		effect_load(screen.views.sunEdge.material, sc_lights_sMaterialSunShadowEdge);
+		screen.views.sunEdge.material.skin1 = screen.renderTargets.gBuffer[SC_GBUFFER_NORMALS_AND_DEPTH];
+		
+		screen.views.sunEdge.material.skill8 = floatv(screen.views.main.clip_far);
+		screen.views.sunEdge.material.skill13 = floatv(screen.settings.lights.sunPssmSplits);
+		LPD3DXEFFECT fx = screen.views.sunEdge->material->d3deffect;
+		if(fx) {
+			fx->SetInt("shadowmapSize", (screen.settings.lights.sunShadowResolution) );
+			fx->SetFloat("shadowBias", (screen.settings.lights.sunShadowBias) );
+		}
+		set(screen.views.sunEdge.material, ENABLE_VIEW);
+		screen.views.sunEdge.material.event = sc_lights_MaterialEventSun;
+		
+		
+		//expander
+		screen.views.sunExpand = view_create(-997);
+		set(screen.views.sunExpand, PROCESS_TARGET);
+		set(screen.views.sunExpand, UNTOUCHABLE);
+		set(screen.views.sunExpand, NOSHADOW);
+		reset(screen.views.sunExpand, AUDIBLE);
+		set(screen.views.sunExpand, NOPARTICLE);
+		set(screen.views.sunExpand, NOSKY);
+		set(screen.views.sunExpand, CHILD);
+		screen.views.sunExpand.size_x = screen.views.main.size_x/8;
+		screen.views.sunExpand.size_y = screen.views.main.size_y/8;
+		screen.views.sunExpand.bmap = screen.renderTargets.eighth0;//bmap_createblack(screen.views.main.size_x/8, screen.views.main.size_y/8, 32);//screen.renderTargets.quarter0;
+		screen.views.sunExpand.material = mtl_create();
+		effect_load(screen.views.sunExpand.material, sc_lights_sMaterialSunShadowExpand);
+		screen.views.sunExpand.material.skin1 = screen.renderTargets.quarter0;
+		set(screen.views.sunExpand.material, ENABLE_VIEW);
+		screen.views.sunExpand.material.event = sc_lights_MaterialEventSun;
+		
+		//shadow
+		screen.views.sunShadow = view_create(-997);
+		set(screen.views.sunShadow, PROCESS_TARGET);
+		set(screen.views.sunShadow, UNTOUCHABLE);
+		set(screen.views.sunShadow, NOSHADOW);
+		reset(screen.views.sunShadow, AUDIBLE);
+		set(screen.views.sunShadow, NOPARTICLE);
+		set(screen.views.sunShadow, NOSKY);
+		set(screen.views.sunShadow, CHILD);
+		screen.views.sunShadow.size_x = screen.views.main.size_x;
+		screen.views.sunShadow.size_y = screen.views.main.size_y;
+		screen.views.sunShadow.bmap = screen.renderTargets.full1;//bmap_createblack(screen.views.main.size_x/4, screen.views.main.size_y/4, 32);//screen.renderTargets.quarter0;
+		screen.views.sunShadow.material = mtl_create();
+		effect_load(screen.views.sunShadow.material, sc_lights_sMaterialSunShadowCreate);
+		screen.views.sunShadow.material.skin1 = screen.renderTargets.gBuffer[SC_GBUFFER_NORMALS_AND_DEPTH];
+		screen.views.sunShadow.material.skin2 = screen.renderTargets.eighth0;
+		
+		screen.views.sunShadow.material.skill4 = floatv(screen.views.sunShadowDepth[0].clip_far);
+		screen.views.sunShadow.material.skill8 = floatv(screen.views.main.clip_far);
+		screen.views.sunShadow.material.skill13 = floatv(screen.settings.lights.sunPssmSplits);
+		LPD3DXEFFECT fx = screen.views.sunShadow->material->d3deffect;
+		if(fx) {
+			fx->SetInt("shadowmapSize", (screen.settings.lights.sunShadowResolution) );
+			fx->SetFloat("shadowBias", (screen.settings.lights.sunShadowBias) );
+		}
+		set(screen.views.sunShadow.material, ENABLE_VIEW);
+		screen.views.sunShadow.material.event = sc_lights_MaterialEventSun;
+		
+		//set stages
+		screen.views.sunEdge.stage = screen.views.sunExpand;
+		screen.views.sunExpand.stage = screen.views.sunShadow;	
+		screen.views.sunShadow.stage = screen.views.sun;
+		
+	}
 	#endif
 	//------------
 	
@@ -987,16 +984,16 @@ void sc_lights_initSun(SC_SCREEN* screen)
 	}
 	
 	#ifndef SC_A7 //PSSM SHADOWS are supported
-		if(screen.settings.lights.sunShadows == 1)
-		{
-			view_last.stage = screen.views.sunEdge;
-		}
-		else
-		{
-			view_last.stage = screen.views.sun;
-		}
-		#else
+	if(screen.settings.lights.sunShadows == 1)
+	{
+		view_last.stage = screen.views.sunEdge;
+	}
+	else
+	{
 		view_last.stage = screen.views.sun;
+	}
+	#else
+	view_last.stage = screen.views.sun;
 	#endif
 	
 }
@@ -1011,17 +1008,17 @@ void sc_lights_destroySun(SC_SCREEN* screen)
 			
 			reset(screen.views.sun,NOSHADOW);
 			//purge render targets
-//			if(screen.views.sun.bmap) bmap_purge(screen.views.sun.bmap);
-//			screen.views.sun.bmap = NULL;
-//			if(screen.settings.lights.sunShadows == 1) //SHADOWS
-//			{
-//				if(screen.views.sunEdge.bmap) bmap_purge(screen.views.sunEdge.bmap);
-//				screen.views.sunEdge.bmap = NULL;
-//				if(screen.views.sunExpand.bmap) bmap_purge(screen.views.sunExpand.bmap);
-//				screen.views.sunExpand.bmap = NULL;
-//				if(screen.views.sunShadow.bmap) bmap_purge(screen.views.sunShadow.bmap);
-//				screen.views.sunShadow.bmap = NULL;
-//			}
+			if(screen.views.sun.bmap) bmap_purge(screen.views.sun.bmap);
+			screen.views.sun.bmap = NULL;
+			if(screen.settings.lights.sunShadows == 1) //SHADOWS
+			{
+				if(screen.views.sunEdge.bmap) bmap_purge(screen.views.sunEdge.bmap);
+				screen.views.sunEdge.bmap = NULL;
+				if(screen.views.sunExpand.bmap) bmap_purge(screen.views.sunExpand.bmap);
+				screen.views.sunExpand.bmap = NULL;
+				if(screen.views.sunShadow.bmap) bmap_purge(screen.views.sunShadow.bmap);
+				screen.views.sunShadow.bmap = NULL;
+			}
 			
 			//remove sun from view chain
 			VIEW* view_last;
@@ -1033,7 +1030,7 @@ void sc_lights_destroySun(SC_SCREEN* screen)
 				{
 					view_last = view_last.stage;
 				}
-				
+					
 				if(screen.views.sun.stage) view_last.stage = screen.views.sun.stage;
 				else view_last.stage = NULL;
 			}
@@ -1043,7 +1040,7 @@ void sc_lights_destroySun(SC_SCREEN* screen)
 				{
 					view_last = view_last.stage;
 				}
-				
+					
 				if(screen.views.sun.stage) view_last.stage = screen.views.sun.stage;
 				else view_last.stage = NULL;
 			}
@@ -1053,17 +1050,17 @@ void sc_lights_destroySun(SC_SCREEN* screen)
 			
 			
 			//remove PSSM
-//			int i=0;
-//			for(i=0; i<4; i++) {
-//				if(screen.views.sunShadowDepth[i] == NULL) continue;
-//				//if(screen.views.sunShadowDepth[i].material != NULL) ptr_remove(screen.views.sunShadowDepth[i].material);
-//				if(screen.views.sunShadowDepth[i].bmap != NULL) {
-//					bmap_purge(screen.views.sunShadowDepth[i].bmap);
-//					//ptr_remove(screen.views.sunShadowDepth[i].bmap);
-//				}
-//				//if(screen.views.sunShadowDepth[i] != NULL) ptr_remove(screen.views.sunShadowDepth[i]);
-//				//if(screen.renderTargets.sunShadowDepth[i] != NULL) ptr_remove(screen.renderTargets.sunShadowDepth[i]);
-//			}
+			int i=0;
+			for(i=0; i<4; i++) {
+				if(screen.views.sunShadowDepth[i] == NULL) continue;
+				//if(screen.views.sunShadowDepth[i].material != NULL) ptr_remove(screen.views.sunShadowDepth[i].material);
+				if(screen.views.sunShadowDepth[i].bmap != NULL) {
+					bmap_purge(screen.views.sunShadowDepth[i].bmap);
+					//ptr_remove(screen.views.sunShadowDepth[i].bmap);
+				}
+				//if(screen.views.sunShadowDepth[i] != NULL) ptr_remove(screen.views.sunShadowDepth[i]);
+				//if(screen.renderTargets.sunShadowDepth[i] != NULL) ptr_remove(screen.renderTargets.sunShadowDepth[i]);
+			}
 			
 			
 		}
@@ -1072,44 +1069,44 @@ void sc_lights_destroySun(SC_SCREEN* screen)
 }
 
 #ifndef SC_A7
-	// Calculate a practical split scheme
-	// weight parameter scales between logarithmic and uniform distances
-	// if maxRange >= 0, the there will be no shadows after maxRange in the scene
-	void sc_lights_pssm_split(VIEW* view,var num,var weight, var maxRange)
+// Calculate a practical split scheme
+// weight parameter scales between logarithmic and uniform distances
+// if maxRange >= 0, the there will be no shadows after maxRange in the scene
+void sc_lights_pssm_split(VIEW* view,var num,var weight, var maxRange)
+{
+	var _maxRange = maxRange;
+	//check if _maxRange is bigger than view.clip_near
+	//fallback to _maxRange = view.clip_far if its smaller or equal
+	if(_maxRange <= view->clip_near && _maxRange > 0)
 	{
-		var _maxRange = maxRange;
-		//check if _maxRange is bigger than view.clip_near
-		//fallback to _maxRange = view.clip_far if its smaller or equal
-		if(_maxRange <= view->clip_near && _maxRange > 0)
-		{
-			_maxRange = view->clip_far;
-		}
-		
-		if(_maxRange > view->clip_far)
-		{
-			_maxRange = view->clip_far;
-		}
-		
-		if(_maxRange == 0)
-		{
-			_maxRange = view->clip_far;
-		}
-		
-		var i;
-		for(i=0; i<num; i++)
-		{
-			var idm = i/num;
-			//var cli = view->clip_near * pow(view->clip_far/view->clip_near,idm);
-			//var cui = view->clip_near + (view->clip_far-view->clip_near)*idm;
-			var cli = view->clip_near * pow(_maxRange/view->clip_near,idm);
-			var cui = view->clip_near + (_maxRange-view->clip_near)*idm;
-			
-			pssm_splitdist[i] = cli*weight + cui*(1-weight);
-		}
-		pssm_splitdist[0] = view->clip_near;
-		//pssm_splitdist[num] = view->clip_far;
-		pssm_splitdist[num] = _maxRange;
+		_maxRange = view->clip_far;
 	}
+	
+	if(_maxRange > view->clip_far)
+	{
+		_maxRange = view->clip_far;
+	}
+	
+	if(_maxRange == 0)
+	{
+		_maxRange = view->clip_far;
+	}
+	
+	var i;
+	for(i=0; i<num; i++)
+	{
+		var idm = i/num;
+		//var cli = view->clip_near * pow(view->clip_far/view->clip_near,idm);
+		//var cui = view->clip_near + (view->clip_far-view->clip_near)*idm;
+		var cli = view->clip_near * pow(_maxRange/view->clip_near,idm);
+		var cui = view->clip_near + (_maxRange-view->clip_near)*idm;
+		
+		pssm_splitdist[i] = cli*weight + cui*(1-weight);
+	}
+	pssm_splitdist[0] = view->clip_near;
+	//pssm_splitdist[num] = view->clip_far;
+	pssm_splitdist[num] = _maxRange;
+}
 #endif
 
 void sc_lights_frmSun(SC_SCREEN* screen)
@@ -1117,10 +1114,10 @@ void sc_lights_frmSun(SC_SCREEN* screen)
 	if(screen.views.sun != NULL)
 	{
 		if(
-		screen.settings.lights.sunPos.x == 0
-		&& screen.settings.lights.sunPos.y == 0
-		&& screen.settings.lights.sunPos.z == 0
-		) //global sun
+			screen.settings.lights.sunPos.x == 0
+			&& screen.settings.lights.sunPos.y == 0
+			&& screen.settings.lights.sunPos.z == 0
+			) //global sun
 		{
 			VECTOR distantSunPos;
 			vec_for_angle(distantSunPos, sun_angle);
@@ -1150,94 +1147,94 @@ void sc_lights_frmSun(SC_SCREEN* screen)
 		
 		
 		#ifndef SC_A7
-			// PSSM main loop
-			if(screen.settings.lights.sunPssmSplits>0 && screen.settings.lights.sunShadows == 1)
+		// PSSM main loop
+		if(screen.settings.lights.sunPssmSplits>0 && screen.settings.lights.sunShadows == 1)
+		{
+		// update the views _after_ the camera was updated!
+		//	proc_mode = PROC_LATE;
+	
+		// set up the split distances and the shadow view
+			sc_lights_pssm_split(screen.views.main, screen.settings.lights.sunPssmSplits, screen.settings.lights.sunPssmSplitWeight, screen.settings.lights.sunShadowRange);
+			//pssm_split(screen.views.main, screen.settings.lights.sunPssmSplits, screen.settings.lights.sunPssmSplitWeight);
+			//pssm_viewcpy(screen.views.main, screen.views.sun);
+	
+		// set up the split view transformation matrices
+			D3DXMATRIX matSplit[4];
+			int i=0;
+			for(i=0; i<screen.settings.lights.sunPssmSplits; i++) 
 			{
-				// update the views _after_ the camera was updated!
-				//	proc_mode = PROC_LATE;
+		// look from the sun onto the scene			
+				screen.views.sunShadowDepth[i]->pan = 180 + sun_angle.pan;
+				screen.views.sunShadowDepth[i]->tilt = -sun_angle.tilt;
+				vec_set(screen.views.sunShadowDepth[i]->x,sun_pos);
+	
+		// calculate the split view clipping borders and transformation matrix			
+				view_to_split(screen.views.main, pssm_splitdist[i],pssm_splitdist[i+1], screen.views.sunShadowDepth[i], &matSplit[i]);
+				LPD3DXEFFECT fx = screen.views.sunShadowDepth[i]->material->d3deffect;
+				if(fx) fx->SetMatrix("matSplitViewProj",&matSplit[i]);
 				
-				// set up the split distances and the shadow view
-				sc_lights_pssm_split(screen.views.main, screen.settings.lights.sunPssmSplits, screen.settings.lights.sunPssmSplitWeight, screen.settings.lights.sunShadowRange);
-				//pssm_split(screen.views.main, screen.settings.lights.sunPssmSplits, screen.settings.lights.sunPssmSplitWeight);
-				//pssm_viewcpy(screen.views.main, screen.views.sun);
-				
-				// set up the split view transformation matrices
-				D3DXMATRIX matSplit[4];
-				int i=0;
-				for(i=0; i<screen.settings.lights.sunPssmSplits; i++) 
-				{
-					// look from the sun onto the scene			
-					screen.views.sunShadowDepth[i]->pan = 180 + sun_angle.pan;
-					screen.views.sunShadowDepth[i]->tilt = -sun_angle.tilt;
-					vec_set(screen.views.sunShadowDepth[i]->x,sun_pos);
-					
-					// calculate the split view clipping borders and transformation matrix			
-					view_to_split(screen.views.main, pssm_splitdist[i],pssm_splitdist[i+1], screen.views.sunShadowDepth[i], &matSplit[i]);
-					LPD3DXEFFECT fx = screen.views.sunShadowDepth[i]->material->d3deffect;
-					if(fx) fx->SetMatrix("matSplitViewProj",&matSplit[i]);
-					
-					// create a texture matrix from the split view proj matrix			
-					D3DXMatrixMultiply(&matSplit[i],&matSplit[i],pssm_texscale(screen.settings.lights.sunShadowResolution));
-					
-					#ifdef DEBUG_PSSM		
-						DEBUG_BMAP(screen.views.sunShadowDepth[i]->bmap,300 + i*220,0.2);
-						var pssm_fps = 16/time_frame;
-						DEBUG_VAR(pssm_fps,200);
-						DEBUG_VAR(pssm_splitdist[i+1],220 + i*20);
-					#endif
-					//set depthmapshader maxDepth	
-					screen.views.sunShadowDepth[i].material.skill4 = floatv(screen.views.sunShadowDepth[i].clip_far);
-				}
-				
-				//put matrices to world space
-				//mat_multiply(matSplit[0], matViewInv);
-				// use a DX function to copy the 4 texture matrices to the shadow shader
-				LPD3DXEFFECT fx = screen.views.sun->material->d3deffect;
-				if(fx) {
-					fx->SetMatrixArray("matTex",matSplit,screen.settings.lights.sunPssmSplits);
-					if(screen.views.sunShadowDepth[0] != NULL) fx->SetTexture("shadowTex1",screen.renderTargets.sunShadowDepth[0].d3dtex);
-					if(screen.views.sunShadowDepth[1] != NULL) fx->SetTexture("shadowTex2",screen.renderTargets.sunShadowDepth[1].d3dtex);
-					if(screen.views.sunShadowDepth[2] != NULL) fx->SetTexture("shadowTex3",screen.renderTargets.sunShadowDepth[2].d3dtex);
-					if(screen.views.sunShadowDepth[3] != NULL) fx->SetTexture("shadowTex4",screen.renderTargets.sunShadowDepth[3].d3dtex);
-					//fx->SetFloat("shadowBias", screen.settings.lights.sunShadowBias);
-					//fx->SetInt("shadowmapSize", (screen.settings.lights.sunShadowResolution) );
-				}
-				
-				
-				
-				
-				//same for shadowEdge acceleration
-				LPD3DXEFFECT fx = screen.views.sunEdge->material->d3deffect;
-				if(fx) {
-					fx->SetMatrixArray("matTex",matSplit,screen.settings.lights.sunPssmSplits);
-					if(screen.views.sunShadowDepth[0] != NULL) fx->SetTexture("shadowTex1",screen.renderTargets.sunShadowDepth[0].d3dtex);
-					if(screen.views.sunShadowDepth[1] != NULL) fx->SetTexture("shadowTex2",screen.renderTargets.sunShadowDepth[1].d3dtex);
-					if(screen.views.sunShadowDepth[2] != NULL) fx->SetTexture("shadowTex3",screen.renderTargets.sunShadowDepth[2].d3dtex);
-					if(screen.views.sunShadowDepth[3] != NULL) fx->SetTexture("shadowTex4",screen.renderTargets.sunShadowDepth[3].d3dtex);
-					//fx->SetFloat("shadowBias", screen.settings.lights.sunShadowBias);
-					//fx->SetInt("shadowmapSize", (screen.settings.lights.sunShadowResolution) );
-				}
-				//and for the actual shadow view
-				LPD3DXEFFECT fx = screen.views.sunShadow->material->d3deffect;
-				if(fx) {
-					fx->SetMatrixArray("matTex",matSplit,screen.settings.lights.sunPssmSplits);
-					if(screen.views.sunShadowDepth[0] != NULL) fx->SetTexture("shadowTex1",screen.renderTargets.sunShadowDepth[0].d3dtex);
-					if(screen.views.sunShadowDepth[1] != NULL) fx->SetTexture("shadowTex2",screen.renderTargets.sunShadowDepth[1].d3dtex);
-					if(screen.views.sunShadowDepth[2] != NULL) fx->SetTexture("shadowTex3",screen.renderTargets.sunShadowDepth[2].d3dtex);
-					if(screen.views.sunShadowDepth[3] != NULL) fx->SetTexture("shadowTex4",screen.renderTargets.sunShadowDepth[3].d3dtex);
-					//fx->SetFloat("shadowBias", screen.settings.lights.sunShadowBias);
-					//fx->SetInt("shadowmapSize", (screen.settings.lights.sunShadowResolution) );
-				}
-				
-				
-				
-				
-				screen.views.sun.material.skill4 = floatv(screen.views.sunShadowDepth[0].clip_far);
-				
-				#ifdef DEBUG_PSSM		
-					DEBUG_BMAP(screen.views.sun->bmap,20,0.2);
-				#endif
+		// create a texture matrix from the split view proj matrix			
+				D3DXMatrixMultiply(&matSplit[i],&matSplit[i],pssm_texscale(screen.settings.lights.sunShadowResolution));
+			
+		#ifdef DEBUG_PSSM		
+				DEBUG_BMAP(screen.views.sunShadowDepth[i]->bmap,300 + i*220,0.2);
+				var pssm_fps = 16/time_frame;
+				DEBUG_VAR(pssm_fps,200);
+				DEBUG_VAR(pssm_splitdist[i+1],220 + i*20);
+		#endif
+				//set depthmapshader maxDepth	
+				screen.views.sunShadowDepth[i].material.skill4 = floatv(screen.views.sunShadowDepth[i].clip_far);
 			}
+	
+		//put matrices to world space
+			//mat_multiply(matSplit[0], matViewInv);
+		// use a DX function to copy the 4 texture matrices to the shadow shader
+			LPD3DXEFFECT fx = screen.views.sun->material->d3deffect;
+			if(fx) {
+				fx->SetMatrixArray("matTex",matSplit,screen.settings.lights.sunPssmSplits);
+				if(screen.views.sunShadowDepth[0] != NULL) fx->SetTexture("shadowTex1",screen.renderTargets.sunShadowDepth[0].d3dtex);
+				if(screen.views.sunShadowDepth[1] != NULL) fx->SetTexture("shadowTex2",screen.renderTargets.sunShadowDepth[1].d3dtex);
+				if(screen.views.sunShadowDepth[2] != NULL) fx->SetTexture("shadowTex3",screen.renderTargets.sunShadowDepth[2].d3dtex);
+				if(screen.views.sunShadowDepth[3] != NULL) fx->SetTexture("shadowTex4",screen.renderTargets.sunShadowDepth[3].d3dtex);
+				//fx->SetFloat("shadowBias", screen.settings.lights.sunShadowBias);
+				//fx->SetInt("shadowmapSize", (screen.settings.lights.sunShadowResolution) );
+			}
+			
+			
+			
+			
+			//same for shadowEdge acceleration
+			LPD3DXEFFECT fx = screen.views.sunEdge->material->d3deffect;
+			if(fx) {
+				fx->SetMatrixArray("matTex",matSplit,screen.settings.lights.sunPssmSplits);
+				if(screen.views.sunShadowDepth[0] != NULL) fx->SetTexture("shadowTex1",screen.renderTargets.sunShadowDepth[0].d3dtex);
+				if(screen.views.sunShadowDepth[1] != NULL) fx->SetTexture("shadowTex2",screen.renderTargets.sunShadowDepth[1].d3dtex);
+				if(screen.views.sunShadowDepth[2] != NULL) fx->SetTexture("shadowTex3",screen.renderTargets.sunShadowDepth[2].d3dtex);
+				if(screen.views.sunShadowDepth[3] != NULL) fx->SetTexture("shadowTex4",screen.renderTargets.sunShadowDepth[3].d3dtex);
+				//fx->SetFloat("shadowBias", screen.settings.lights.sunShadowBias);
+				//fx->SetInt("shadowmapSize", (screen.settings.lights.sunShadowResolution) );
+			}
+			//and for the actual shadow view
+			LPD3DXEFFECT fx = screen.views.sunShadow->material->d3deffect;
+			if(fx) {
+				fx->SetMatrixArray("matTex",matSplit,screen.settings.lights.sunPssmSplits);
+				if(screen.views.sunShadowDepth[0] != NULL) fx->SetTexture("shadowTex1",screen.renderTargets.sunShadowDepth[0].d3dtex);
+				if(screen.views.sunShadowDepth[1] != NULL) fx->SetTexture("shadowTex2",screen.renderTargets.sunShadowDepth[1].d3dtex);
+				if(screen.views.sunShadowDepth[2] != NULL) fx->SetTexture("shadowTex3",screen.renderTargets.sunShadowDepth[2].d3dtex);
+				if(screen.views.sunShadowDepth[3] != NULL) fx->SetTexture("shadowTex4",screen.renderTargets.sunShadowDepth[3].d3dtex);
+				//fx->SetFloat("shadowBias", screen.settings.lights.sunShadowBias);
+				//fx->SetInt("shadowmapSize", (screen.settings.lights.sunShadowResolution) );
+			}
+			
+			
+			
+						
+			screen.views.sun.material.skill4 = floatv(screen.views.sunShadowDepth[0].clip_far);
+	
+		#ifdef DEBUG_PSSM		
+			DEBUG_BMAP(screen.views.sun->bmap,20,0.2);
+		#endif
+		}
 		#endif
 		
 		

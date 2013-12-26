@@ -28,19 +28,11 @@ somematerial.skill1 = (var)sc_volumeTexture_create("yourvoltex.dds"); //creation
 LPDIRECT3DVOLUMETEXTURE9 sc_volumeTexture_create(STRING *filename)
 {
 	LPDIRECT3DVOLUMETEXTURE9 temptex;
-	char** c;
-	for (c = pPaths; *c != NULL; c++)
+	HRESULT res = D3DXCreateVolumeTextureFromFile((LPDIRECT3DDEVICE9)pd3ddev, _chr(filename), &temptex);
+	if(res != S_OK)
 	{
-		STRING* str_="";
-		str_cpy(str_,*c);
-		str_cat(str_,filename);
-		HRESULT res = D3DXCreateVolumeTextureFromFile((LPDIRECT3DDEVICE9)pd3ddev, _chr(str_), &temptex);
-		if(res == S_OK)
-		{
-			return temptex;
-		}
+		printf("error: %x", res);
+		return NULL;
 	}
-	
-	error("can't create sc_deferredLighting_LUT.dds");
-	return NULL;
+	return temptex;
 }

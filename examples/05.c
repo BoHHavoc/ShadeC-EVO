@@ -89,11 +89,11 @@ MATERIAL* mtlDissolveShadow =
 
 ENTITY* skycube =
 {
-	type = "plain_abraham+6.tga";
-	flags2 = SKY | CUBE | SHOW;
-	red = 130;
-	green = 130;
-	blue = 130;
+  type = "plain_abraham+6.tga";
+  flags2 = SKY | CUBE | SHOW;
+  red = 130;
+  green = 130;
+  blue = 130;
 }
 
 //simple camera script...
@@ -134,14 +134,6 @@ void main()
 	camera.clip_far = 5000; //set this as low as possible to increase performance AND visuals!
 	camera.arc = 75;
 	
-	//set fog
-	fog_color=1;
-	d3d_fogcolor1.red=5;
-	d3d_fogcolor1.green=5;
-	d3d_fogcolor1.blue=10;
-	camera.fog_start=100;
-	camera.fog_end=1000;
-	
 	//set resolution before calling sc_setup
 	//if you want to change resolution again, simple call sc_setup() again after you changed the resolution
 	//video_set(1280, 720, 0, 2);
@@ -150,12 +142,25 @@ void main()
 	//setup skies
 	sc_sky(skycube);
 	
-	//create shade-c stuff - open sc_wrapper.c to edit settings in function "sc_get_settings"
-	//SHADEC_LOW
-	//SHADEC_MEDIUM
-	//SHADEC_HIGH
-	//SHADEC_ULTRA
-	sc_create(SHADEC_ULTRA);
+	//set camera as main view of sc_screen_default
+	sc_screen_default = sc_screen_create(camera);
+	
+	//enable/disable Shade-C effects. You have to set these before calling sc_setup()
+	//If you want to change these during runtime, simply call sc_setup() again after you enabled/disabled an effect
+	// -> more info in sc_core.h, in struct SC_SETTINGS
+	sc_screen_default.settings.hdr.enabled = 1; //enable Bloom/HDR
+	sc_screen_default.settings.hdr.lensflare.enabled = 1; //enable for a nice lensflare effect in combination with HDR/Bloom
+		
+	//initialize shade-c, use default screen object
+	sc_setup(sc_screen_default);
+	
+	//tweak effect parameters anytime you want
+	// -> more info in sc_core.h, in struct SC_SETTINGS
+	sc_screen_default.settings.hdr.brightpass = 0.85;
+	sc_screen_default.settings.hdr.intensity = 2;
+	sc_screen_default.settings.hdr.lensflare.brightpass = 0.0;
+	sc_screen_default.settings.hdr.lensflare.intensity = 0.25;
+	sc_screen_default.settings.bitdepth = 32; //8 bit g-buffer & lighting (default). change to 12222 or 14444 for 16bit/32bit g-buffer and lighting buffer which results in nicer lighting at the cost of performance
 	
 	//Add objects and apply custom materials
 	//Texture Movement

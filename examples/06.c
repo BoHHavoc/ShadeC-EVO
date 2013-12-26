@@ -74,20 +74,7 @@ void main()
 	you.pan = 123;
 	you.tilt = -18;
 	camera.arc = 75;
-	camera.clip_far = 50000; //set this as low as possible to increase performance AND visuals!
-	
-	//set resolution before calling sc_setup
-	//if you want to change resolution again, simple call sc_setup() again after you changed the resolution
-	//video_set(1280, 720, 0, 2);
-	video_set(800, 600, 0, 2);
-	
-	//set fog
-	fog_color=1;
-	d3d_fogcolor1.red=160;
-	d3d_fogcolor1.green=200;
-	d3d_fogcolor1.blue=220;
-	camera.fog_start=500;
-	camera.fog_end=1500;
+	camera.clip_far = 5000; //set this as low as possible to increase performance AND visuals!
 	
 	//set resolution before calling sc_setup
 	//if you want to change resolution again, simple call sc_setup() again after you changed the resolution
@@ -97,13 +84,43 @@ void main()
 	//setup skies
 	sc_sky(skycube);
 	
-	//create shade-c stuff - open sc_wrapper.c to edit settings in function "sc_get_settings"
-	//SHADEC_LOW
-	//SHADEC_MEDIUM
-	//SHADEC_HIGH
-	//SHADEC_ULTRA
-	sc_create(SHADEC_ULTRA);
+	//set camera as main view of sc_screen_default
+	sc_screen_default = sc_screen_create(camera);
 	
+	//enable/disable Shade-C effects. You have to set these before calling sc_setup()
+	//If you want to change these during runtime, simply call sc_setup() again after you enabled/disabled an effect
+	// -> more info in sc_core.h, in struct SC_SETTINGS
+	
+	sc_screen_default.settings.forward.enabled = 0; //enable if you need particles or custom materials which can't be rendered in the deferred pipeline
+	sc_screen_default.settings.refract.enabled = 0; //enable for refractive effects such as heat haze and glass
+	sc_screen_default.settings.hdr.enabled = 1; //enable Bloom/HDR
+	sc_screen_default.settings.hdr.lensflare.enabled = 1; //enable for a nice lensflare effect in combination with HDR/Bloom
+	sc_screen_default.settings.dof.enabled = 0; //enable Depth of Field Effect
+	sc_screen_default.settings.ssao.quality = SC_MEDIUM; //set ssao quality. SC_LOW, SC_MEDIUM, SC_HIGH, SC_ULTRA
+	sc_screen_default.settings.ssao.enabled = 1; //enable to activate SSAO
+	sc_screen_default.settings.lights.sunShadows = 1; //enable shadows for the sun
+	sc_screen_default.settings.lights.sunShadowResolution = 512; //reduce shadow resolution as we are manually setting the shadow range to 5000 and can therefor get away with a small shadowmap
+	sc_screen_default.settings.lights.sunPssmSplitWeight = 0.7; //high res near splits, low res far splits
+	sc_screen_default.settings.lights.sunShadowRange = 5000; //manually set the shadow range...we don't need realtime shadows in the far distant! If set to 0 (default) shadow range will be set to camera.clip_far
+	sc_screen_default.settings.lights.sunShadowBias = 0.001; //set the shadow bias
+	sc_screen_default.settings.antialiasing.enabled = 1; //enable antialiasing
+	sc_screen_default.settings.bitdepth = 32; //8 bit g-buffer & lighting (default). change to 12222 or 14444 for 16bit/32bit g-buffer and lighting buffer which results in nicer lighting at the cost of performance
+	
+	//initialize shade-c, use default screen object
+	sc_setup(sc_screen_default);
+	
+	//tweak effect parameters anytime you want
+	// -> more info in sc_core.h, in struct SC_SETTINGS
+	sc_screen_default.settings.hdr.brightpass = 0.85;
+	sc_screen_default.settings.hdr.intensity = 1;
+	sc_screen_default.settings.hdr.lensflare.brightpass = 0.0;
+	sc_screen_default.settings.hdr.lensflare.intensity = 0.25;
+	sc_screen_default.settings.dof.focalPos = 300;
+	sc_screen_default.settings.dof.focalWidth = 600;
+	sc_screen_default.settings.ssao.radius = 30;	
+	sc_screen_default.settings.ssao.intensity = 4;
+	sc_screen_default.settings.ssao.selfOcclusion = 0.0004; //we want a bit of self occlusion... lower values result in even more self occlusion
+	sc_screen_default.settings.ssao.brightOcclusion = 0.25; //low value: ssao will only be visible in shadows and dark areas. high value: ssao will always be visible. Range: 0-1
 	
 	you = ent_create(SPHERE_MDL, vector(150,-360,58), NULL);
 	you.material = mtl_car;

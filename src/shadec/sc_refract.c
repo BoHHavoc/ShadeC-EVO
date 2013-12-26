@@ -40,11 +40,11 @@ void sc_refract_destroy(SC_SCREEN* screen)
 		if(is(screen.views.refract,NOSHADOW))
 		{
 			reset(screen.views.refract,NOSHADOW);
-//			if(screen.views.refract.bmap) bmap_purge(screen.views.refract.bmap);
-//			screen.views.refract.bmap = NULL;
+			if(screen.views.refract.bmap) bmap_purge(screen.views.refract.bmap);
+			screen.views.refract.bmap = NULL;
 			
-//			if(screen.views.preRefract.bmap) bmap_purge(screen.views.preRefract.bmap);
-//			screen.views.preRefract.bmap = NULL;
+			if(screen.views.preRefract.bmap) bmap_purge(screen.views.preRefract.bmap);
+			screen.views.preRefract.bmap = NULL;
 			
 			
 			//find view before

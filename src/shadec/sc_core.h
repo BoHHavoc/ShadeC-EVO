@@ -13,14 +13,6 @@
 // ! END OF USER INPUT !
 //------------------------------------------------------------------------------
 
-#define SHADEC_OFF 0 		//if this mode is set, shade-c is not use and fallback forward shaders are used
-#define SHADEC_LOW 1
-#define SHADEC_MEDIUM 2
-#define SHADEC_HIGH 3 	//default
-#define SHADEC_ULTRA 4
-
-#define SHADEC_DEFAULT 1
-
 #define SC_PI 3.14159265 //Pi
 D3DXVECTOR4 sc_vec4Null;
 //BMAP* sc_bmapNull = "#1#1#8";
@@ -218,7 +210,6 @@ typedef struct{
 	VIEW* dofBlurX;
 	VIEW* dofBlurY;
 	VIEW* gammaCorrection;
-	VIEW* atmosphericScatteringSky;
 	
 	//pre views
 	VIEW* preSSAO; //not needed...?
@@ -246,7 +237,6 @@ typedef struct{
 	BMAP* quarter1; //generic rendertarget, quarter screen size
 	BMAP* eighth0; //generic rendertarget, eighth screen size
 	BMAP* eighth1; //generic rendertarget, eighth screen size
-	BMAP* fogMap;
 }SC_SCREEN_RENDERTARGETS;
 
 typedef struct{
@@ -362,7 +352,7 @@ typedef struct{
 	BMAP* ssaoNoise;
 }SC_SCREEN;
 
-SC_SCREEN* sc_screen_default=NULL;
+SC_SCREEN* sc_screen_default;
 
 
 
@@ -379,8 +369,8 @@ typedef struct{
 	BMAP* projMap;
 	BMAP* shadowMap;
 	//MATERIAL* mtlShadowmap;
-	D3DXMATRIX* matrix;   
-	VIEW* view;
+   D3DXMATRIX* matrix;   
+   VIEW* view;
 }SC_OBJECT_LIGHT;
 
 typedef struct{
@@ -413,8 +403,6 @@ var sc_getTexCaps(var tex);
 VIEW* sc_ppAdd(MATERIAL* Material,VIEW* View,BMAP* bmap);
 int sc_ppRemove(MATERIAL* Material,VIEW* View,VIEW* StageView);
 SC_SCREEN* sc_screen_create(VIEW* inView);
-void sc_sky_set(SC_SCREEN* screen);
-void sc_sky_remove(SC_SCREEN* screen);
 
 void sc_skill_(ENTITY* ent,int objMode, var objVar);
 void sc_skill(ENTITY* ent, int objMode, VECTOR* objVec)

@@ -15,7 +15,7 @@ void sc_forward_init(SC_SCREEN* screen, int mode)
 		reset(screen.views.gBuffer,AUDIBLE);
 		//setup view
 		reset(screen.views.main, SHOW);
-//		set(screen.views.main, CHILD);
+		set(screen.views.main, CHILD);
 		
 		//set(screen.views.main, PROCESS_SCREEN); //keep zBuffer //DONT SET THIS! PARTICLES WON'T RENDER CORRECT!
 		//if(screen.settings.refract.enabled == 1) set(screen.views.main, NOPARTICLE);
@@ -37,7 +37,7 @@ void sc_forward_init(SC_SCREEN* screen, int mode)
 		reset(screen.views.gBuffer,AUDIBLE);
 		
 		reset(screen.views.main, SHOW);
-//		set(screen.views.main, CHILD);
+		set(screen.views.main, CHILD);
 		set(screen.views.main, PROCESS_TARGET); //keep zBuffer
 		set(screen.views.main, NOSKY); //keep zBuffer
 		set(screen.views.main,NOSHADOW);
@@ -82,11 +82,11 @@ void sc_forward_destroy(SC_SCREEN* screen)
 			reset(screen.views.main, CHILD);
 			reset(screen.views.main,NOSHADOW);
 			
-//			if(screen.views.main.bmap != NULL) bmap_purge(screen.views.main.bmap);
-//			screen.views.main.bmap = NULL;
+			if(screen.views.main.bmap != NULL) bmap_purge(screen.views.main.bmap);
+			screen.views.main.bmap = NULL;
 			
-//			if(screen.views.preForward.bmap != NULL) bmap_purge(screen.views.preForward.bmap);
-//			screen.views.preForward.bmap = NULL;
+			if(screen.views.preForward.bmap != NULL) bmap_purge(screen.views.preForward.bmap);
+			screen.views.preForward.bmap = NULL;
 			
 			VIEW* view_last;
 			view_last = screen.views.gBuffer;

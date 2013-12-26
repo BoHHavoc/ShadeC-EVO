@@ -6,14 +6,14 @@ void sc_gBuffer_init(SC_SCREEN* screen, int inBufferType, int inBufferFormat)
    sc_setupScreenquad(screen);
 	
 	//remove rendertarget textures if there are any
-//	if(screen.renderTargets.gBuffer[SC_GBUFFER_NORMALS_AND_DEPTH]) bmap_purge(screen.renderTargets.gBuffer[SC_GBUFFER_NORMALS_AND_DEPTH]);
-//	if(screen.renderTargets.gBuffer[SC_GBUFFER_ALBEDO_AND_EMISSIVE_MASK]) bmap_purge(screen.renderTargets.gBuffer[SC_GBUFFER_ALBEDO_AND_EMISSIVE_MASK]);
-//	if(screen.renderTargets.gBuffer[SC_GBUFFER_MATERIAL_DATA]) bmap_purge(screen.renderTargets.gBuffer[SC_GBUFFER_MATERIAL_DATA]);
-//	if(screen.renderTargets.gBuffer[3]) bmap_purge(screen.renderTargets.gBuffer[3]);
-//	ptr_remove(screen.renderTargets.gBuffer[SC_GBUFFER_NORMALS_AND_DEPTH]);
-//	ptr_remove(screen.renderTargets.gBuffer[SC_GBUFFER_ALBEDO_AND_EMISSIVE_MASK]);
-//	ptr_remove(screen.renderTargets.gBuffer[SC_GBUFFER_MATERIAL_DATA]);
-//	ptr_remove(screen.renderTargets.gBuffer[3]);
+	if(screen.renderTargets.gBuffer[SC_GBUFFER_NORMALS_AND_DEPTH]) bmap_purge(screen.renderTargets.gBuffer[SC_GBUFFER_NORMALS_AND_DEPTH]);
+	if(screen.renderTargets.gBuffer[SC_GBUFFER_ALBEDO_AND_EMISSIVE_MASK]) bmap_purge(screen.renderTargets.gBuffer[SC_GBUFFER_ALBEDO_AND_EMISSIVE_MASK]);
+	if(screen.renderTargets.gBuffer[SC_GBUFFER_MATERIAL_DATA]) bmap_purge(screen.renderTargets.gBuffer[SC_GBUFFER_MATERIAL_DATA]);
+	if(screen.renderTargets.gBuffer[3]) bmap_purge(screen.renderTargets.gBuffer[3]);
+	ptr_remove(screen.renderTargets.gBuffer[SC_GBUFFER_NORMALS_AND_DEPTH]);
+	ptr_remove(screen.renderTargets.gBuffer[SC_GBUFFER_ALBEDO_AND_EMISSIVE_MASK]);
+	ptr_remove(screen.renderTargets.gBuffer[SC_GBUFFER_MATERIAL_DATA]);
+	ptr_remove(screen.renderTargets.gBuffer[3]);
 		
 	//create rendertarget textures
 	screen.renderTargets.gBuffer[SC_GBUFFER_NORMALS_AND_DEPTH] = bmap_createblack(screen.views.main.size_x, screen.views.main.size_y, inBufferFormat);
@@ -47,7 +47,6 @@ void sc_gBuffer_init(SC_SCREEN* screen, int inBufferType, int inBufferFormat)
 		set(screen.views.gBuffer,NOPARTICLE);
 		set(screen.views.gBuffer,NOSHADOW);
 		reset(screen.views.gBuffer,UNTOUCHABLE);
-		set(screen.views.gBuffer,NOFLAG1);
 		//screen.views.gBuffer.material = screen.materials.gBuffer;
 		//screen.views.gBuffer.stage = screen.views.main;
 		
@@ -57,7 +56,7 @@ void sc_gBuffer_init(SC_SCREEN* screen, int inBufferType, int inBufferFormat)
 		{
 			screen.views.gBuffer.target1 = screen.renderTargets.gBuffer[SC_GBUFFER_ALBEDO_AND_EMISSIVE_MASK];
 			screen.views.gBuffer.target2 = screen.renderTargets.gBuffer[SC_GBUFFER_MATERIAL_DATA];
-			screen.views.gBuffer.target3 = screen.renderTargets.fogMap;
+			screen.views.gBuffer.target3 = screen.renderTargets.gBuffer[3];
 		}
 		
 }
@@ -104,15 +103,15 @@ void sc_gBuffer_destroy(SC_SCREEN* screen)
 		{
 			reset(screen.views.gBuffer,NOSHADOW);
 			reset(screen.views.gBuffer,SHOW);
-//			screen.views.gBuffer.bmap = NULL;
+			screen.views.gBuffer.bmap = NULL;
 			screen.views.gBuffer.target1 = NULL;
 			screen.views.gBuffer.target2 = NULL;
 			screen.views.gBuffer.target3 = NULL;
 			
-//			if(screen.renderTargets.gBuffer[SC_GBUFFER_NORMALS_AND_DEPTH]) bmap_purge(screen.renderTargets.gBuffer[SC_GBUFFER_NORMALS_AND_DEPTH]);
-//			if(screen.renderTargets.gBuffer[SC_GBUFFER_ALBEDO_AND_EMISSIVE_MASK]) bmap_purge(screen.renderTargets.gBuffer[SC_GBUFFER_ALBEDO_AND_EMISSIVE_MASK]);
-//			if(screen.renderTargets.gBuffer[SC_GBUFFER_MATERIAL_DATA]) bmap_purge(screen.renderTargets.gBuffer[SC_GBUFFER_MATERIAL_DATA]);
-//			if(screen.renderTargets.gBuffer[3]) bmap_purge(screen.renderTargets.gBuffer[3]);
+			if(screen.renderTargets.gBuffer[SC_GBUFFER_NORMALS_AND_DEPTH]) bmap_purge(screen.renderTargets.gBuffer[SC_GBUFFER_NORMALS_AND_DEPTH]);
+			if(screen.renderTargets.gBuffer[SC_GBUFFER_ALBEDO_AND_EMISSIVE_MASK]) bmap_purge(screen.renderTargets.gBuffer[SC_GBUFFER_ALBEDO_AND_EMISSIVE_MASK]);
+			if(screen.renderTargets.gBuffer[SC_GBUFFER_MATERIAL_DATA]) bmap_purge(screen.renderTargets.gBuffer[SC_GBUFFER_MATERIAL_DATA]);
+			if(screen.renderTargets.gBuffer[3]) bmap_purge(screen.renderTargets.gBuffer[3]);
 			
 			/*
 			//find view before shadows_viewShadows
