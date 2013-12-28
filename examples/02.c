@@ -97,7 +97,6 @@ void main()
 	sc_screen_default.settings.lights.sunShadowRange = 5000; //manually set the shadow range...we don't need realtime shadows in the far distant! If set to 0 (default) shadow range will be set to camera.clip_far
 	sc_screen_default.settings.lights.sunShadowBias = 0.001; //set the shadow bias
 	sc_screen_default.settings.antialiasing.enabled = 1; //enable antialiasing
-	sc_screen_default.settings.bitdepth = 32; //8 bit g-buffer & lighting (default). change to 12222 or 14444 for 16bit/32bit g-buffer and lighting buffer which results in nicer lighting at the cost of performance
 	
 	//initialize shade-c, use default screen object
 	sc_setup(sc_screen_default);

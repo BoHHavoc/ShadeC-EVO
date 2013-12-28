@@ -15,7 +15,7 @@ void sc_viewEvent_destroy(SC_SCREEN* screen)
 	if(!screen) return 0;
 	if(screen.materials.viewEvent)
 	{
-		free(screen.materials.viewEvent);
+		sys_free(screen.materials.viewEvent);
 		//ptr_remove(screen.materials.viewEvent);
 	}
 }

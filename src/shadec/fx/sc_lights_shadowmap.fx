@@ -5,12 +5,13 @@ bool PASS_SOLID;
 
 //float4x4 matWorldViewProj;
 float4x4 matWorld;
-//float4x4 matWorldView;
+float4x4 matWorldView;
 float4x4 matSplitViewProj;
 //float4x4 matProj;
 
 float4 vecSkill1; //depthmap stuff, x = | y = alpha clip | z = | w = maxDepth
 float4 vecSkill5; //xyz = lightpos | w =
+float fAlpha;
 
 texture entSkin1;
 
@@ -40,6 +41,7 @@ vsOut mainVS(vsIn In)
 	
 	Out.Pos = mul(In.Pos,matWorld);
 	Out.Pos = mul(Out.Pos, matSplitViewProj);
+	//Out.Pos = mul(In.Pos, matSplitViewProj);
 	Out.Pos2D = Out.Pos.zw;
 	Out.Tex = In.Tex;	
 	
@@ -50,6 +52,7 @@ vsOut mainVS(vsIn In)
 half4 CalculateShadowDepth(float2 Pos2D)
 {
 	half depth = (Pos2D.x/Pos2D.y);
+	//half depth = (Pos2D.x/vecSkill1.w);
 	depth += depth*vecSkill1.z;
 	//half depth = 1-(( (In.Pos2D)/vecSkill1.w ) + vecSkill1.z);
 	
@@ -68,7 +71,7 @@ half4 CalculateShadowDepth(float2 Pos2D)
 half4 mainPS(vsOut In):COLOR0
 {
 	//alpha clip
-	clip(tex2D(ColorSampler,In.Tex).a-vecSkill1.y);
+	clip(tex2D(ColorSampler,In.Tex).a-vecSkill1.y-(1-fAlpha));
 	//return tex2D(ColorSampler,In.Tex);
 	return CalculateShadowDepth(In.Pos2D);
 }

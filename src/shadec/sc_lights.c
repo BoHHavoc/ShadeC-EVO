@@ -591,7 +591,7 @@ var sc_lights_mtlShadowmapLocalRenderEvent()
 	if(my)
 	{
 		#ifndef SC_A7
-				LPD3DXEFFECT pEffect = (LPD3DXEFFECT)mtl->d3deffect;
+			LPD3DXEFFECT pEffect = (LPD3DXEFFECT)mtl->d3deffect;
 		#else
 			LPD3DXEFFECT pEffect = (LPD3DXEFFECT)render_d3dxeffect;
 		#endif
@@ -620,6 +620,7 @@ var sc_lights_mtlShadowmapLocalRenderEvent()
 						{
 							pEffect2->SetFloat("alphaClip", 1-(my.alpha/100));
 							pEffect2->SetFloat("clipFar", mtl.skill30);
+							pEffect2->SetFloat("shadowmapMode", 1); //set shadowmap mode to local shadowmap
 						}
 						
 						//change current material to new one
@@ -754,6 +755,117 @@ void sc_lights_MaterialEventSun()
 	*/
 }
 
+/*
+void sc_lights_MaterialEventSunShadowmap()
+{
+	
+	#ifndef SC_A7
+		LPD3DXEFFECT pEffect = (LPD3DXEFFECT)mtl->d3deffect;
+	#else
+		LPD3DXEFFECT pEffect = (LPD3DXEFFECT)render_d3dxeffect;
+	#endif
+	
+	if(pEffect != NULL)
+	{
+		pEffect->SetVector("frustumPoints", screen.frustumPoints);
+		//pEffect->SetFloat("clipFar", screen.views.main.clip_far);
+		pEffect->SetTexture("texBRDFLut", sc_deferredLighting_texBRDFLUT); //assign volumetric brdf lut
+		pEffect->SetTexture("texMaterialLUT", sc_materials_mapData.d3dtex);
+		pEffect->SetTexture("texShadowMask", screen.renderTargets.eighth0.d3dtex);
+		pEffect->SetTexture("texShadowSun", screen.renderTargets.full1.d3dtex);
+		pEffect->SetInt("shadowmapSize", (screen.settings.lights.sunShadowResolution) );
+		pEffect->SetFloat("shadowBias", (screen.settings.lights.sunShadowBias) );
+	}
+	
+
+}
+*/
+var sc_lights_MaterialEventSunShadowmap()
+{
+	//mtl.skill1 = floatv(0); //wind...
+	//mtl.skill2 = floatv(0.5); //depth alpha clip
+	//mtl.skill3 = floatv(0); //shadow bias
+	if(my)
+	{
+		#ifndef SC_A7
+			LPD3DXEFFECT pEffect = (LPD3DXEFFECT)mtl->d3deffect;
+		#else
+			LPD3DXEFFECT pEffect = (LPD3DXEFFECT)render_d3dxeffect;
+		#endif
+		//mtl.skill2 = floatv(1-(my.alpha/100));
+		pEffect->SetFloat("alphaClip", 1-(my.alpha/100));
+		pEffect->SetFloat("clipFar", mtl.skill30);
+		pEffect->SetFloat("shadowmapMode", 0); //set shadowmap mode to sun shadowmap
+		
+		if(my.SC_SKILL)
+		{
+			SC_OBJECT* ObjData = (SC_OBJECT*)(my.SC_SKILL);
+			//if(ObjData == NULL) return(1);
+		
+			//mtl.skill3 = floatv(ObjData.shadowBias);
+			
+			//check if object casts sun shadows
+			if(ObjData.castShadow == 1 || ObjData.castShadow == 3)
+			{
+				
+				#ifndef SC_A7
+					//check if object has specific shadowmap material applied
+					if(ObjData.material.shadowmap != NULL)
+					{
+						//Set basic shadowmap parameters for new material			
+						LPD3DXEFFECT pEffect2 = (LPD3DXEFFECT)(ObjData.material.shadowmap->d3deffect);
+						if(pEffect2)
+						{
+							pEffect2->SetFloat("alphaClip", 1-(my.alpha/100));
+							pEffect2->SetFloat("clipFar", mtl.skill30);
+							pEffect2->SetFloat("shadowmapMode", 0); //set shadowmap mode to sun shadowmap
+							D3DMATRIX matSplitViewProj;
+							pEffect->GetMatrix("matSplitViewProj", &matSplitViewProj);
+							pEffect2->SetMatrix("matSplitViewProj", matSplitViewProj);
+						}
+						
+						//change current material to new one
+						mtl = ObjData.material.shadowmap;
+						
+						//get material skills from object material
+						mtl.skill1 = my.material.skill1;
+						mtl.skill2 = my.material.skill2;
+						mtl.skill3 = my.material.skill3;
+						mtl.skill4 = my.material.skill4;
+						mtl.skill5 = my.material.skill5;
+						mtl.skill6 = my.material.skill6;
+						mtl.skill7 = my.material.skill7;
+						mtl.skill8 = my.material.skill8;
+						mtl.skill9 = my.material.skill9;
+						mtl.skill10 = my.material.skill10;
+						mtl.skill11 = my.material.skill11;
+						mtl.skill12 = my.material.skill12;
+						mtl.skill13 = my.material.skill13;
+						mtl.skill14 = my.material.skill14;
+						mtl.skill15 = my.material.skill15;
+						mtl.skill16 = my.material.skill16;
+						mtl.skill17 = my.material.skill17;
+						mtl.skill18 = my.material.skill18;
+						mtl.skill19 = my.material.skill19;
+						mtl.skill20 = my.material.skill20;
+					}
+				#endif
+				
+				//ptr_remove(screen);
+				return(0);
+			}
+			
+		}
+		else
+		{
+			return (0);
+		}
+		
+		//free(screen);
+	}
+	return(1);
+}
+
 
 void sc_lights_initSun(SC_SCREEN* screen)
 {
@@ -876,7 +988,10 @@ void sc_lights_initSun(SC_SCREEN* screen)
 				default:
 				break;
 			}
-			
+			//screen.views.sunShadowDepth[i].material.flags = ENABLE_RENDER;
+			set(screen.views.sunShadowDepth[i].material, ENABLE_RENDER);
+			set(screen.views.sunShadowDepth[i].material,PASS_SOLID);
+			screen.views.sunShadowDepth[i].material.event = sc_lights_MaterialEventSunShadowmap;
 			//pass number of splits to sun shader
 			screen.materials.sun.skill13 = floatv(screen.settings.lights.sunPssmSplits);
 			
@@ -1167,11 +1282,16 @@ void sc_lights_frmSun(SC_SCREEN* screen)
 				screen.views.sunShadowDepth[i]->pan = 180 + sun_angle.pan;
 				screen.views.sunShadowDepth[i]->tilt = -sun_angle.tilt;
 				vec_set(screen.views.sunShadowDepth[i]->x,sun_pos);
-	
+				
 		// calculate the split view clipping borders and transformation matrix			
 				view_to_split(screen.views.main, pssm_splitdist[i],pssm_splitdist[i+1], screen.views.sunShadowDepth[i], &matSplit[i]);
 				LPD3DXEFFECT fx = screen.views.sunShadowDepth[i]->material->d3deffect;
-				if(fx) fx->SetMatrix("matSplitViewProj",&matSplit[i]);
+				/*
+				D3DXMATRIX mepmopmup;
+				mat_set(mepmopmup, matWorld);
+				mat_multiply(mepmopmup, matSplit[i]);
+				*/
+				if(fx) fx->SetMatrix("matSplitViewProj",matSplit[i]);
 				
 		// create a texture matrix from the split view proj matrix			
 				D3DXMatrixMultiply(&matSplit[i],&matSplit[i],pssm_texscale(screen.settings.lights.sunShadowResolution));

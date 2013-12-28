@@ -160,7 +160,7 @@ void main()
 	sc_screen_default.settings.hdr.intensity = 2;
 	sc_screen_default.settings.hdr.lensflare.brightpass = 0.0;
 	sc_screen_default.settings.hdr.lensflare.intensity = 0.25;
-	sc_screen_default.settings.bitdepth = 32; //8 bit g-buffer & lighting (default). change to 12222 or 14444 for 16bit/32bit g-buffer and lighting buffer which results in nicer lighting at the cost of performance
+	
 	
 	//Add objects and apply custom materials
 	//Texture Movement

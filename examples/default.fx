@@ -1797,8 +1797,6 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 				//else
 				//	color.rgb *= 1;
 				
-				
-				
 				//-------------------------
 			}
 			else if(shadowMask == 1)
@@ -2594,10 +2592,23 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 		#include <bones>
 	#endif
 	
+	#ifndef MATWORLD
+	#define MATWORLD
+		float4x4 matWorld;
+	#endif
+	#ifndef MATVIEWPROJ
+	#define MATVIEWPROJ
+		float4x4 matViewProj;
+	#endif
+	#ifndef MATSPLITVIEWPROJ
+	#define MATSPLITVIEWPROJ
+		float4x4 matSplitViewProj;
+	#endif
 	#ifndef MATWORLDVIEWPROJ
 		#define MATWORLDVIEWPROJ
 		float4x4 matWorldViewProj;
 	#endif
+	
 	//float4x4 matProj;
 	
 	/*
@@ -2614,6 +2625,10 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 	#ifndef FALPHA
 	#define FALPHA
 		float fAlpha;
+	#endif
+	#ifndef SHADOWMAPMODE
+	#define SHADOWMAPMODE
+		float shadowmapMode = 1; //0 = sun | 1 = local lights | auto-set by code
 	#endif
 	
 	#ifdef ALPHA
@@ -2643,7 +2658,7 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 	struct vsOut
 	{
 		float4 Pos : POSITION;
-		float Pos2D : TEXCOORD0;
+		float2 Pos2D : TEXCOORD0;
 		float2 Tex : TEXCOORD1;
 	};
 	
@@ -2658,6 +2673,8 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 //section: scLightShadowmap - shadowmap calculation //
 #ifndef include_scLightShadowmap
 #define include_scLightShadowmap
+	//float4x4 _matViewProj; //set by code |we can't use the default matViewProj here as we need to support both sun and local lights
+	
 	vsOut mainVS(vsIn In)
 	{
 		vsOut Out = (vsOut)0;	
@@ -2669,6 +2686,10 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 		Out.Tex = In.Tex;	
 		*/
 		
+		//dead ugly...but we have to serve both sun and local shadowmaps...
+		matWorldViewProj = lerp( mul(matWorld, matSplitViewProj), matWorldViewProj, shadowmapMode );
+		matViewProj = lerp(matSplitViewProj, matViewProj, shadowmapMode);
+		
 		#ifndef CUSTOM_VS_POSITION
 			#ifdef BONES
 				Out.Pos = DoBones(In.Pos, In.BoneIndices, In.BoneWeights);
@@ -2679,7 +2700,9 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 		#else
 			Out.Pos = Custom_VS_Position(In);
 		#endif
-		Out.Pos2D = Out.Pos.z;
+		
+		//support both local and sun shadows (sun shadowmap needs Out.Pos.w whereas local lights need clipFar)
+		Out.Pos2D = float2(Out.Pos.z, lerp(Out.Pos.w, clipFar, shadowmapMode)); 
 		Out.Tex = In.Tex;	
 		
 		#ifdef CUSTOM_VS_Extend
@@ -2690,10 +2713,11 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 		
 	}
 	
-	half4 CalculateShadowDepth(float Pos2D_Z)
+	half4 CalculateShadowDepth(float2 Pos2D_Z)
 	{
 		//half depth = ((Pos2D_Z)/vecSkill1.w);
-		half depth = ((Pos2D_Z)/clipFar);
+		//half depth = ((Pos2D_Z)/clipFar);
+		half depth = Pos2D_Z.x/Pos2D_Z.y;
 		//depth += depth*vecSkill1.z;
 		
 		//return half4(PackDepth(depth),0,0);
@@ -2718,7 +2742,7 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 			#endif
 		#endif
 		
-		Out.Color = CalculateShadowDepth(In.Pos2D.x);
+		Out.Color = CalculateShadowDepth(In.Pos2D.xy);
 		
 		#ifdef CUSTOM_PS_EXTEND
 			Out = Custom_PS_Extend(In, Out);
@@ -2731,7 +2755,7 @@ float scGetShadowPCFBilinear(half3 vTexCoord, sampler inDepthSampler, int inShad
 	{
 		psOut Out = (psOut)0;
 		
-		Out.Color = CalculateShadowDepth(In.Pos2D.x);
+		Out.Color = CalculateShadowDepth(In.Pos2D.xy);
 		
 		#ifdef CUSTOM_PS_EXTEND
 			Out = Custom_PS_Extend(In, Out);

@@ -334,7 +334,9 @@ typedef struct{
 	SC_SETTINGS_SSAO ssao;
 	SC_SETTINGS_LIGHTS lights;
 	SC_SETTINGS_ANTIALIASING antialiasing;
-	int bitdepth;
+	int bitdepthGBuffer; //g-buffer
+	int bitdepthLBuffer; //lighting buffer
+	int bitdepthGRTs; //generic render targets
 }SC_SETTINGS;
 //
 

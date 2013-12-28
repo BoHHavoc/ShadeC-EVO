@@ -104,7 +104,9 @@ void main()
 	sc_screen_default.settings.lights.sunShadowRange = 5000; //manually set the shadow range...we don't need realtime shadows in the far distant! If set to 0 (default) shadow range will be set to camera.clip_far
 	sc_screen_default.settings.lights.sunShadowBias = 0.001; //set the shadow bias
 	sc_screen_default.settings.antialiasing.enabled = 1; //enable antialiasing
-	sc_screen_default.settings.bitdepth = 32; //8 bit g-buffer & lighting (default). change to 12222 or 14444 for 16bit/32bit g-buffer and lighting buffer which results in nicer lighting at the cost of performance
+	sc_screen_default.settings.bitdepthGBuffer = 32; //8 bit g-buffer (default). change to 12222 or 14444 for 16bit/32bit g-buffer which might result in nicer lighting at the cost of performance
+	sc_screen_default.settings.bitdepthLBuffer = 32; //8 bit lighting (default). change to 12222 or 14444 for 16bit/32bit lighting buffer which results in nicer lighting at the cost of performance
+	sc_screen_default.settings.bitdepthGRTs = 32; //8 bit generic rendertargets (default). change to 12222 or 14444 for 16bit/32bit generic rendertargets
 	
 	//initialize shade-c, use default screen object
 	sc_setup(sc_screen_default);
@@ -127,9 +129,7 @@ void main()
 	vec_scale(you.scale_x, 10);
 	set(you, SHADOW);
 	
-	
-	
-	
+
 	
 	//create a spotlight which we will rotate later
 	//please note that the light's red color value is above 255, which automatically makes this an hdr light
@@ -158,9 +158,10 @@ void main()
    	sc_light_update(spotlight);
    	
    	
-   	//DEBUG_BMAP(sc_screen_default.renderTargets.gBuffer[0],0,1);
+   	DEBUG_BMAP(sc_screen_default.views.sunShadowDepth[0].bmap, 0, 0.5);
    	
 	   wait(1);
   }
+  
   
 }

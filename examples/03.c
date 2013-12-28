@@ -99,8 +99,7 @@ void main()
 	sc_screen_default.settings.lights.sunShadows = 1; //enable shadows for the sun
 	sc_screen_default.settings.lights.sunShadowResolution = 256; //reduce shadow resolution as we are blurring the shadowmap and therefore can get away with low res shadows
 	sc_screen_default.settings.lights.sunPssmBlurSplits = 2; //blur the first two pssm splits
-	sc_screen_default.settings.lights.sunPssmSplitWeight = 0.7; //high res near splits, low res far splits
-	sc_screen_default.settings.bitdepth = 32; //8 bit g-buffer & lighting (default). change to 12222 or 14444 for 16bit/32bit g-buffer and lighting buffer which results in nicer lighting at the cost of performance
+	sc_screen_default.settings.lights.sunPssmSplitWeight = 0.7; //high res near splits, low res far splits	
 	
 	
 	//initialize shade-c, use default screen object and 8 bit g-buffer & lighting. change 32 to 12222 or 14444 for 16bit/32bit g-buffer and lighting

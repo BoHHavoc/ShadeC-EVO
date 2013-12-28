@@ -155,7 +155,9 @@ void sc_settings_setDefaults(SC_SETTINGS* settings)
 	settings.antialiasing.enabled = 0;
 	
 	//bitdepth
-	settings.bitdepth = 32;
+	settings.bitdepthGBuffer = 32;
+	settings.bitdepthLBuffer = 32;
+	settings.bitdepthGRTs = 32;
 }
 
 SC_SCREEN* sc_screen_create(VIEW* inView)
