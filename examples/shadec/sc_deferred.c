@@ -3,9 +3,9 @@ void sc_deferred_init(SC_SCREEN* screen)
 	//create materials
 	screen.materials.deferred = mtl_create();
 	effect_load(screen.materials.deferred, sc_deferred_sMaterialFinalize);
-	screen.materials.deferred.skin1 = screen.renderTargets.gBuffer[SC_GBUFFER_ALBEDO_AND_EMISSIVE_MASK];
-	screen.materials.deferred.skin2 = screen.renderTargets.deferredLighting;
-	screen.materials.deferred.skin3 = screen.renderTargets.gBuffer[SC_GBUFFER_MATERIAL_DATA];
+	//screen.materials.deferred.skin1 = screen.renderTargets.gBuffer[SC_GBUFFER_ALBEDO_AND_EMISSIVE_MASK];
+	//screen.materials.deferred.skin2 = screen.renderTargets.deferredLighting;
+	//screen.materials.deferred.skin3 = screen.renderTargets.gBuffer[SC_GBUFFER_MATERIAL_DATA];
 	screen.materials.deferred.skin4 = screen.renderTargets.ssao;
 	
 	//screen.materials.deferred.skin4 = screen.renderTargets.gBuffer[SC_GBUFFER_NORMALS_AND_DEPTH];
@@ -73,22 +73,42 @@ void sc_deferred_frm(SC_SCREEN* screen)
 		screen.materials.deferred.skill2 = floatv(ambient_color.green/255);
 		screen.materials.deferred.skill3 = floatv(ambient_color.blue/255);
 		
+		
 		LPD3DXEFFECT fx = screen.materials.deferred->d3deffect;
 		fx->SetFloat("clipFar", screen.views.main.clip_far);
-		fx->SetTexture("texNormalsAndDepth", screen.renderTargets.gBuffer[SC_GBUFFER_NORMALS_AND_DEPTH].d3dtex);
+		fx->SetTexture("texAlbedoAndEmissiveMask", (LPDIRECT3DTEXTURE9*)(screen.renderTargets.gBuffer[SC_GBUFFER_ALBEDO_AND_EMISSIVE_MASK].d3dtex));
+		fx->SetTexture("texNormalsAndDepth", (LPDIRECT3DTEXTURE9*)(screen.renderTargets.gBuffer[SC_GBUFFER_NORMALS_AND_DEPTH].d3dtex));
+		fx->SetTexture("texMaterialData", (LPDIRECT3DTEXTURE9*)(screen.renderTargets.gBuffer[SC_GBUFFER_MATERIAL_DATA].d3dtex));
+		fx->SetTexture("texDiffuseAndSpecular", (LPDIRECT3DTEXTURE9*)(screen.renderTargets.deferredLighting.d3dtex));
+		
 		//FOG
+		screen.materials.deferred.skin1 = screen.settings.fogNoise;
 		D3DXVECTOR4 heightFog;
-		//heightFog.x = screen.views.main.clip_near + screen.settings.heightFog.x;
-		//heightFog.y = screen.views.main.clip_near + screen.settings.heightFog.y;
-		heightFog.x = screen.settings.heightFog.x;
-		heightFog.y = screen.settings.heightFog.y;
-		heightFog.z = (float)(1) / (screen.settings.heightFog.y - screen.settings.heightFog.x);
+		//heightFog.x = screen.views.main.clip_near + screen.settings.fogData.x;
+		//heightFog.y = screen.views.main.clip_near + screen.settings.fogData.y;
+		heightFog.x = screen.settings.fogData.y;//screen.settings.heightFog.x;
+		heightFog.y = (float)(1) / (screen.settings.fogData.y - screen.settings.fogData.x);//screen.settings.fogData.y;
+		//heightFog.z = (float)(1) / (screen.settings.fogData.y - screen.settings.fogData.x);
+		
+		//enable disable noise texture
+		if(screen.settings.fogNoise == NULL)
+			heightFog.z = 0;
+		else
+			heightFog.z = 1;
+		
+		//enable disable fog
 		if(fog_color == 0)
 			heightFog.w = 0;
 		else
 			heightFog.w = 1;
-		
 		fx->SetVector("vecFogHeight", heightFog);
+		
+		D3DXVECTOR4 fogData;
+		fogData.x = screen.settings.fogNoiseScale*100;
+		fogData.y = screen.settings.fogData.z/1000;
+		fogData.z = screen.settings.fogData.w/1000;
+		fx->SetVector("fogData", fogData);
+		
 		
 	}
 }

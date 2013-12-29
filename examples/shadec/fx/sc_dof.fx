@@ -98,8 +98,36 @@ float4 mainPS(float2 inTex:TEXCOORD0):COLOR0
 	focalPlane = lerp(foregroundPlane, backgroundPlane, focalPlaneLerpFactor);
 	*/
 	
+	
+	
+	
+	//focalPlane = lerp(focalPlane, 1, tex2D(blurSampler, inTex).w - focalPlane);
+	//focalPlane = tex2D(blurSampler, inTex).w;
+	/*
+	vecViewPort *= 4;
+	half blurFocus = tex2D(blurSampler, inTex + half2(vecViewPort.z,0)).w;
+	blurFocus += tex2D(blurSampler, inTex + half2(-vecViewPort.z,0)).w;
+	blurFocus += tex2D(blurSampler, inTex + half2(0, vecViewPort.w)).w;
+	blurFocus += tex2D(blurSampler, inTex + half2(0, -vecViewPort.w)).w;
+	*/
+	
+	/*
+	half blurFocus = UnpackDepth(tex2D(normalsAndDepthSampler, inTex + half2(vecViewPort.z,0)).zw);
+	blurFocus += UnpackDepth(tex2D(normalsAndDepthSampler, inTex + half2(-vecViewPort.z,0)).zw);
+	blurFocus += UnpackDepth(tex2D(normalsAndDepthSampler, inTex + half2(0, vecViewPort.w)).zw);
+	blurFocus += UnpackDepth(tex2D(normalsAndDepthSampler, inTex + half2(0, -vecViewPort.w)).zw);
+	blurFocus *= 0.25;
+	half blurFocalPlane = blurFocus*vecSkill1.y;
+	blurFocalPlane = ((blurFocalPlane-vecSkill1.z)/vecSkill1.w) * ((blurFocalPlane-vecSkill1.z)/vecSkill1.w);
+	blurFocalPlane = saturate(blurFocalPlane);
+	*/
+	
+	focalPlane = max(focalPlane, tex2D(blurSampler, inTex-vecViewPort.zw).w);//lerp(focalPlane, max(focalPlane, tex2D(blurSampler, inTex).w), focalPlanePos);
+	
 	color = lerp(color, blur, focalPlane);
-
+	//color = focalPlanePos;
+	
+	
 	return half4(color,1);
 }
 

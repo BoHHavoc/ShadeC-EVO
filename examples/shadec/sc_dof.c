@@ -29,6 +29,7 @@ void sc_dof_MaterialEvent()
 			
 		case screen.views.dofBlurX:
 			screen.views.dofBlurX.bmap = screen.renderTargets.quarter1;
+			screen.views.dofBlurX.target1 = screen.renderTargets.quarter2;
 			break;
 		
 		case screen.views.dofBlurY:
@@ -60,8 +61,9 @@ void sc_dof_init(SC_SCREEN* screen)
 		//blur y
 		screen.materials.dofBlurY = mtl_create();
 		effect_load(screen.materials.dofBlurY, sc_dof_sMaterialBlurY);
-		screen.materials.dofBlurY.skin1 = screen.renderTargets.quarter1;// this contains the x blurred scene
+		screen.materials.dofBlurY.skin1 = screen.renderTargets.quarter1;// this contains the x blurred scene, with unblurred focus
 		screen.materials.dofBlurY.skin2 = screen.renderTargets.gBuffer[SC_GBUFFER_NORMALS_AND_DEPTH];
+		screen.materials.dofBlurY.skin3 = screen.renderTargets.quarter2;// this contains the downsampled scene, with blurred focus
 		screen.materials.dofBlurY.skill1 = floatv(screen.settings.dof.blurY); //blur strength
 		screen.materials.dofBlurY.event = sc_dof_MaterialEvent;
 		screen.materials.dofBlurY.SC_SKILL = screen;
@@ -127,6 +129,7 @@ void sc_dof_init(SC_SCREEN* screen)
 		screen.views.dofBlurX.material = screen.materials.dofBlurX;
 		screen.views.dofBlurX.stage = screen.views.dofBlurY;
 		screen.views.dofBlurX.bmap = screen.renderTargets.quarter0; //assign temp render target so Acknex does not automatically create a new one
+		screen.views.dofBlurX.target1 = screen.renderTargets.quarter2; //assign temp render target so Acknex does not automatically create a new one
 		
 		//downsample
 		screen.views.dofDownsample = view_create(2);

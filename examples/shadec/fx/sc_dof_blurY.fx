@@ -3,10 +3,21 @@
 float4 vecViewPort;
 float4 vecSkill1;
 
-texture mtlSkin1; //downsample output
+texture mtlSkin1; //blurred output, unblurred focus
 sampler sceneSampler = sampler_state
 {
 	texture 		= mtlSkin1;
+	MinFilter = Linear;
+	MagFilter = Linear;
+	MipFilter = Linear;
+	AddressU = Clamp;
+   AddressV = Clamp;
+};
+
+texture mtlSkin3; //downsample output, blurred focus
+sampler orgSceneSampler = sampler_state
+{
+	texture 		= mtlSkin3;
 	MinFilter = Linear;
 	MagFilter = Linear;
 	MipFilter = Linear;
@@ -18,9 +29,9 @@ texture mtlSkin2; //normals and depth
 sampler normalsAndDepthSampler = sampler_state
 {
 	texture 		= mtlSkin2;
-	MinFilter = Linear;
-	MagFilter = Linear;
-	MipFilter = Linear;
+	MinFilter = POINT;
+	MagFilter = POINT;
+	MipFilter = POINT;
 	AddressU = Clamp;
    AddressV = Clamp;
 };
@@ -52,13 +63,23 @@ float4 mainPS(float2 inTex : TEXCOORD0) : COLOR
 	inTex.x += (0.5/vecViewPort.x); //half pixel fix
 	inTex.y += (0.5/vecViewPort.y); //half pixel fix
 	
-	//half depth = 1-UnpackDepth(tex2D(normalsAndDepthSampler, inTex).zw);
+	half depth = 1-UnpackDepth(tex2D(normalsAndDepthSampler, inTex).zw);
+	/*
+	half depth = UnpackDepth(tex2D(normalsAndDepthSampler, inTex + half2(vecViewPort.z, vecViewPort.w)).zw);
+	depth += UnpackDepth(tex2D(normalsAndDepthSampler, inTex + half2(-vecViewPort.z, vecViewPort.w)).zw);
+	depth += UnpackDepth(tex2D(normalsAndDepthSampler, inTex + half2(vecViewPort.z, -vecViewPort.w)).zw);
+	depth += UnpackDepth(tex2D(normalsAndDepthSampler, inTex + half2(-vecViewPort.z, -vecViewPort.w)).zw);
+	depth = 1-(depth*0.25);
+	*/
+	
 	half4 scene = tex2D(sceneSampler, inTex-vecViewPort.zw);
+	//scene.a = tex2D(orgSceneSampler, inTex-vecViewPort.zw).w;
 	//scene.a *= depth;
 	half4 pixel = 0;
 	for(int i = 0; i < g_c_PixelOffsetSize; i++)
 	{
-		half4 sample = tex2D(sceneSampler,(inTex) + PixelOffsets[i].yx * vecSkill1.x);
+		half4 sample = tex2D(sceneSampler,(inTex) + PixelOffsets[i].yx * vecSkill1.x * depth);
+		//sample.w = tex2D(orgSceneSampler,(inTex) + PixelOffsets[i].yx * vecSkill1.x * depth).w;
 		//half sampleDepth = 1-UnpackDepth(tex2D(normalsAndDepthSampler,(inTex-vecViewPort.zw) + PixelOffsets[i].xy * vecSkill1.x).zw);
 		//sample.a *= depthDepth;
 		pixel += lerp(sample.rgba, scene.rgba, (scene.a - sample.a));
@@ -71,7 +92,31 @@ float4 mainPS(float2 inTex : TEXCOORD0) : COLOR
 	//return scene;
 	
 	pixel /= g_c_PixelOffsetSize;
+	pixel.a = (pixel.a + tex2D(orgSceneSampler, inTex-vecViewPort.zw).w) * 0.5;
+		
 	return pixel;
+	
+	//return scene;
+	
+	/*
+	half depthpixel = 0;
+	for(int i = 0; i < g_c_PixelOffsetSize; i++)
+	{
+		half sample = tex2D(sceneSampler,(inTex) + PixelOffsets[i].xy * vecSkill1.x * depth).w;
+		//half sampleDepth = 1-UnpackDepth(tex2D(normalsAndDepthSampler,(inTex-vecViewPort.zw) + PixelOffsets[i].xy * vecSkill1.x).zw);
+		//sample.a *= depthDepth;
+		depthpixel += lerp(sample, scene.a, (scene.a - sample));
+
+		//if(depth < sampleDepth) pixel += lerp(sample.rgb, scene.rgb, (scene.a - sample.a));
+		//else pixel += scene.rgb;
+		//if(depth > sampleDepth) pixel = lerp(pixel.rgb, scene.rgb, (-1)*(sample.a - scene.a));
+	}
+	
+	depthpixel /= g_c_PixelOffsetSize;
+	pixel.a = (pixel.a + depthpixel) * 0.5;
+	*/
+	
+	
 	//return float4(pixel.rgb, scene.a);
 }
 
