@@ -7,6 +7,7 @@ void sc_deferred_init(SC_SCREEN* screen)
 	screen.materials.deferred.skin2 = screen.renderTargets.deferredLighting;
 	screen.materials.deferred.skin3 = screen.renderTargets.gBuffer[SC_GBUFFER_MATERIAL_DATA];
 	screen.materials.deferred.skin4 = screen.renderTargets.ssao;
+	
 	//screen.materials.deferred.skin4 = screen.renderTargets.gBuffer[SC_GBUFFER_NORMALS_AND_DEPTH];
 	
 	//setup views
@@ -71,5 +72,23 @@ void sc_deferred_frm(SC_SCREEN* screen)
 		screen.materials.deferred.skill1 = floatv(ambient_color.red/255);
 		screen.materials.deferred.skill2 = floatv(ambient_color.green/255);
 		screen.materials.deferred.skill3 = floatv(ambient_color.blue/255);
+		
+		LPD3DXEFFECT fx = screen.materials.deferred->d3deffect;
+		fx->SetFloat("clipFar", screen.views.main.clip_far);
+		fx->SetTexture("texNormalsAndDepth", screen.renderTargets.gBuffer[SC_GBUFFER_NORMALS_AND_DEPTH].d3dtex);
+		//FOG
+		D3DXVECTOR4 heightFog;
+		//heightFog.x = screen.views.main.clip_near + screen.settings.heightFog.x;
+		//heightFog.y = screen.views.main.clip_near + screen.settings.heightFog.y;
+		heightFog.x = screen.settings.heightFog.x;
+		heightFog.y = screen.settings.heightFog.y;
+		heightFog.z = (float)(1) / (screen.settings.heightFog.y - screen.settings.heightFog.x);
+		if(fog_color == 0)
+			heightFog.w = 0;
+		else
+			heightFog.w = 1;
+		
+		fx->SetVector("vecFogHeight", heightFog);
+		
 	}
 }

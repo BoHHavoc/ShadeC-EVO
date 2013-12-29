@@ -1,5 +1,7 @@
 //#include <scUnpackSpecularData>
 #include <scUnpackLighting>
+#include <scUnpackDepth>
+#include <scCalculatePosVSQuad>
 
 /*
 float3 vecViewDir;
@@ -10,10 +12,19 @@ float3 vecViewDir;
 
 float4 vecSkill1; //xyz = ambient_color
 
+//fog
+float4 vecFog;
+float4 vecFogHeight;
+float4 vecFogColor;
+float clipFar;
+float4x4 matViewInv;
+float4 vecViewPos;
+
 texture mtlSkin1; //albedo and emissive mask
 texture mtlSkin2; //lighting, diffuse and specular
 texture mtlSkin3; //brdf data
 texture mtlSkin4; //ssao
+texture texNormalsAndDepth; //normals and depth
 
 sampler2D albedoAndEmissiveMaskSampler = sampler_state
 {
@@ -26,6 +37,17 @@ sampler2D albedoAndEmissiveMaskSampler = sampler_state
 	AddressV = WRAP;
 	
 	SRGBTexture = true;
+};
+
+sampler2D normalsAndDepthSampler = sampler_state
+{
+	Texture = <texNormalsAndDepth>;
+
+	MinFilter = POINT;
+	MagFilter = POINT;
+	MipFilter = POINT;
+	AddressU = WRAP;
+	AddressV = WRAP;
 };
 
 sampler2D diffuseAndSpecularSampler = sampler_state
@@ -98,9 +120,7 @@ float4 mainPS(psIn In):COLOR
 	half4 albedoAndEmissiveMask;// = tex2D(albedoAndEmissiveMaskSampler, In.Tex);
 	half4 diffuseAndSpecular;// = UnpackLighting(tex2D(diffuseAndSpecularSampler, In.Tex));
 	half4 materialData = tex2D(materialDataSampler, In.Tex);
-	
-	
-	
+		
 	//return half4(materialData.xyz, 1);
 	//Do Transparency
 	half2 alphaMask;
@@ -132,8 +152,11 @@ float4 mainPS(psIn In):COLOR
 	//diffuseAndSpecular.xyz += ssao.xyz;
 	//return half4(diffuseAndSpecular.xyz, 1);
 	//albedoAndEmissiveMask.xyz = 1; //debug only
-
 	
+	
+	//gBuffer (needed for fog)
+	half4 gBuffer = DoTransparency(alphaMask, alpha, normalsAndDepthSampler, In.Tex);
+	gBuffer.w = UnpackDepth(gBuffer.zw);
 	
 	/*
 	//sky
@@ -225,6 +248,23 @@ float4 mainPS(psIn In):COLOR
 	//gamma correction
 	//output = float4( sqrt(output.xyz), output.w);
 	
+	
+	
+	
+	//FOG
+	//linear
+	half fog = 1-saturate((vecFog.y-(gBuffer.w*clipFar)) * vecFog.z);
+	//add height
+	half3 posVS = CalculatePosVSQuad(In.Tex, gBuffer.w*clipFar);
+	half3 posWS = mul(float4(posVS,1), matViewInv).xyz;
+	fog = lerp(0, fog, saturate((vecFogHeight.y-(posWS.y)) * vecFogHeight.z) ) * vecFogHeight.w; //vecFogHeight.w is either 0 or 1, depending if fog is activated or not (fog_color != 0)
+	//exp
+	//half fog = 1-saturate(1/pow(2.71828, gBuffer.w*density));
+	//add fog to output
+	output.xyz = lerp(output.xyz, vecFogColor.xyz, fog);
+	
+	//output.xyz = posWS;
+	
 	return output;
 }
 
@@ -236,7 +276,7 @@ technique t1
 		//zwriteenable = false;
 		alphablendenable = false;
 		//VertexShader = compile vs_2_0 mainVS();
-		PixelShader = compile ps_2_0 mainPS();
+		PixelShader = compile ps_3_0 mainPS();
 		//FogEnable = False;
 		
 		SRGBWriteEnable = true;

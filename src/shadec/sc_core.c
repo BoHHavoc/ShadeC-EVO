@@ -158,6 +158,12 @@ void sc_settings_setDefaults(SC_SETTINGS* settings)
 	settings.bitdepthGBuffer = 32;
 	settings.bitdepthLBuffer = 32;
 	settings.bitdepthGRTs = 32;
+	
+	//height fog
+	settings.heightFog.x = 9999990;
+	settings.heightFog.y = 9999999;
+	settings.heightFog.z = 0;
+	settings.heightFog.w = 0;
 }
 
 SC_SCREEN* sc_screen_create(VIEW* inView)

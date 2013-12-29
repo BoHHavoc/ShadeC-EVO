@@ -2,7 +2,7 @@
 void sc_reset(SC_SCREEN* screen)
 {
 	if(screen == NULL) return;
-	if(screen.draw == 1) screen.draw = 0;
+	screen.draw = 0;
 	//sc_viewEvent_destroy(screen);
 	//sc_gammaCorrection_destroy(screen); //not used yet...
 	sc_hdr_destroy(screen);
@@ -16,7 +16,7 @@ void sc_reset(SC_SCREEN* screen)
 	sc_lights_destroySun(screen);
 	sc_gBuffer_destroy(screen);
 	
-	//Rendertargets//////////////////////////////////////////
+	//Generic Rendertargets (GRTs)//////////////////////////////////////////
 	if(screen.renderTargets.full0 != NULL){bmap_purge(screen.renderTargets.full0); ptr_remove(screen.renderTargets.full0); screen.renderTargets.full0=NULL; }
 	if(screen.renderTargets.full1 != NULL){bmap_purge(screen.renderTargets.full1); ptr_remove(screen.renderTargets.full1); screen.renderTargets.full1=NULL; }
 	if(screen.renderTargets.full2 != NULL){bmap_purge(screen.renderTargets.full2); ptr_remove(screen.renderTargets.full2); screen.renderTargets.full2=NULL; }
@@ -222,24 +222,15 @@ void sc_setup(SC_SCREEN* screen)
 	
 	screen.draw = 0;
 	
-	//setup generic rendertargets
-	if(screen.renderTargets.full0 != NULL) bmap_purge(screen.renderTargets.full0);
+	//setup generic rendertargets (GRTs)
 	screen.renderTargets.full0 = bmap_createblack(screen.views.main.size_x, screen.views.main.size_y, screen.settings.bitdepthGRTs);
-	if(screen.renderTargets.full1 != NULL) bmap_purge(screen.renderTargets.full1);
 	screen.renderTargets.full1 = bmap_createblack(screen.views.main.size_x, screen.views.main.size_y, screen.settings.bitdepthGRTs);
-	if(screen.renderTargets.full2 != NULL) bmap_purge(screen.renderTargets.full2);
 	screen.renderTargets.full2 = bmap_createblack(screen.views.main.size_x, screen.views.main.size_y, screen.settings.bitdepthGRTs);
-	if(screen.renderTargets.half0 != NULL) bmap_purge(screen.renderTargets.half0);
 	screen.renderTargets.half0 = bmap_createblack(screen.views.main.size_x/2, screen.views.main.size_y/2, screen.settings.bitdepthGRTs);
-	if(screen.renderTargets.half1 != NULL) bmap_purge(screen.renderTargets.half1);
 	screen.renderTargets.half1 = bmap_createblack(screen.views.main.size_x/2, screen.views.main.size_y/2, screen.settings.bitdepthGRTs);
-	if(screen.renderTargets.quarter0 != NULL) bmap_purge(screen.renderTargets.quarter0);
 	screen.renderTargets.quarter0 = bmap_createblack(screen.views.main.size_x/4, screen.views.main.size_y/4, screen.settings.bitdepthGRTs);
-	if(screen.renderTargets.quarter1 != NULL) bmap_purge(screen.renderTargets.quarter1);
 	screen.renderTargets.quarter1 = bmap_createblack(screen.views.main.size_x/4, screen.views.main.size_y/4, screen.settings.bitdepthGRTs);
-	if(screen.renderTargets.eighth0 != NULL) bmap_purge(screen.renderTargets.eighth0);
 	screen.renderTargets.eighth0 = bmap_createblack(screen.views.main.size_x/8, screen.views.main.size_y/8, screen.settings.bitdepthGRTs);
-	if(screen.renderTargets.eighth1 != NULL) bmap_purge(screen.renderTargets.eighth1);
 	screen.renderTargets.eighth1 = bmap_createblack(screen.views.main.size_x/8, screen.views.main.size_y/8, screen.settings.bitdepthGRTs);
 	
 	//setup effects
@@ -257,9 +248,7 @@ void sc_setup(SC_SCREEN* screen)
 	if(screen.settings.hdr.enabled == 1) sc_hdr_init(screen);
 	//sc_gammaCorrection_init(screen); //not used yet...
 	sc_viewEvent_init(screen);
-	
-	
-	//wait(2);
+
 	
 	screen.draw = 1;
 	
@@ -280,8 +269,6 @@ void sc_setup(SC_SCREEN* screen)
 		
 		wait(1);
 	}
-	
-	
 }
 
 

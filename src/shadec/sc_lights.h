@@ -43,7 +43,7 @@ int sc_lights_stencilRefCurrent = 1; //current Stencil Reference for lights. Wil
 BMAP* sc_lights_map_defaultProjTex = "sc_lights_defaultProjTex.bmp";
 
 //material Strings
-STRING* sc_lights_sMaterialShadowmapLocal = "sc_lights_shadowmapLocal.fx";
+STRING* sc_lights_sMaterialShadowmapLocal = "sc_lights_shadowmap.fx";
 STRING* sc_lights_sMaterialShadowmapBlur = "sc_lights_shadowmapBlur.fx";
 
 //model files
@@ -89,7 +89,7 @@ STRING* sc_lights_sMaterialSunShadowCreate = "sc_lights_sunShadowCreate.fx";
 STRING* sc_lights_sMaterialSunShadowEdge = "sc_lights_sunShadowEdge.fx";
 STRING* sc_lights_sMaterialSunShadowExpand = "sc_lights_sunShadowExpand.fx";
 //STRING* sc_lights_sMaterialShadowmap = "sc_lights_shadowmap.fx";
-STRING* sc_lights_sMaterialShadowmapSplit1 = "sc_lights_shadowmapLocal.fx";
-STRING* sc_lights_sMaterialShadowmapSplit2 = "sc_lights_shadowmapLocal.fx";
-STRING* sc_lights_sMaterialShadowmapSplit3 = "sc_lights_shadowmapLocal.fx";
-STRING* sc_lights_sMaterialShadowmapSplit4 = "sc_lights_shadowmapLocal.fx";
+STRING* sc_lights_sMaterialShadowmapSplit1 = "sc_lights_shadowmap.fx";
+STRING* sc_lights_sMaterialShadowmapSplit2 = "sc_lights_shadowmap.fx";
+STRING* sc_lights_sMaterialShadowmapSplit3 = "sc_lights_shadowmap.fx";
+STRING* sc_lights_sMaterialShadowmapSplit4 = "sc_lights_shadowmap.fx";

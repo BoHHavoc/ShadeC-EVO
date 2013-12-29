@@ -337,6 +337,7 @@ typedef struct{
 	int bitdepthGBuffer; //g-buffer
 	int bitdepthLBuffer; //lighting buffer
 	int bitdepthGRTs; //generic render targets
+	D3DXVECTOR4 heightFog; //height based fog. x = start, y = end
 }SC_SETTINGS;
 //
 

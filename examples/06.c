@@ -84,8 +84,24 @@ void main()
 	//setup skies
 	sc_sky(skycube);
 	
+
 	//set camera as main view of sc_screen_default
 	sc_screen_default = sc_screen_create(camera);
+	
+	
+	//FOG
+	fog_color=1;
+	d3d_fogcolor1.red=160;
+	d3d_fogcolor1.green=200;
+	d3d_fogcolor1.blue=220;
+	camera.fog_start=500;
+	camera.fog_end=1500;
+	//turn on shade-c's height based fog (for 100% fog set both values very high (default: 9999990 & 9999999)
+	sc_screen_default.settings.heightFog.x = 0; //height fog start
+	sc_screen_default.settings.heightFog.y = 500; //height fog end
+	//to attach the fog ground plane to the camera, call this in a while loop
+	//sc_screen_default.settings.heightFog.x = camera.y; //height fog start
+	//sc_screen_default.settings.heightFog.y = 500 + camera.y; //height fog end
 	
 	//enable/disable Shade-C effects. You have to set these before calling sc_setup()
 	//If you want to change these during runtime, simply call sc_setup() again after you enabled/disabled an effect
@@ -117,8 +133,8 @@ void main()
 	sc_screen_default.settings.hdr.intensity = 1;
 	sc_screen_default.settings.hdr.lensflare.brightpass = 0.0;
 	sc_screen_default.settings.hdr.lensflare.intensity = 0.25;
-	sc_screen_default.settings.dof.focalPos = 300;
-	sc_screen_default.settings.dof.focalWidth = 600;
+	sc_screen_default.settings.dof.focalPos = 600;
+	sc_screen_default.settings.dof.focalWidth = 150;
 	sc_screen_default.settings.ssao.radius = 30;	
 	sc_screen_default.settings.ssao.intensity = 4;
 	sc_screen_default.settings.ssao.selfOcclusion = 0.0004; //we want a bit of self occlusion... lower values result in even more self occlusion
@@ -151,14 +167,13 @@ void main()
 //   	sun_light = sun_angle.tilt;
    	
    	
-   	
    	//rotate the spotlight
    	spotlight.pan += time_step*5;
    	//update the spotlight
    	sc_light_update(spotlight);
    	
    	
-   	DEBUG_BMAP(sc_screen_default.views.sunShadowDepth[0].bmap, 0, 0.5);
+   	//DEBUG_BMAP(sc_screen_default.views.sunShadowDepth[0].bmap, 0, 0.5);
    	
 	   wait(1);
   }
