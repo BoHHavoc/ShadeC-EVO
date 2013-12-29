@@ -21,9 +21,9 @@ sampler2D normalsAndDepthSampler = sampler_state
 {
 	Texture = <mtlSkin2>;
 
-	MinFilter = LINEAR;
-	MagFilter = LINEAR;
-	MipFilter = LINEAR;
+	MinFilter = POINT;
+	MagFilter = POINT;
+	MipFilter = POINT;
 	AddressU = WRAP;
 	AddressV = WRAP;
 };

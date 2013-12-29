@@ -1,6 +1,7 @@
 //#include <scUnpackSpecularData>
 #include <scUnpackLighting>
 #include <scUnpackDepth>
+#include <scUnpackNormals>
 #include <scCalculatePosVSQuad>
 
 /*
@@ -14,21 +15,25 @@ float4 vecSkill1; //xyz = ambient_color
 
 //fog
 float4 vecFog;
-float4 vecFogHeight;
+float4 vecFogHeight; //xy = density data , z = noise texture on/off, w = fog on/off
+float4 fogData; //x = noise scale , yz = movement speed
 float4 vecFogColor;
 float clipFar;
 float4x4 matViewInv;
-float4 vecViewPos;
+//float4 vecViewPos;
+//float4 vecViewDir;
+float4 vecTime;
 
-texture mtlSkin1; //albedo and emissive mask
-texture mtlSkin2; //lighting, diffuse and specular
-texture mtlSkin3; //brdf data
+texture texAlbedoAndEmissiveMask;//mtlSkin1; //albedo and emissive mask
+texture texDiffuseAndSpecular;//mtlSkin2; //lighting, diffuse and specular
+texture texMaterialData;//mtlSkin3; //brdf data
 texture mtlSkin4; //ssao
+texture mtlSkin1; //fog noise texture
 texture texNormalsAndDepth; //normals and depth
 
 sampler2D albedoAndEmissiveMaskSampler = sampler_state
 {
-	Texture = <mtlSkin1>;
+	Texture = <texAlbedoAndEmissiveMask>;
 
 	MinFilter = POINT;
 	MagFilter = POINT;
@@ -52,7 +57,7 @@ sampler2D normalsAndDepthSampler = sampler_state
 
 sampler2D diffuseAndSpecularSampler = sampler_state
 {
-	Texture = <mtlSkin2>;
+	Texture = <texDiffuseAndSpecular>;
 
 	MinFilter = POINT;
 	MagFilter = POINT;
@@ -63,7 +68,7 @@ sampler2D diffuseAndSpecularSampler = sampler_state
 
 sampler2D materialDataSampler = sampler_state
 {
-	Texture = <mtlSkin3>;
+	Texture = <texMaterialData>;
 
 	MinFilter = POINT;
 	MagFilter = POINT;
@@ -75,6 +80,17 @@ sampler2D materialDataSampler = sampler_state
 sampler2D ssaoSampler = sampler_state
 {
 	Texture = <mtlSkin4>;
+
+	MinFilter = LINEAR;
+	MagFilter = LINEAR;
+	MipFilter = LINEAR;
+	AddressU = WRAP;
+	AddressV = WRAP;
+};
+
+sampler2D fogNoiseSampler = sampler_state
+{
+	Texture = <mtlSkin1>;
 
 	MinFilter = LINEAR;
 	MagFilter = LINEAR;
@@ -157,6 +173,7 @@ float4 mainPS(psIn In):COLOR
 	//gBuffer (needed for fog)
 	half4 gBuffer = DoTransparency(alphaMask, alpha, normalsAndDepthSampler, In.Tex);
 	gBuffer.w = UnpackDepth(gBuffer.zw);
+	gBuffer.xyz = UnpackNormals(gBuffer.xy);
 	
 	/*
 	//sky
@@ -250,20 +267,45 @@ float4 mainPS(psIn In):COLOR
 	
 	
 	
-	
 	//FOG
 	//linear
-	half fog = 1-saturate((vecFog.y-(gBuffer.w*clipFar)) * vecFog.z);
-	//add height
+	half fog = 1-saturate((vecFog.y-(gBuffer.w*clipFar)) * vecFog.z) * vecFogHeight.w;
+	//general stuff
 	half3 posVS = CalculatePosVSQuad(In.Tex, gBuffer.w*clipFar);
 	half3 posWS = mul(float4(posVS,1), matViewInv).xyz;
-	fog = lerp(0, fog, saturate((vecFogHeight.y-(posWS.y)) * vecFogHeight.z) ) * vecFogHeight.w; //vecFogHeight.w is either 0 or 1, depending if fog is activated or not (fog_color != 0)
+	
+	[BRANCH]
+	if(vecFogHeight.z == 1)
+	{
+		//noise
+		half2 noiseScale = 2;
+		noiseScale.y = noiseScale.x*0.25;
+		half2 noiseMovement = vecTime.w*fogData.zw;
+		half3 fogNoise = tex2Dlod(fogNoiseSampler, half4((posWS.yz/fogData.x)+noiseMovement,0,0) ).x*noiseScale.x-(noiseScale.y);
+		fogNoise.y = tex2Dlod(fogNoiseSampler, half4((posWS.xz/fogData.x)+noiseMovement,0,0) ).x*noiseScale.x-(noiseScale.y);
+		fogNoise.z = tex2Dlod(fogNoiseSampler, half4((posWS.xy/fogData.x)+noiseMovement,0,0) ).x*noiseScale.x-(noiseScale.y);
+		half3 normalsWS = mul(half4(gBuffer.xyz,0), matViewInv).xyz;
+		fogNoise *= abs(normalsWS.xyz);
+		fogNoise.x = dot(fogNoise,1);
+			//
+			
+		//add height
+		fog = lerp(0, fog, saturate((vecFogHeight.x-(posWS.y)) * vecFogHeight.y) ); //vecFogHeight.w is either 0 or 1, depending if fog is activated or not (fog_color != 0)
+		//add noise
+		fog = saturate(fog + fog*fogNoise);
+	}
+	else
+	{
+		//add height
+		fog = lerp(0, fog, saturate((vecFogHeight.x-(posWS.y)) * vecFogHeight.y) ); //vecFogHeight.w is either 0 or 1, depending if fog is activated or not (fog_color != 0)
+	}
 	//exp
 	//half fog = 1-saturate(1/pow(2.71828, gBuffer.w*density));
 	//add fog to output
 	output.xyz = lerp(output.xyz, vecFogColor.xyz, fog);
-	
+	//	output.xyz = tex2D(fogNoiseSampler, In.Tex).xyz;
 	//output.xyz = posWS;
+	//output.xyz = dot(fogNoise,1);
 	
 	return output;
 }

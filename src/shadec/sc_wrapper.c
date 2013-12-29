@@ -24,6 +24,7 @@ void sc_reset(SC_SCREEN* screen)
 	if(screen.renderTargets.half1 != NULL){bmap_purge(screen.renderTargets.half1); ptr_remove(screen.renderTargets.half1); screen.renderTargets.half1=NULL; }
 	if(screen.renderTargets.quarter0 != NULL){bmap_purge(screen.renderTargets.quarter0); ptr_remove(screen.renderTargets.quarter0); screen.renderTargets.quarter0=NULL; }
 	if(screen.renderTargets.quarter1 != NULL){bmap_purge(screen.renderTargets.quarter1); ptr_remove(screen.renderTargets.quarter1); screen.renderTargets.quarter1=NULL; }
+	if(screen.renderTargets.quarter2 != NULL){bmap_purge(screen.renderTargets.quarter2); ptr_remove(screen.renderTargets.quarter2); screen.renderTargets.quarter2=NULL; }
 	if(screen.renderTargets.eighth0 != NULL){bmap_purge(screen.renderTargets.eighth0); ptr_remove(screen.renderTargets.eighth0); screen.renderTargets.eighth0=NULL; }
 	if(screen.renderTargets.eighth1 != NULL){bmap_purge(screen.renderTargets.eighth1); ptr_remove(screen.renderTargets.eighth1); screen.renderTargets.eighth1=NULL; }
 	/////////////////////////////////////////////////////////
@@ -230,6 +231,7 @@ void sc_setup(SC_SCREEN* screen)
 	screen.renderTargets.half1 = bmap_createblack(screen.views.main.size_x/2, screen.views.main.size_y/2, screen.settings.bitdepthGRTs);
 	screen.renderTargets.quarter0 = bmap_createblack(screen.views.main.size_x/4, screen.views.main.size_y/4, screen.settings.bitdepthGRTs);
 	screen.renderTargets.quarter1 = bmap_createblack(screen.views.main.size_x/4, screen.views.main.size_y/4, screen.settings.bitdepthGRTs);
+	screen.renderTargets.quarter2 = bmap_createblack(screen.views.main.size_x/4, screen.views.main.size_y/4, screen.settings.bitdepthGRTs);
 	screen.renderTargets.eighth0 = bmap_createblack(screen.views.main.size_x/8, screen.views.main.size_y/8, screen.settings.bitdepthGRTs);
 	screen.renderTargets.eighth1 = bmap_createblack(screen.views.main.size_x/8, screen.views.main.size_y/8, screen.settings.bitdepthGRTs);
 	

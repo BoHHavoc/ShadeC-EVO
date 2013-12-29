@@ -235,6 +235,7 @@ typedef struct{
 	BMAP* half1; //generic rendertarget, half screen size
 	BMAP* quarter0; //generic rendertarget, quarter screen size
 	BMAP* quarter1; //generic rendertarget, quarter screen size
+	BMAP* quarter2; //generic rendertarget, quarter screen size
 	BMAP* eighth0; //generic rendertarget, eighth screen size
 	BMAP* eighth1; //generic rendertarget, eighth screen size
 }SC_SCREEN_RENDERTARGETS;
@@ -337,7 +338,9 @@ typedef struct{
 	int bitdepthGBuffer; //g-buffer
 	int bitdepthLBuffer; //lighting buffer
 	int bitdepthGRTs; //generic render targets
-	D3DXVECTOR4 heightFog; //height based fog. x = start, y = end
+	D3DXVECTOR4 fogData; //height based fog. x = start, y = end
+	BMAP* fogNoise;
+	int fogNoiseScale;
 }SC_SETTINGS;
 //
 
