@@ -1,6 +1,6 @@
 /***************************************************************************
 
-Basic Example on how to setup and use transparent materials/objects
+Basic Example on how to use fog
 
 
 ***************************************************************************/
@@ -88,6 +88,28 @@ void main()
 
 	//set camera as main view of sc_screen_default
 	sc_screen_default = sc_screen_create(camera);
+	
+	
+	//FOG
+	fog_color=1;
+	d3d_fogcolor1.red=200;
+	d3d_fogcolor1.green=240;
+	d3d_fogcolor1.blue=255;
+	camera.fog_start=100;
+	camera.fog_end=500;
+	//turn on shade-c's height based fog (for 100% fog set both values very high (default: 9999990 & 9999999)
+	sc_screen_default.settings.fogData.x = 10; //height fog start
+	sc_screen_default.settings.fogData.y = 200; //height fog end
+	//to attach the fog ground plane to the camera, call this in a while loop
+	//sc_screen_default.settings.heightFog.x = camera.y; //height fog start
+	//sc_screen_default.settings.heightFog.y = 500 + camera.y; //height fog end
+	//You can also apply noise to the fog, to give it a more volumetric look. Setting fogNoise to NULL disables the noise effect
+	sc_screen_default.settings.fogNoise = bmap_create("sc_noise00.tga");
+	//Scale of the noise texture
+	sc_screen_default.settings.fogNoiseScale = 6;
+	//If noise if activated, you can set the speed of it's movement
+	sc_screen_default.settings.fogData.z = 5;
+	sc_screen_default.settings.fogData.w = -2;
 	
 	//enable/disable Shade-C effects. You have to set these before calling sc_setup()
 	//If you want to change these during runtime, simply call sc_setup() again after you enabled/disabled an effect

@@ -290,14 +290,14 @@ float4 mainPS(psIn In):COLOR
 			//
 			
 		//add height
-		fog = lerp(0, fog, saturate((vecFogHeight.x-(posWS.y)) * vecFogHeight.y) ); //vecFogHeight.w is either 0 or 1, depending if fog is activated or not (fog_color != 0)
+		fog = lerp(0, fog, saturate((vecFogHeight.x-(posWS.y)) * vecFogHeight.y) ) * vecFogHeight.w; //vecFogHeight.w is either 0 or 1, depending if fog is activated or not (fog_color != 0)
 		//add noise
 		fog = saturate(fog + fog*fogNoise);
 	}
 	else
 	{
 		//add height
-		fog = lerp(0, fog, saturate((vecFogHeight.x-(posWS.y)) * vecFogHeight.y) ); //vecFogHeight.w is either 0 or 1, depending if fog is activated or not (fog_color != 0)
+		fog = lerp(0, fog, saturate((vecFogHeight.x-(posWS.y)) * vecFogHeight.y) ) * vecFogHeight.w; //vecFogHeight.w is either 0 or 1, depending if fog is activated or not (fog_color != 0)
 	}
 	//exp
 	//half fog = 1-saturate(1/pow(2.71828, gBuffer.w*density));
