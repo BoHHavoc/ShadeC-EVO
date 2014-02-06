@@ -72,7 +72,7 @@ var sc_lights_mtlShadowmapLocalRenderEvent();
 
 BMAP* sc_lights_mapShadowScatter64 = "sc_random.png";
 
-
+void sc_light_remove(ENTITY* ent);
 
 
 //--------------------------------------------------------------------------
