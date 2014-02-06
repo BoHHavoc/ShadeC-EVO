@@ -4,6 +4,40 @@
 
 // Light handling functions
 
+void sc_light_remove(ENTITY* ent)
+{
+	if(ent==NULL){ return; }
+	if(!ent.SC_SKILL){ return; }
+	
+	SC_OBJECT* myData = (SC_OBJECT*)ent.SC_SKILL;
+	
+	if(myData.light!=NULL)
+	{
+		if(myData.light.view!=NULL)
+		{
+			if(myData.light.view.stage!=NULL)
+			{ 
+				if(myData.light.view.stage.material!=NULL){ ptr_remove(myData.light.view.stage.material); }
+				ptr_remove(myData.light.view.stage); 
+			}
+			
+			if(myData.light.view.material!=NULL){ ptr_remove(myData.light.view.material); }
+			if(myData.light.view.bmap!=NULL){ bmap_purge(myData.light.view.bmap); ptr_remove(myData.light.view.bmap); }
+			
+			ptr_remove(myData.light.view);
+		}
+		if(myData.light.shadowMap!=NULL){ bmap_purge(myData.light.shadowMap); ptr_remove(myData.light.shadowMap); }
+		if(myData.light.matrix!=NULL){sys_free(myData.light.matrix);}
+		
+		sys_free(myData.light);	
+	}
+	
+	sys_free(myData.data);
+	sys_free(myData);
+
+	ptr_remove(ent);
+}
+
 void sc_light_updatePointMtx(ENTITY* inLight)
 {
 	//static D3DXMATRIX testmtx;
